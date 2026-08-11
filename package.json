@@ -13,6 +13,7 @@
     "chess.js": "^1.4.0"
   },
   "devDependencies": {
+    "bass-platform": "file:tools/bass-platform-0.2.1.tgz",
     "typescript": "^5.4.0",
     "vite": "^5.2.0",
     "vitest": "^1.5.0"

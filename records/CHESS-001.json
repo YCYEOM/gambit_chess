@@ -1,0 +1,76 @@
+{
+  "task_id": "CHESS-001",
+  "summary_of_changes": "AI 탐색 중 컨트롤 4개에 disabled 속성과 흐림 표시를 적용하고, :focus-visible 포커스 링을 추가했다. render()가 thinking 플래그를 컨트롤 disabled에 그대로 반영한다.",
+  "why": "DESIGN.md 조사에서 disabled와 focus 두 상호작용 상태가 MISSING이었다. AI 탐색 중 컨트롤이 눌리는 것처럼 보여 멈춘 것으로 읽혔고, 키보드 Tab 이동 시 현재 위치를 알 수 없었다.",
+  "files_changed": [
+    "index.html",
+    "src/main.ts",
+    "DESIGN.md"
+  ],
+  "models_used": [],
+  "verification": {
+    "evaluations_run": [
+      {
+        "name": "typecheck",
+        "level": 1,
+        "status": "pass"
+      },
+      {
+        "name": "unit",
+        "level": 2,
+        "status": "pass"
+      },
+      {
+        "name": "build",
+        "level": 2,
+        "status": "pass"
+      },
+      {
+        "name": "design check",
+        "level": 3,
+        "status": "pass"
+      }
+    ],
+    "not_verified": [
+      "색 대비 수치 (WCAG) — 측정 수단 없음",
+      "Chrome 외 브라우저의 :focus-visible 동작"
+    ]
+  },
+  "critic_findings": {
+    "total": 0,
+    "open_high_or_medium": 0
+  },
+  "known_limitations": [
+    "보드 칸은 div라 tabbable이 아니므로 포커스 링이 적용되지 않는다. 키보드로 수를 두는 기능과 함께 다뤄야 한다.",
+    "기물 칸에 aria-label이 없어 스크린 리더로 반상을 읽을 수 없다."
+  ],
+  "out_of_scope_findings": [
+    "npm run dev의 기본 포트가 README(5173)와 실제 사용 포트(5190)로 갈릴 수 있다. 검증용 임시 포트였고 프로젝트 설정은 아니다."
+  ],
+  "docs_updated": {
+    "needed": true,
+    "updated": [
+      "DESIGN.md"
+    ]
+  },
+  "lessons": {
+    "recorded": true,
+    "candidates": [
+      "DESIGN.md의 Interaction states 표를 MISSING 포함해 정직하게 쓰면 다음 작업 목록이 그대로 나온다. 빈 템플릿을 채우는 것보다 유용하다."
+    ]
+  },
+  "rollback": {
+    "method": "단일 커밋 revert. 영속 데이터나 마이그레이션이 없다."
+  },
+  "design": {
+    "rendered_verification": true,
+    "environment": "Chrome, http://localhost:5190 (vite dev)",
+    "notes": "탐색 중 상태를 20ms 간격으로 샘플링해 '백 차례|falsefalsefalsefalse' → 'AI가 고민 중…|truetruetruetrue' → '백 차례|falsefalsefalsefalse' 전이를 확인했다. 흐림 표시와 포커스 링은 화면 캡처로 확인했다."
+  },
+  "human_approval": {
+    "approved": true,
+    "approver": "user",
+    "at": "2026-08-11T08:30:20.271Z",
+    "notes": "포커스 링을 --accent 그대로 유지하고 미검증 항목(색 대비 수치, Chrome 외 브라우저)을 수용한다"
+  }
+}

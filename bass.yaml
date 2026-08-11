@@ -1,0 +1,35 @@
+# BASS 프로젝트 설정. BASS 코드를 복사하지 않고 버전을 의존한다.
+bass:
+  version: 0.2.1
+  profiles:
+    - common
+    - web
+
+project:
+  name: gambit_chess
+
+# capability alias 만 사용한다. 모델명을 직접 쓰지 마라.
+# 특정 모델 고정이 꼭 필요하면 "pin:provider/model" 표기를 쓴다.
+models:
+  worker: auto
+
+workflow:
+  max_active_tasks: 1
+  reviewer_required: true
+
+# 기존 프로젝트 명령을 그대로 위임한다. BASS 전용 명령을 새로 만들지 않는다.
+evaluators:
+  level1:
+    - name: typecheck
+      command: npx tsc --noEmit
+      timeout_ms: 120000
+  level2:
+    - name: unit
+      command: npm test
+      timeout_ms: 180000
+    - name: build
+      command: npx vite build
+      timeout_ms: 180000
+  # level3(성능·접근성·시각 회귀)은 아직 자동화 수단이 없다.
+  # 보드 렌더링은 `npm run dev` 후 실제 화면으로 확인한다.
+  level3: []
