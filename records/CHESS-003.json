@@ -1,0 +1,91 @@
+{
+  "task_id": "CHESS-003",
+  "summary_of_changes": "반상과 기물을 three.js 3D 로 바꿨다. 백은 KayKit Adventurers, 흑은 Skeletons(둘 다 CC0). 전투는 별도 오버레이 대신 반상 위에서 재생되고, 카메라가 두 기물로 들어가 모델의 Attack·Hit·Death 모션이 돈다. 2D 유니코드 반상은 버렸다. 두 진영이 서로 마주 보도록 회전을 잡았다.",
+  "why": "기물이 유니코드 글자라 '캐릭터가 실제로 싸운다'는 결투 모드의 전제와 어긋났다. 사용자가 3D 캐릭터를 요청했고 시안 승인 후 진행했다.",
+  "files_changed": [
+    "src/board3d.ts",
+    "src/main.ts",
+    "index.html",
+    "tools/strip-anims.mjs",
+    "public/models/kaykit/",
+    "README.md",
+    "DESIGN.md",
+    "package.json"
+  ],
+  "models_used": [],
+  "verification": {
+    "evaluations_run": [
+      {
+        "name": "typecheck",
+        "level": 1,
+        "status": "pass"
+      },
+      {
+        "name": "unit",
+        "level": 2,
+        "status": "pass"
+      },
+      {
+        "name": "build",
+        "level": 2,
+        "status": "pass"
+      },
+      {
+        "name": "design check",
+        "level": 3,
+        "status": "pass"
+      }
+    ],
+    "not_verified": [
+      "저사양 기기·모바일에서의 프레임률 — 측정 수단 없음",
+      "WebGL 이 없는 환경의 동작 (대체 화면이 없어 빈 화면이 된다)",
+      "Chrome 외 브라우저"
+    ]
+  },
+  "critic_findings": {
+    "total": 0,
+    "open_high_or_medium": 0
+  },
+  "known_limitations": [
+    "스크린 리더로 반상을 읽을 수 없다. canvas 하나라 2D 시절보다 나빠졌다.",
+    "WebGL 이 필수다. 2D 반상을 버렸으므로 대체 경로가 없다.",
+    "기물 이동은 직선 미끄러짐뿐이다. 걷기·도약 모션은 넣지 않았다.",
+    "AI 는 여전히 전투 확률을 모른다 (CHESS-002 에서 이월)."
+  ],
+  "out_of_scope_findings": [
+    "mockup.html / src/mockup.ts 를 삭제했다. 승인 후에는 board3d.ts 와 중복되는 두 번째 원천이 되어 썩는다."
+  ],
+  "docs_updated": {
+    "needed": true,
+    "updated": [
+      "README.md",
+      "DESIGN.md",
+      "public/models/kaykit/CREDITS.md"
+    ]
+  },
+  "lessons": {
+    "recorded": true,
+    "candidates": [
+      "gltf-transform 의 Animation.dispose() 는 채널·샘플러를 연쇄로 버리지 않는다. 남은 샘플러가 accessor 를 붙들어 prune() 이 8,500 개를 못 걷어냈고, 클립을 76개에서 5개로 줄여도 파일 크기가 그대로였다. 명시적으로 dispose 하니 3.5MB → 0.4MB.",
+      "prune() 은 기본값에서 빈 잎 노드를 지운다. 무기를 붙일 handslot 본이 애니메이션에도 스킨에도 안 쓰여서 함께 사라졌다. keepLeaves 필요.",
+      "three.js 는 glTF 노드 이름에서 애니메이션 경로 예약 문자를 지운다. handslot.r 이 씬에서는 handslotr 이라 getObjectByName 이 계속 빗나갔다.",
+      "3D 로 바꾸면 세로 제약이 새 실패 모드가 된다. 가로 폭만 걸었더니 페이지가 화면을 넘겨 반상 아래쪽이 잘렸고, 잘린 칸은 클릭도 안 됐다.",
+      "연출을 붙일 때 기존 UI 가 결과를 미리 알리지 않는지 확인해야 한다. 기보의 ✗ 를 수를 둘 때 붙였더니 전투가 시작되기도 전에 승패가 보였다.",
+      "glTF 캐릭터의 정면은 +z 다. 회전을 안 준 쪽이 '기본 방향'이라고 가정했다가 양 진영이 나란히 바깥을 보고 섰다. 3D 에서 '아무것도 안 한 상태'는 중립이 아니라 하나의 선택이다."
+    ]
+  },
+  "rollback": {
+    "method": "커밋 revert. 영속 데이터가 없다. 2D 유니코드 반상은 이전 커밋에 그대로 남아 있다."
+  },
+  "design": {
+    "rendered_verification": true,
+    "environment": "Chrome, http://localhost:5173 (vite dev)",
+    "notes": "실제 대국으로 확인: (1) 32개 기물이 6역 구분되어 렌더됨. (2) 클릭 선택 → 합법수 점·고리 표시 → 이동, 1. e4 Nf6 진행. (3) 잡기 시 카메라 진입 + HP 계기판 + 공격/피격 모션 재생 (2. a3 Nxe4). (4) 전투 중 기보에 ✗ 가 뜨지 않음을 100ms 간격 샘플링으로 확인 — 수정 전에는 전투 시작과 동시에 떴다. (5) 무르기로 2수 되돌아가고 반상이 따라옴. (6) 정통 체스 전환 시 새 게임. (7) 흑(후공) 선택 시 카메라가 반대편으로 넘어가고 AI 가 백으로 1.Nf3. (8) 반상이 화면 안에 다 들어오도록 82vh 제약 추가. (9) 전투 무산 검증: 4. a5 Nxd1✗ — 흑 나이트가 백 퀸을 덮쳤다 실패했고, 이후 5수까지 진행하며 여러 번 다시 그린 뒤에도 백 마법사가 d1 에 그대로 서 있고 공격자는 사라졌다. CHESS-002 에서 화면을 다시 그릴 때마다 되살아나던 그 결함이 3D 에서는 재발하지 않는다 — sync() 가 game.board() 를 직접 읽기 때문. (10) 방향 수정 후 재검증: 백은 카메라에 등을 보이고 흑은 정면을 본다 — 자기 군대 뒤에서 적을 마주 보는 구도. 흑 시점에서도 대칭으로 성립한다. 전투로 틀어 둔 각도가 남지 않는 것도 확인했다 (5. a6 Nxd1✗ 이후 d1 의 마법사가 정면 유지)."
+  },
+  "human_approval": {
+    "approved": true,
+    "approver": "user",
+    "at": "2026-08-11T10:01:14.795Z",
+    "notes": "3D 렌더링 승인. 두 진영이 서로 마주 보도록 수정한 뒤 완료. 미검증 항목(저사양 프레임률, WebGL 없는 환경, Chrome 외 브라우저)과 접근성 후퇴를 수용한다"
+  }
+}

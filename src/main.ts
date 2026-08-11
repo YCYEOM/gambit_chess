@@ -1,19 +1,14 @@
 import { Chess, type PieceSymbol, type Square, type Color } from 'chess.js'
 import { bestMove } from './ai'
-import { STATS, type Strike } from './combat'
+import { STATS } from './combat'
 import { playMove, findKing, type MoveOutcome } from './duel'
+import * as board3d from './board3d'
 
-const GLYPH: Record<string, string> = {
-  wk: '♔', wq: '♕', wr: '♖', wb: '♗', wn: '♘', wp: '♙',
-  bk: '♚', bq: '♛', br: '♜', bb: '♝', bn: '♞', bp: '♟',
-}
-const FILES = 'abcdefgh'
-
-const boardEl = document.getElementById('board')!
 const statusEl = document.getElementById('status')!
 const movesEl = document.getElementById('moves')!
 const panelEl = document.getElementById('panel')!
 const duelEl = document.getElementById('duel')!
+const boardEl = document.getElementById('board') as HTMLCanvasElement
 const modeEl = document.getElementById('mode') as HTMLSelectElement
 const sideEl = document.getElementById('side') as HTMLSelectElement
 const levelEl = document.getElementById('level') as HTMLSelectElement
@@ -33,11 +28,6 @@ let fallen: Color | null = null
 
 const busy = () => thinking || dueling
 const over = () => game.isGameOver() || fallen !== null
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
-
-const squares: Square[] = []
-for (let r = 0; r < 8; r++)
-  for (let f = 0; f < 8; f++) squares.push(`${FILES[f]}${8 - r}` as Square)
 
 function statusText(): string {
   if (fallen) return `킹이 쓰러졌다 — ${fallen === human ? '패배' : '승리'}`
@@ -48,36 +38,17 @@ function statusText(): string {
   return `${game.turn() === 'w' ? '백' : '흑'} 차례${game.inCheck() ? ' (체크!)' : ''}`
 }
 
+/** 반상 밖(상태줄·기보·컨트롤)만 그린다. 반상 자체는 board3d 가 맡는다. */
 function render() {
-  const order = human === 'b' ? [...squares].reverse() : squares
   const legal = selected ? game.moves({ square: selected, verbose: true }) : []
   const last = log.at(-1)
-  const checkedKing = game.inCheck() ? findKing(game, game.turn()) : undefined
-
-  boardEl.replaceChildren(
-    ...order.map((sq) => {
-      const file = FILES.indexOf(sq[0])
-      const rank = 8 - Number(sq[1])
-      const piece = game.get(sq)
-      const move = legal.find((m) => m.to === sq)
-      const el = document.createElement('div')
-      el.className = [
-        'sq',
-        (file + rank) % 2 === 0 ? 'light' : 'dark',
-        sq === selected && 'sel',
-        move && 'move',
-        move?.captured && 'cap',
-        (sq === last?.from || sq === last?.to) && 'last',
-        sq === checkedKing && 'check',
-      ].filter(Boolean).join(' ')
-      if (piece) {
-        el.textContent = GLYPH[piece.color + piece.type]
-        el.classList.add(piece.color)
-      }
-      el.onclick = () => onClick(sq)
-      return el
-    }),
-  )
+  board3d.highlight({
+    selected,
+    moves: legal.filter((m) => !m.captured).map((m) => m.to),
+    captures: legal.filter((m) => m.captured).map((m) => m.to),
+    last: last ? [last.from, last.to] : null,
+    check: game.inCheck() ? findKing(game, game.turn()) ?? null : null,
+  })
 
   statusEl.textContent = statusText()
 
@@ -98,64 +69,36 @@ function render() {
   movesEl.scrollTop = movesEl.scrollHeight
 }
 
-/** 전투를 화면에서 재생한다. 판정은 이미 끝났고, 여기서는 보여주기만 한다. */
-async function showDuel(outcome: MoveOutcome) {
-  const { move, fight } = outcome
-  if (!fight) return
+// ---------------------------------------------------------------- 전투 계기판
 
-  const enemy: Color = move.color === 'w' ? 'b' : 'w'
-  const setup = (side: 'atk' | 'def', type: PieceSymbol, color: Color) => {
-    const el = duelEl.querySelector(`.${side}`)!
-    el.className = `fighter ${side}`
-    const glyph = el.querySelector('.glyph')!
-    glyph.className = `glyph ${color}` // 반상과 같은 흑백 표기를 쓴다
-    glyph.textContent = GLYPH[color + type]
-    el.querySelector('.name')!.textContent = STATS[type].name
-    el.querySelector('.stat')!.textContent = `HP ${STATS[type].hp} · 공격 ${STATS[type].atk}`
+const duelSide = (side: 'atk' | 'def') => duelEl.querySelector(`.${side}`)!
+
+function openDuelGauge(attacker: PieceSymbol, attackerColor: Color, defender: PieceSymbol) {
+  const enemy: Color = attackerColor === 'w' ? 'b' : 'w'
+  for (const [side, type, color] of [['atk', attacker, attackerColor], ['def', defender, enemy]] as const) {
+    const el = duelSide(side)
+    el.querySelector('.name')!.textContent = `${board3d.roleName(color, type)} · HP ${STATS[type].hp}`
     ;(el.querySelector('.bar i') as HTMLElement).style.width = '100%'
-    return el
+    el.querySelector('.bar i')!.classList.remove('hurt')
+    el.querySelector('.dmg')!.textContent = ''
   }
-  const atk = setup('atk', move.piece, move.color)
-  const def = setup('def', move.captured as PieceSymbol, enemy)
-  const verdictEl = duelEl.querySelector('.verdict')!
-  verdictEl.textContent = ''
-
   duelEl.hidden = false
-  await sleep(450) // 마주 서는 시간
-
-  // 타격이 많아도 전체 재생이 늘어지지 않게 간격을 줄인다.
-  const step = Math.min(340, 2600 / fight.strikes.length)
-  for (const s of fight.strikes) {
-    const struck = s.by === 'attacker' ? def : atk
-    const hp = s.by === 'attacker' ? s.defenderHp : s.attackerHp
-    const max = STATS[s.by === 'attacker' ? (move.captured as PieceSymbol) : move.piece].hp
-    showStrike(struck, s, hp / max)
-    await sleep(step)
-  }
-
-  const [winner, loser] = fight.winner === 'attacker' ? [atk, def] : [def, atk]
-  winner.classList.add('won')
-  loser.classList.add('dead')
-  verdictEl.textContent = outcome.repelled
-    ? `${STATS[move.captured as PieceSymbol].name}이(가) 버텨냈다`
-    : `${STATS[move.piece].name}이(가) 제압했다`
-
-  await sleep(1000)
-  duelEl.hidden = true
 }
 
-function showStrike(fighter: Element, s: Strike, ratio: number) {
-  const dmg = fighter.querySelector('.dmg')!
-  dmg.textContent = s.crit ? `${s.damage} 치명타!` : `${s.damage}`
-  dmg.className = s.crit ? 'dmg crit' : 'dmg'
-  const bar = fighter.querySelector('.bar i') as HTMLElement
-  bar.style.width = `${ratio * 100}%`
-  bar.classList.toggle('hurt', ratio <= 0.3)
+function showStrike(struck: 'atk' | 'def', damage: number, crit: boolean, ratio: number) {
+  const el = duelSide(struck)
+  const dmg = el.querySelector('.dmg')!
+  dmg.textContent = crit ? `${damage} 치명타!` : `${damage}`
+  dmg.className = crit ? 'dmg crit' : 'dmg'
   // 클래스를 뗐다 붙여야 같은 애니메이션이 다시 재생된다.
-  fighter.classList.remove('hit')
-  void (fighter as HTMLElement).offsetWidth
-  fighter.classList.add('hit')
+  void (dmg as HTMLElement).offsetWidth
+  dmg.classList.add('show')
+  const bar = el.querySelector('.bar i') as HTMLElement
+  bar.style.width = `${Math.max(0, ratio) * 100}%`
+  bar.classList.toggle('hurt', ratio <= 0.3)
 }
+
+// ---------------------------------------------------------------- 수 적용
 
 async function apply(from: Square, to: Square) {
   // ponytail: 승진은 항상 퀸. 언더프로모션이 필요하면 여기서 선택 UI를 띄운다.
@@ -163,18 +106,44 @@ async function apply(from: Square, to: Square) {
     ? playMove(game, { from, to, promotion: 'q' })
     : ({ move: game.move({ from, to, promotion: 'q' }), fight: null, repelled: false, loser: null } as MoveOutcome)
 
-  log.push({ san: outcome.move.san, from, to, repelled: outcome.repelled })
+  // 무산 표시(✗)는 전투가 끝난 뒤에 붙인다. 먼저 넣으면 기보가 결과를 미리 알려준다.
+  const ply = { san: outcome.move.san, from, to, repelled: false }
+  log.push(ply)
+
   if (outcome.fight) {
     dueling = true
     render()
-    await showDuel(outcome)
+    // 전투는 반상이 갱신되기 전, 두 기물이 원래 서 있던 자리에서 벌어진다.
+    // 앙파상은 잡힌 폰이 도착 칸이 아니라 그 뒤에 서 있다.
+    const defenderSquare = (outcome.move.flags.includes('e')
+      ? outcome.move.to[0] + outcome.move.from[1]
+      : outcome.move.to) as Square
+    const attackerType = outcome.move.piece
+    const defenderType = outcome.move.captured as PieceSymbol
+
+    openDuelGauge(attackerType, outcome.move.color, defenderType)
+    await board3d.playDuel(
+      from, defenderSquare, outcome.fight.strikes, !outcome.repelled,
+      (i) => {
+        const s = outcome.fight!.strikes[i]
+        const struck = s.by === 'attacker' ? 'def' : 'atk'
+        const max = STATS[struck === 'def' ? defenderType : attackerType].hp
+        showStrike(struck, s.damage, s.crit, (struck === 'def' ? s.defenderHp : s.attackerHp) / max)
+      },
+    )
+    duelEl.hidden = true
     dueling = false
+  } else {
+    await board3d.slide(from, to)
   }
+
+  ply.repelled = outcome.repelled
   fallen = outcome.loser
+  await board3d.sync(game)
   render()
 }
 
-async function onClick(sq: Square) {
+async function onSquare(sq: Square) {
   if (busy() || over() || game.turn() !== human) return
 
   if (selected) {
@@ -204,7 +173,7 @@ function aiTurn() {
   }, 20)
 }
 
-function newGame() {
+async function newGame() {
   game.reset()
   human = sideEl.value as Color
   selected = null
@@ -213,14 +182,16 @@ function newGame() {
   fallen = null
   log = []
   duelEl.hidden = true
+  board3d.setOrientation(human)
+  await board3d.sync(game)
   render()
   if (human === 'b') aiTurn()
 }
 
-document.getElementById('new')!.onclick = newGame
-sideEl.onchange = newGame
-modeEl.onchange = newGame
-document.getElementById('undo')!.onclick = () => {
+document.getElementById('new')!.onclick = () => { void newGame() }
+sideEl.onchange = () => { void newGame() }
+modeEl.onchange = () => { void newGame() }
+document.getElementById('undo')!.onclick = async () => {
   if (busy()) return
   for (const _ of [0, 1]) {
     game.undo() // AI 수, 그리고 내 수
@@ -228,7 +199,11 @@ document.getElementById('undo')!.onclick = () => {
   }
   selected = null
   fallen = null
+  await board3d.sync(game)
   render()
 }
 
-newGame()
+board3d.init(boardEl, (sq) => { void onSquare(sq) })
+addEventListener('resize', board3d.resize)
+statusEl.textContent = '기물 불러오는 중…'
+board3d.preload().then(newGame)
