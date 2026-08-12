@@ -1,7 +1,7 @@
 ---
 id: CHESS-008
 title: '아이템: 랜덤 칸에 나타나 기물에게 능력을 준다'
-status: HUMAN_REVIEW
+status: DONE
 type: feature
 profile: web
 

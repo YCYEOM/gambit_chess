@@ -7,7 +7,7 @@
  * 효과는 기물에 붙어 따라다니고(pieceState), 그 기물이 죽으면 함께 사라진다.
  */
 import type { Chess, Square } from 'chess.js'
-import type { State } from './pieceState'
+import { grant, maxHp, type State } from './pieceState'
 
 export type ItemKind = 'again' | 'sharp' | 'rage' | 'mend'
 
@@ -82,5 +82,33 @@ export function take(square: Square): ItemKind | null {
   const kind = placed.get(square)
   if (kind === undefined) return null
   placed.delete(square)
+  return kind
+}
+
+/**
+ * 도착 칸의 아이템을 줍고 효과를 건다. 주운 것이 없으면 null.
+ *
+ * 재행동은 여기서 차례까지 되돌린다 — chess.js 에 차례를 바꾸는 API 가 없어 FEN 을
+ * 갈아 끼운다. 앙파상 칸은 지운다: 같은 쪽이 한 번 더 두면 그 권리는 사라진 것이다.
+ * load() 가 chess.js 내부 이력을 지우므로 무르기는 FEN 스냅샷으로 해야 한다.
+ */
+export function pickUp(game: Chess, square: Square, repelled: boolean): ItemKind | null {
+  // 아이템은 빈 칸에만 놓이므로 잡는 수로는 닿지 않고, 무산된 공격은 도착조차 못 했다.
+  if (repelled) return null
+  const kind = take(square)
+  if (!kind) return null
+
+  const spec = ITEMS[kind]
+  if (kind === 'mend') {
+    const piece = game.get(square)
+    if (piece) grant(square, { hp: maxHp(piece.type) })
+  } else if (spec.effect) {
+    grant(square, spec.effect)
+  }
+
+  if (spec.extraTurn) {
+    const [board, turn, castling, , halfmove, fullmove] = game.fen().split(' ')
+    game.load([board, turn === 'w' ? 'b' : 'w', castling, '-', halfmove, fullmove].join(' '))
+  }
   return kind
 }

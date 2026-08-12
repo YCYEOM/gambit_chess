@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { Chess } from 'chess.js'
-import { ITEMS, MAX_ON_BOARD, SPAWN_EVERY, itemAt, items, maybeSpawn, reset, restore, snapshot, take } from './items'
+import { ITEMS, MAX_ON_BOARD, SPAWN_EVERY, type ItemKind, itemAt, items, maybeSpawn, pickUp, reset, restore, snapshot, take } from './items'
+import * as pieces from './pieceState'
 
 beforeEach(reset)
 
@@ -90,5 +91,93 @@ describe('ITEMS', () => {
     expect(ITEMS.mend.effect).toBeUndefined()
     expect(ITEMS.sharp.effect?.crit).toBeGreaterThan(0)
     expect(ITEMS.rage.effect?.atk).toBeGreaterThan(0)
+  })
+})
+
+describe('pickUp', () => {
+  beforeEach(pieces.reset)
+
+  /** e4 에 아이템을 놓고 백 폰을 그 칸으로 보낸다. */
+  function stepOnto(kind: ItemKind) {
+    const game = new Chess()
+    restore([['e4', kind]])
+    const move = game.move('e4')
+    return { game, move, picked: pickUp(game, 'e4', false) }
+  }
+
+  it('아이템이 없는 칸이면 아무 일도 없다', () => {
+    const game = new Chess()
+    game.move('e4')
+    expect(pickUp(game, 'e4', false)).toBeNull()
+  })
+
+  it('무산된 공격은 줍지 못한다 — 도착조차 못 했다', () => {
+    const game = new Chess()
+    restore([['e4', 'rage']])
+    game.move('e4')
+    expect(pickUp(game, 'e4', true)).toBeNull()
+    expect(itemAt('e4')).toBe('rage') // 그대로 남아 있다
+  })
+
+  it('분노는 그 기물의 공격력을 올린다', () => {
+    stepOnto('rage')
+    expect(pieces.bonus('e4').atk).toBe(ITEMS.rage.effect!.atk)
+    expect(itemAt('e4')).toBeUndefined() // 주웠으니 사라진다
+  })
+
+  it('예리함은 치명타 확률을 올린다', () => {
+    stepOnto('sharp')
+    expect(pieces.bonus('e4').crit).toBeCloseTo(ITEMS.sharp.effect!.crit!)
+  })
+
+  it('응급처치는 체력을 만피로 되돌린다', () => {
+    const game = new Chess()
+    restore([['e4', 'mend']])
+    const move = game.move('e4')
+    pieces.applyMove(move, false, { attackerHp: 5, defenderHp: 0 }) // 다친 채로 도착
+    expect(pieces.current('e4', 'p')).toBe(5)
+    pickUp(game, 'e4', false)
+    expect(pieces.current('e4', 'p')).toBe(pieces.maxHp('p'))
+  })
+
+  it('재행동은 차례를 둔 쪽으로 되돌린다', () => {
+    const { game, picked } = stepOnto('again')
+    expect(picked).toBe('again')
+    expect(game.turn()).toBe('w') // 백이 뒀는데 다시 백 차례
+    expect(game.moves().length).toBeGreaterThan(0)
+  })
+
+  it('재행동이 아니면 차례는 그대로 넘어간다', () => {
+    const { game } = stepOnto('rage')
+    expect(game.turn()).toBe('b')
+  })
+
+  it('재행동은 앙파상 권리를 지운다 — 같은 쪽이 한 번 더 두면 사라진 것이다', () => {
+    const { game } = stepOnto('again')
+    expect(game.fen().split(' ')[3]).toBe('-')
+  })
+
+  it('얻은 능력은 기물을 따라 움직인다', () => {
+    const { game } = stepOnto('rage')
+    expect(pieces.bonus('e4').atk).toBe(ITEMS.rage.effect!.atk)
+
+    game.move('a6') // 흑
+    pieces.applyMove(game.move('e5'), false, null) // 능력을 얻은 폰이 전진
+
+    expect(pieces.bonus('e5').atk).toBe(ITEMS.rage.effect!.atk) // 따라왔다
+    expect(pieces.bonus('e4').atk).toBe(0) // 떠난 자리에는 남지 않는다
+  })
+
+  it('능력을 얻은 기물이 죽으면 능력도 사라진다', () => {
+    // 흑 폰이 d5 에 있어 e4 를 대각선으로 잡을 수 있다
+    const game = new Chess('rnbqkbnr/ppp1pppp/8/3p4/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
+    restore([['e4', 'rage']])
+    pieces.applyMove(game.move('e4'), false, null)
+    pickUp(game, 'e4', false)
+    expect(pieces.bonus('e4').atk).toBe(ITEMS.rage.effect!.atk)
+
+    // 흑 폰이 e4 를 잡는다
+    pieces.applyMove(game.move('dxe4'), false, { attackerHp: 9, defenderHp: 0 })
+    expect(pieces.bonus('e4').atk).toBe(0) // 잡힌 기물의 능력은 남지 않는다
   })
 })

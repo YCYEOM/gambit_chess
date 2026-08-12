@@ -195,37 +195,18 @@ async function apply(from: Square, to: Square): Promise<boolean> {
     state.applyMove(outcome.move, outcome.repelled, outcome.fight)
     // 쉰 기물만 회복한다. 방금 움직인 기물은 뺀다.
     state.regen(game, outcome.move.color, outcome.repelled ? undefined : outcome.move.to)
-    again = pickUp(outcome.move.to, outcome.repelled)
+    const picked = items.pickUp(game, outcome.move.to, outcome.repelled)
+    if (picked) {
+      const spec = items.ITEMS[picked]
+      hint = `${spec.name} — ${spec.what}`
+      again = spec.extraTurn ?? false
+    }
     items.maybeSpawn(game, log.length)
   }
 
   await board3d.sync(game)
   render()
   return again
-}
-
-/** 도착 칸의 아이템을 줍는다. 재행동이면 true. */
-function pickUp(square: Square, repelled: boolean): boolean {
-  // 아이템은 빈 칸에만 놓이므로 잡는 수로는 닿지 않고, 무산된 공격은 도착조차 못 했다.
-  if (repelled) return false
-  const kind = items.take(square)
-  if (!kind) return false
-
-  const spec = items.ITEMS[kind]
-  if (kind === 'mend') {
-    const piece = game.get(square)
-    if (piece) state.grant(square, { hp: state.maxHp(piece.type) })
-  } else if (spec.effect) {
-    state.grant(square, spec.effect)
-  }
-  hint = `${spec.name} — ${spec.what}`
-  if (!spec.extraTurn) return false
-
-  // 턴을 되돌린다. chess.js 에 차례를 바꾸는 API 가 없어 FEN 으로 갈아 끼운다.
-  // 앙파상 칸은 지운다 — 같은 쪽이 한 번 더 두면 그 권리는 사라진 것이다.
-  const [board, turn, castling, , halfmove, fullmove] = game.fen().split(' ')
-  game.load([board, turn === 'w' ? 'b' : 'w', castling, '-', halfmove, fullmove].join(' '))
-  return true
 }
 
 async function onSquare(sq: Square) {
