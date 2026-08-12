@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { Chess } from 'chess.js'
 import { STATS } from './combat'
-import { applyMove, current, regen, regenAmount, reset, restore, snapshot, wounded } from './health'
+import { applyMove, current, regen, regenAmount, reset, restore, snapshot, wounded } from './pieceState'
 
 beforeEach(reset)
 

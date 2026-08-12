@@ -18,6 +18,8 @@ export interface Duel {
   /** 전투가 끝난 시점의 체력. 다음 전투로 이어진다. */
   attackerHp: number
   defenderHp: number
+  /** 시작 체력. 계기판이 만피가 아닌 지점에서 바를 그리려면 필요하다. */
+  startHp: { attacker: number; defender: number }
 }
 
 // 20000회 시뮬레이션으로 맞춘 값. 공격자 승률(행=공격, 열=수비):
@@ -56,20 +58,33 @@ const AMBUSH_MULT = 1.25
  * start 를 주면 그 체력에서 시작한다. 앞선 전투에서 깎인 채로 싸우는 것이 기본이고,
  * 생략하면 만피다 (정통 모드·테스트용).
  */
+export interface Bonus {
+  /** 치명타 확률 가산. */
+  crit?: number
+  /** 공격력 가산. */
+  atk?: number
+}
+
 export function duel(
   attacker: PieceSymbol,
   defender: PieceSymbol,
   rng: () => number = Math.random,
   start?: { attacker: number; defender: number },
+  bonus?: { attacker?: Bonus; defender?: Bonus },
 ): Duel {
-  let attackerHp = start?.attacker ?? STATS[attacker].hp
-  let defenderHp = start?.defender ?? STATS[defender].hp
+  const startHp = {
+    attacker: start?.attacker ?? STATS[attacker].hp,
+    defender: start?.defender ?? STATS[defender].hp,
+  }
+  let attackerHp = startHp.attacker
+  let defenderHp = startHp.defender
   const strikes: Strike[] = []
   let by: Side = 'attacker'
 
   while (attackerHp > 0 && defenderHp > 0) {
-    const atk = STATS[by === 'attacker' ? attacker : defender].atk
-    const crit = rng() < CRIT_CHANCE
+    const mine = by === 'attacker' ? bonus?.attacker : bonus?.defender
+    const atk = STATS[by === 'attacker' ? attacker : defender].atk + (mine?.atk ?? 0)
+    const crit = rng() < CRIT_CHANCE + (mine?.crit ?? 0)
     const ambush = by === 'attacker' && strikes.length === 0
     // 최소 1 — 변동폭이 아무리 낮게 나와도 전투는 반드시 끝난다.
     const damage = Math.max(
@@ -86,7 +101,7 @@ export function duel(
     by = by === 'attacker' ? 'defender' : 'attacker'
   }
 
-  return { strikes, winner: defenderHp === 0 ? 'attacker' : 'defender', attackerHp, defenderHp }
+  return { strikes, winner: defenderHp === 0 ? 'attacker' : 'defender', attackerHp, defenderHp, startHp }
 }
 
 /**
@@ -98,22 +113,26 @@ export function duel(
  */
 const winCache = new Map<string, number>()
 const SAMPLES = 200
+const b0 = (b?: Bonus) => (b?.crit || b?.atk ? `${b.crit ?? 0},${b.atk ?? 0}` : '')
 
 export function winChance(
   attacker: PieceSymbol,
   defender: PieceSymbol,
   attackerHp = STATS[attacker].hp,
   defenderHp = STATS[defender].hp,
+  bonus?: { attacker?: Bonus; defender?: Bonus },
 ): number {
-  const key = `${attacker}${defender}${attackerHp >> 1}:${defenderHp >> 1}`
+  const b = bonus
+    ? `${b0(bonus.attacker)}|${b0(bonus.defender)}`
+    : ''
+  const key = `${attacker}${defender}${attackerHp >> 1}:${defenderHp >> 1}${b}`
   const cached = winCache.get(key)
   if (cached !== undefined) return cached
 
   let wins = 0
   for (let i = 0; i < SAMPLES; i++) {
-    if (duel(attacker, defender, Math.random, { attacker: attackerHp, defender: defenderHp }).winner === 'attacker') {
-      wins++
-    }
+    const d = duel(attacker, defender, Math.random, { attacker: attackerHp, defender: defenderHp }, bonus)
+    if (d.winner === 'attacker') wins++
   }
   const p = wins / SAMPLES
   winCache.set(key, p)

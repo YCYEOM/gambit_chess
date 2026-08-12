@@ -18,6 +18,12 @@
     --team-light: #f4f1ea;
     --team-dark: #211d1a;
     --last: #ffe066;
+    /* 아이템 — 색으로 종류를 구분한다 */
+    --item-again: #5aa9e6;
+    --item-sharp: #f5b942;
+    --item-rage: #e5484d;
+    --item-mend: #7fa650;
+    --buff: #c77dff;
   }
   * { box-sizing: border-box; }
   body {
@@ -48,6 +54,15 @@
     font-size: 13px; color: #b6b2ae; word-break: break-all;
   }
   #moves .repelled { color: var(--danger); }
+
+  /* 반상에 놓인 아이템 안내. 색만 봐서는 효과를 알 수 없다. */
+  #legend[hidden] { display: none; }
+  #legend {
+    width: min(92vw, 1000px); display: flex; gap: 14px; flex-wrap: wrap;
+    font-size: 13px; color: #b6b2ae;
+  }
+  #legend .item { display: inline-flex; align-items: center; gap: 6px; }
+  #legend .item i { width: 10px; height: 10px; border-radius: 2px; transform: rotate(45deg); }
 
   /* ---- 전투 계기판 ----
      전투 자체는 반상 위에서 벌어진다. 여기는 HP 처럼 3D 로 읽기 어려운 수치만 맡는다. */
@@ -88,6 +103,7 @@
     </div>
   </div>
   <canvas id="board"></canvas>
+  <div id="legend" hidden></div>
   <div id="panel">
     <select id="mode">
       <option value="duel">결투 모드</option>

@@ -38,7 +38,7 @@ describe('bestMove', () => {
 
 describe('결투 모드 AI', () => {
   /** 만피 기준 체력. bestMove 에 넘기면 결투 모드로 본다. */
-  const fullHp = (_sq: Square, type: PieceSymbol) => STATS[type].hp
+  const fullHp = (_sq: Square, type: PieceSymbol) => ({ hp: STATS[type].hp, crit: 0, atk: 0 })
 
   it('빈사 상태의 기물로는 덤비지 않는다', () => {
     // e4 의 나이트는 아무도 지키지 않는다. 만피 퀸이면 공짜지만, 퀸이 3 남았으면 자살이다.
@@ -48,7 +48,7 @@ describe('결투 모드 AI', () => {
       for (let i = 0; i < 12; i++) if (bestMove(new Chess(fen), 2, hpOf)?.to === 'e4') n++
       return n
     }
-    const dying = (sq: Square, type: PieceSymbol) => (sq === 'e1' ? 3 : STATS[type].hp)
+    const dying = (sq: Square, type: PieceSymbol) => ({ hp: sq === 'e1' ? 3 : STATS[type].hp, crit: 0, atk: 0 })
 
     expect(takes(fullHp)).toBeGreaterThan(10) // 멀쩡하면 잡는다
     expect(takes(dying)).toBeLessThan(3) // 빈사면 안 잡는다
@@ -57,7 +57,7 @@ describe('결투 모드 AI', () => {
   it('다친 적을 노린다', () => {
     // 같은 나이트 둘 중 하나만 빈사. 다친 쪽을 잡으러 가야 한다.
     const fen = '4k3/8/2n1n3/3P4/8/8/8/4K3 w - - 0 1'
-    const hurt = (sq: Square, type: PieceSymbol) => (sq === 'c6' ? 3 : STATS[type].hp)
+    const hurt = (sq: Square, type: PieceSymbol) => ({ hp: sq === 'c6' ? 3 : STATS[type].hp, crit: 0, atk: 0 })
     let atHurt = 0
     for (let i = 0; i < 12; i++) {
       if (bestMove(new Chess(fen), 2, hurt)?.to === 'c6') atHurt++

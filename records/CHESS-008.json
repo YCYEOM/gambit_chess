@@ -1,0 +1,52 @@
+{
+  "task_id": "CHESS-008",
+  "summary_of_changes": "6수마다 빈 칸에 아이템이 나타난다(최대 2개). 기물이 그 칸으로 가면 능력을 얻는다 — 재행동·예리함·분노·응급처치. 효과는 기물에 붙어 따라다니고 그 기물이 죽으면 사라진다. 체력 장부(health.ts)를 상태 장부(pieceState.ts)로 확장해 이동 규칙을 그대로 물려받았고, 재행동 때문에 무르기를 FEN 스냅샷 방식으로 교체했다.",
+  "why": "매 수가 '무엇을 잡을까'뿐이었다. 반상에 잡는 것 말고 다른 목표가 필요하다는 사용자 요청.",
+  "files_changed": [
+    "src/items.ts", "src/items.test.ts",
+    "src/pieceState.ts", "src/pieceState.test.ts",
+    "src/combat.ts", "src/duel.ts", "src/ai.ts", "src/ai.test.ts",
+    "src/main.ts", "src/board3d.ts", "index.html",
+    "README.md", "DESIGN.md"
+  ],
+  "models_used": [],
+  "verification": {
+    "evaluations_run": [
+      { "name": "typecheck", "level": 1, "status": "pass" },
+      { "name": "unit", "level": 2, "status": "pass" },
+      { "name": "build", "level": 2, "status": "pass" },
+      { "name": "design check", "level": 3, "status": "pass" }
+    ],
+    "not_verified": [
+      "6수마다 최대 2개가 게임으로서 적당한지 — 사람 판단",
+      "영구 효과가 누적된 기물이 게임을 망가뜨리는지 — 긴 대국 미확인",
+      "아이템 줍기와 재행동의 화면 재현 — 아이템이 상대 진영에 나와 도달하지 못했다. 로직은 단위 테스트, 턴 뒤집기와 FEN 복원은 node 로 따로 확인",
+      "Chrome 외 브라우저"
+    ]
+  },
+  "critic_findings": { "total": 0, "open_high_or_medium": 0 },
+  "known_limitations": [
+    "AI 는 아이템을 주우러 가지 않는다. 이미 얻은 능력은 승률 계산에 넣지만 반상의 아이템을 목표로 삼지 않는다.",
+    "효과에 만료가 없다. 한 기물이 여러 개를 먹으면 계속 강해진다 — 그 기물이 죽어야 사라진다.",
+    "무르기가 FEN 기반이 되면서 chess.js 내부 이력이 끊긴다. 3회 동형 반복 판정은 원래도 못 쓰던 것이라 실질 변화는 없다.",
+    "재행동으로 같은 쪽이 연속으로 두면 fullmove 번호가 실제와 어긋난다. 기보는 자체 log 로 그리므로 화면에는 영향이 없다."
+  ],
+  "out_of_scope_findings": [
+    "health.ts 를 pieceState.ts 로 이름을 바꿨다. 체력만 담던 모듈이 아이템 효과까지 담게 되어 이름이 사실과 달라졌다."
+  ],
+  "docs_updated": { "needed": true, "updated": ["README.md", "DESIGN.md"] },
+  "lessons": {
+    "recorded": true,
+    "candidates": [
+      "새 per-piece 상태를 넣을 때, 이미 '기물을 따라다니는 장부'가 있으면 값 타입을 넓히는 것이 새 장부를 만드는 것보다 훨씬 싸다. 캐슬링·앙파상·승진이라는 세 예외를 한 번 더 구현하지 않아도 됐다.",
+      "라이브러리가 막는 기능(차례 바꾸기)은 우회로의 부작용까지 계산해야 한다. load() 로 차례를 뒤집는 순간 undo() 가 죽고, 그래서 무르기 전체를 FEN 스냅샷으로 바꿔야 했다. 기능 하나가 인접 기능 하나를 같이 요구한 셈이다.",
+      "색을 소스에 박으면 design check 가 잡는다. 자동 검사가 '색 정의는 한 곳' 규칙을 실제로 지키게 해 준다 — 문서에만 적혀 있었다면 그냥 어겼을 것이다."
+    ]
+  },
+  "rollback": { "method": "단일 커밋 revert. 영속 데이터가 없다." },
+  "design": {
+    "rendered_verification": true,
+    "environment": "Chrome, http://localhost:5173 (vite dev)",
+    "notes": "실제 대국으로 확인. 6수째(1. e4 Nf6 2. a3 Nxe4 3. a4 Nc6)에 e6 에 분노 아이템이 나타났다 — 빨간 결정체가 칸 위에 떠서 돌고 바닥에 같은 색 고리가 깔렸으며, 반상 아래 안내줄에 '◆ e6 분노 · 공격력 +3' 이 떴다. 그 전 다섯 수 동안에는 아무것도 나오지 않았다. 줍기와 재행동은 아이템이 흑 진영에 나와 도달하지 못해 화면에서 재현하지 못했고, FEN 으로 차례를 뒤집고 되돌리는 것은 node 에서 따로 확인했다 (뒤집은 뒤 백 합법수 30개, 복원 FEN 정확 일치)."
+  }
+}

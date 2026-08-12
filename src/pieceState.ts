@@ -1,5 +1,7 @@
 /**
- * 기물 체력을 전투 사이에 이어간다. 매 전투를 만피로 시작하면 "약해진 기물을 노린다"도
+ * 기물에 붙어 다니는 상태 — 체력과 아이템 효과.
+ *
+ * 체력은 전투 사이에 이어진다. 매 전투를 만피로 시작하면 "약해진 기물을 노린다"도
  * "물러나서 쉰다"도 성립하지 않는다.
  *
  * 체력은 칸을 키로 들고 다닌다. chess.js 가 기물에 고유 id 를 주지 않기 때문인데,
@@ -15,24 +17,58 @@ import { defenderSquareOf } from './duel'
 /** 한 턴 쉬면 최대 체력의 이만큼 돌아온다. */
 const REGEN_RATE = 0.08
 
-const hp = new Map<Square, number>()
+export interface State {
+  /** 없으면 만피. */
+  hp?: number
+  /** 치명타 확률 가산 (0.15 = +15%p). */
+  crit?: number
+  /** 공격력 가산. */
+  atk?: number
+}
+
+const board = new Map<Square, State>()
 
 export const maxHp = (type: PieceSymbol) => STATS[type].hp
 export const regenAmount = (type: PieceSymbol) => Math.max(1, Math.round(maxHp(type) * REGEN_RATE))
 
 export function current(square: Square, type: PieceSymbol): number {
-  return hp.get(square) ?? maxHp(type)
+  return board.get(square)?.hp ?? maxHp(type)
+}
+
+/** 전투 공식에 더할 보정. 아이템이 없으면 0. */
+export function bonus(square: Square): { crit: number; atk: number } {
+  const s = board.get(square)
+  return { crit: s?.crit ?? 0, atk: s?.atk ?? 0 }
+}
+
+export function stateOf(square: Square, type: PieceSymbol) {
+  const s = board.get(square)
+  return { hp: s?.hp ?? maxHp(type), crit: s?.crit ?? 0, atk: s?.atk ?? 0 }
+}
+
+/** 아이템 효과를 기물에 붙인다. 기물이 죽으면 함께 사라진다. */
+export function grant(square: Square, effect: State) {
+  const s = { ...board.get(square) }
+  if (effect.hp !== undefined) s.hp = effect.hp
+  if (effect.crit) s.crit = (s.crit ?? 0) + effect.crit
+  if (effect.atk) s.atk = (s.atk ?? 0) + effect.atk
+  board.set(square, s)
+}
+
+/** 화면에 표식을 띄울 기물 — 아이템 효과를 지닌 것들. */
+export function buffed(): Square[] {
+  return [...board].filter(([, s]) => s.crit || s.atk).map(([sq]) => sq)
 }
 
 export function reset() {
-  hp.clear()
+  board.clear()
 }
 
-export type Snapshot = [Square, number][]
-export const snapshot = (): Snapshot => [...hp]
+export type Snapshot = [Square, State][]
+export const snapshot = (): Snapshot => [...board].map(([sq, s]) => [sq, { ...s }])
 export function restore(snap: Snapshot) {
-  hp.clear()
-  for (const [sq, v] of snap) hp.set(sq, v)
+  board.clear()
+  for (const [sq, s] of snap) board.set(sq, { ...s })
 }
 
 /** 캐슬링에서 함께 움직이는 룩. chess.js 의 flags 로 어느 쪽인지 알 수 있다. */
@@ -52,27 +88,29 @@ export function applyMove(
   repelled: boolean,
   fight: { attackerHp: number; defenderHp: number } | null,
 ) {
-  const attackerHp = fight ? fight.attackerHp : current(move.from, move.piece)
+  const moving = { ...board.get(move.from) }
   const defender = defenderSquareOf(move)
 
-  hp.delete(move.from)
+  board.delete(move.from)
 
   if (repelled) {
-    // 공격자가 죽고 수비 기물이 제자리에 남는다.
-    if (fight) hp.set(defender, fight.defenderHp)
+    // 공격자가 죽고 수비 기물이 제자리에 남는다. 공격자의 아이템 효과도 함께 사라진다.
+    if (fight) board.set(defender, { ...board.get(defender), hp: fight.defenderHp })
     return
   }
 
-  hp.delete(defender)
-  // 승진은 다른 기물이 된 것이다. 새 몸으로 만피에서 시작한다.
-  hp.set(move.to, move.promotion ? maxHp(move.promotion) : attackerHp)
+  board.delete(defender)
+  moving.hp = fight ? fight.attackerHp : (moving.hp ?? maxHp(move.piece))
+  // 승진은 다른 기물이 된 것이다. 새 몸으로 만피에서 시작하되 얻은 능력은 가져간다.
+  if (move.promotion) moving.hp = maxHp(move.promotion)
+  board.set(move.to, moving)
 
   const rook = castlingRook(move)
   if (rook) {
     const [from, to] = rook
-    const value = hp.get(from)
-    hp.delete(from)
-    if (value !== undefined) hp.set(to, value)
+    const value = board.get(from)
+    board.delete(from)
+    if (value) board.set(to, value)
   }
 }
 
@@ -86,7 +124,9 @@ export function regen(game: Chess, color: Color, busy?: Square) {
       if (!cell || cell.color !== color || cell.square === busy) continue
       const max = maxHp(cell.type)
       const now = current(cell.square, cell.type)
-      if (now < max) hp.set(cell.square, Math.min(max, now + regenAmount(cell.type)))
+      if (now < max) {
+        board.set(cell.square, { ...board.get(cell.square), hp: Math.min(max, now + regenAmount(cell.type)) })
+      }
     }
 }
 

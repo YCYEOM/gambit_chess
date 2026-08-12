@@ -79,17 +79,23 @@ export function playMove(
   game: Chess,
   req: { from: Square; to: Square; promotion?: string },
   rng: () => number = Math.random,
-  /** 두 기물의 현재 체력. 없으면 만피에서 싸운다 (정통 모드·테스트). */
-  hpOf?: (square: Square, type: PieceSymbol) => number,
+  /** 두 기물의 현재 상태(체력·아이템 효과). 없으면 만피·보정 없음 (정통 모드·테스트). */
+  stateOf?: (square: Square, type: PieceSymbol) => { hp: number; crit: number; atk: number },
 ): MoveOutcome {
   const move = game.move(req)
   if (!move.captured) return { move, fight: null, repelled: false, loser: null }
 
-  const start = hpOf && {
-    attacker: hpOf(move.from, move.piece),
-    defender: hpOf(defenderSquareOf(move), move.captured),
+  const attackerState = stateOf?.(move.from, move.piece)
+  const defenderState = stateOf?.(defenderSquareOf(move), move.captured)
+  const start = attackerState && defenderState && {
+    attacker: attackerState.hp,
+    defender: defenderState.hp,
   }
-  const fight = duel(move.piece, move.captured, rng, start)
+  const bonus = attackerState && defenderState && {
+    attacker: { crit: attackerState.crit, atk: attackerState.atk },
+    defender: { crit: defenderState.crit, atk: defenderState.atk },
+  }
+  const fight = duel(move.piece, move.captured, rng, start, bonus)
   if (fight.winner === 'attacker') return { move, fight, repelled: false, loser: null }
 
   const mover = move.color

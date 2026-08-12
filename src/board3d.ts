@@ -92,7 +92,9 @@ let cameraLocked = false
 
 const markers = new THREE.Group()
 const healthBars = new THREE.Group()
+const itemGroup = new THREE.Group()
 const clock = new THREE.Clock()
+let spin = 0
 
 const token = (name: string) =>
   new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue(name).trim())
@@ -123,7 +125,7 @@ export function init(canvas: HTMLCanvasElement, onPick: (sq: Square) => void) {
   scene.add(fill)
 
   buildBoard()
-  scene.add(markers, healthBars)
+  scene.add(markers, healthBars, itemGroup)
 
   canvas.addEventListener('pointerdown', (e) => {
     const sq = pick(e)
@@ -368,6 +370,7 @@ const MARKER = {
   blockedBar: new THREE.MeshBasicMaterial({ color: token('--danger') }),
   arrow: tint(token('--last'), 0.9),
   arrowRepelled: tint(token('--danger'), 0.9),
+  buff: tint(token('--buff'), 0.85),
 }
 const dotGeo = new THREE.CircleGeometry(0.15, 24)
 const ringGeo = new THREE.RingGeometry(0.4, 0.47, 32)
@@ -491,6 +494,52 @@ export function showHealth(list: { square: Square; ratio: number }[]) {
     fill.position.set(x - (0.58 * (1 - ratio)) / 2, y, z)
     fill.renderOrder = 5
     healthBars.add(back, fill)
+  }
+}
+
+// ---------------------------------------------------------------- 아이템
+
+const itemGeo = new THREE.OctahedronGeometry(0.2)
+const itemBaseGeo = new THREE.RingGeometry(0.3, 0.38, 32)
+const itemMaterials = new Map<string, { gem: THREE.Material; ring: THREE.Material }>()
+
+const itemMaterial = (name: string) => {
+  let m = itemMaterials.get(name)
+  if (!m) {
+    const color = token(name)
+    m = {
+      gem: new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.5, roughness: 0.3 }),
+      ring: tint(color, 0.55),
+    }
+    itemMaterials.set(name, m)
+  }
+  return m
+}
+
+/** 반상 위 아이템. 칸 위에 떠서 돌고, 바닥에 같은 색 고리를 둔다. */
+export function showItems(list: { square: Square; token: string }[]) {
+  itemGroup.clear()
+  for (const { square, token: name } of list) {
+    const { x, z } = squareToWorld(square)
+    const mat = itemMaterial(name)
+    const gem = new THREE.Mesh(itemGeo, mat.gem)
+    gem.position.set(x, 0.45, z)
+    gem.castShadow = true
+    const ring = new THREE.Mesh(itemBaseGeo, mat.ring)
+    ring.position.set(x, 0.012, z)
+    ring.rotation.x = -Math.PI / 2
+    itemGroup.add(gem, ring)
+  }
+}
+
+/** 능력을 얻은 기물 발밑 고리. 어느 기물이 특별한지 반상에서 보이게. */
+export function showBuffed(squares: Square[]) {
+  for (const square of squares) {
+    const { x, z } = squareToWorld(square)
+    const ring = new THREE.Mesh(itemBaseGeo, MARKER.buff)
+    ring.position.set(x, 0.013, z)
+    ring.rotation.x = -Math.PI / 2
+    markers.add(ring)
   }
 }
 
@@ -632,5 +681,12 @@ function tick() {
   for (const p of pieces.values()) p.mixer.update(dt)
   // 체력 바는 언제나 카메라를 마주 본다. 결투 중에는 카메라가 크게 움직인다.
   for (const bar of healthBars.children) bar.quaternion.copy(camera.quaternion)
+  // 아이템은 떠서 돌며 위아래로 흔들린다 — 반상의 정적인 것들과 구분된다.
+  spin += dt
+  for (const obj of itemGroup.children) {
+    if ((obj as THREE.Mesh).geometry !== itemGeo) continue
+    obj.rotation.y = spin * 1.6
+    obj.position.y = 0.45 + Math.sin(spin * 2) * 0.06
+  }
   renderer.render(scene, camera)
 }

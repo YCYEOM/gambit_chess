@@ -56,9 +56,15 @@ export function evaluate(game: Chess): number {
  * 체력까지 정확히 아는 것은 뿌리(실제 반상)뿐이다. 더 깊은 수는 가상의 위치라
  * 체력 지도를 조회해도 엉뚱한 기물의 값이 나오므로 만피 기준으로만 본다.
  */
-function captureRisk(move: Move, atkHp?: number, defHp?: number): number {
+interface PieceState { hp: number; crit: number; atk: number }
+
+function captureRisk(move: Move, attacker?: PieceState, defender?: PieceState): number {
   if (!move.captured) return 0
-  const p = winChance(move.piece, move.captured, atkHp, defHp)
+  const bonus = attacker && defender && {
+    attacker: { crit: attacker.crit, atk: attacker.atk },
+    defender: { crit: defender.crit, atk: defender.atk },
+  }
+  const p = winChance(move.piece, move.captured, attacker?.hp, defender?.hp, bonus)
   return (1 - p) * (VALUE[move.piece] + VALUE[move.captured])
 }
 
@@ -96,19 +102,19 @@ function search(game: Chess, depth: number, alpha: number, beta: number, duelMod
 export function bestMove(
   game: Chess,
   depth = 3,
-  hpOf?: (square: Square, type: PieceSymbol) => number,
+  stateOf?: (square: Square, type: PieceSymbol) => { hp: number; crit: number; atk: number },
 ): Move | null {
   const moves = game.moves({ verbose: true })
   if (moves.length === 0) return null
 
-  const duelMode = hpOf !== undefined
+  const duelMode = stateOf !== undefined
   const maximizing = game.turn() === 'w'
   let best: Move = moves[0]
   let bestScore = maximizing ? -Infinity : Infinity
 
   for (const m of moves) {
-    const risk = hpOf && m.captured
-      ? captureRisk(m, hpOf(m.from, m.piece), hpOf(defenderSquareOf(m), m.captured))
+    const risk = stateOf && m.captured
+      ? captureRisk(m, stateOf(m.from, m.piece), stateOf(defenderSquareOf(m), m.captured))
       : 0
     game.move(m)
     // 동점일 때 첫 수만 고집하면 매 판 똑같아진다.
