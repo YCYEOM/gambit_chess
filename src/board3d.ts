@@ -303,17 +303,8 @@ function moveTo(piece: Piece, square: Square) {
 export async function slide(from: Square, to: Square, ms = 240) {
   const piece = pieces.get(from)
   if (!piece) return
-  const a = piece.root.position.clone()
   const { x, z } = squareToWorld(to)
-  const b = new THREE.Vector3(x, piece.root.userData.footY, z)
-  const start = performance.now()
-  for (;;) {
-    const t = Math.min(1, (performance.now() - start) / ms)
-    piece.root.position.lerpVectors(a, b, easeInOut(t))
-    piece.base.position.set(piece.root.position.x, 0.03, piece.root.position.z)
-    if (t >= 1) return
-    await new Promise(requestAnimationFrame)
-  }
+  await glide(piece, new THREE.Vector3(x, piece.root.userData.footY, z), ms)
 }
 
 function despawn(piece: Piece) {
@@ -512,6 +503,19 @@ function play(piece: Piece, name: string, loop = false) {
   return clip.duration * 1000
 }
 
+/** 기물 하나를 목표 지점까지 미끄러뜨린다 (발판도 같이). */
+async function glide(piece: Piece, to: THREE.Vector3, ms: number) {
+  const from = piece.root.position.clone()
+  const start = performance.now()
+  for (;;) {
+    const t = Math.min(1, (performance.now() - start) / ms)
+    piece.root.position.lerpVectors(from, to, easeInOut(t))
+    piece.base.position.set(piece.root.position.x, 0.03, piece.root.position.z)
+    if (t >= 1) return
+    await new Promise(requestAnimationFrame)
+  }
+}
+
 function faceEachOther(a: Piece, b: Piece) {
   const angle = Math.atan2(b.root.position.x - a.root.position.x, b.root.position.z - a.root.position.z)
   a.root.rotation.y = angle
@@ -536,7 +540,17 @@ export async function playDuel(
   if (!attacker || !defender) return
 
   cameraLocked = true
+
+  // 공격자를 수비 기물 바로 앞까지 데려온다. 원래 자리에 세워 두면 룩이 반상 끝에서
+  // 칼을 휘두르는 꼴이 되고, 멀수록 둘이 화면 양끝으로 벌어져 누가 싸우는지 안 보인다.
+  const home = attacker.root.position.clone()
+  const approach = defender.root.position.clone().sub(home).setY(0)
+  const stage = approach.length() > 1.2
+    ? defender.root.position.clone().sub(approach.clone().normalize().multiplyScalar(1))
+    : home.clone()
+  stage.y = home.y
   faceEachOther(attacker, defender)
+  if (!stage.equals(home)) await glide(attacker, stage, 380)
 
   const mid = attacker.root.position.clone().add(defender.root.position).multiplyScalar(0.5)
   const sign = flipped ? -1 : 1

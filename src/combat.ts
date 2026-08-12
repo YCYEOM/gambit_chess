@@ -88,3 +88,34 @@ export function duel(
 
   return { strikes, winner: defenderHp === 0 ? 'attacker' : 'defender', attackerHp, defenderHp }
 }
+
+/**
+ * 이 전투에서 공격자가 이길 확률. AI 가 "잡기는 공짜"라고 믿지 않게 하려고 쓴다.
+ *
+ * 닫힌 식이 없어서 그냥 굴려 본다. 체력을 2 단위로 뭉쳐 키를 만들고 결과를 기억해 두면
+ * 한 번의 탐색에서 실제로 굴리는 횟수는 수십 종류 × 200 회로 끝난다.
+ * 표를 손으로 관리하지 않으므로 밸런스 상수를 바꿔도 저절로 따라온다.
+ */
+const winCache = new Map<string, number>()
+const SAMPLES = 200
+
+export function winChance(
+  attacker: PieceSymbol,
+  defender: PieceSymbol,
+  attackerHp = STATS[attacker].hp,
+  defenderHp = STATS[defender].hp,
+): number {
+  const key = `${attacker}${defender}${attackerHp >> 1}:${defenderHp >> 1}`
+  const cached = winCache.get(key)
+  if (cached !== undefined) return cached
+
+  let wins = 0
+  for (let i = 0; i < SAMPLES; i++) {
+    if (duel(attacker, defender, Math.random, { attacker: attackerHp, defender: defenderHp }).winner === 'attacker') {
+      wins++
+    }
+  }
+  const p = wins / SAMPLES
+  winCache.set(key, p)
+  return p
+}

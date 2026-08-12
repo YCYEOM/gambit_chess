@@ -206,7 +206,12 @@ function aiTurn() {
   render()
   // 탐색이 UI를 막으므로 한 프레임 양보한 뒤 계산한다.
   setTimeout(async () => {
-    const move = bestMove(game, Number(levelEl.value))
+    // 결투 모드면 체력을 넘겨 준다 — 다친 기물로 덤비지 않고 다친 적을 노린다.
+    const move = bestMove(
+      game,
+      Number(levelEl.value),
+      modeEl.value === 'duel' ? health.current : undefined,
+    )
     thinking = false
     if (move) await apply(move.from, move.to)
     render()
