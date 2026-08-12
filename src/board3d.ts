@@ -89,6 +89,7 @@ let flipped = false
 let cameraLocked = false
 
 const markers = new THREE.Group()
+const healthBars = new THREE.Group()
 const clock = new THREE.Clock()
 
 const token = (name: string) =>
@@ -120,7 +121,7 @@ export function init(canvas: HTMLCanvasElement, onPick: (sq: Square) => void) {
   scene.add(fill)
 
   buildBoard()
-  scene.add(markers)
+  scene.add(markers, healthBars)
 
   canvas.addEventListener('pointerdown', (e) => {
     const sq = pick(e)
@@ -254,6 +255,7 @@ async function spawn(type: PieceSymbol, color: Color, square: Square): Promise<P
   const scale = spec.height / Math.max(size.y, 0.001)
   root.scale.setScalar(scale)
   root.userData.footY = -box.min.y * scale
+  root.userData.height = spec.height
 
   for (const w of spec.hold ?? []) {
     const slot = findBone(root, w.bone)
@@ -354,29 +356,55 @@ export async function sync(game: Chess) {
 
 // ---------------------------------------------------------------- 표시
 
+/**
+ * 표시는 칸 전체를 물들인다. 2D 판에서 쓰던 가운데 점은 3D 에서 안 통한다 —
+ * 원근 때문에 기물이 자기 바로 뒤 칸의 화면 자리를 통째로 덮어서, 킹을 고르면
+ * 갈 수 있는 칸의 점이 킹의 투구 위에 찍힌다. depthTest 를 꺼도 마찬가지다.
+ * 칸을 통째로 칠하면 기물 좌우로 삐져나온 부분이 남아 가려져도 읽힌다.
+ */
+const tint = (color: THREE.Color | number, opacity: number) =>
+  new THREE.MeshBasicMaterial({ color, opacity, transparent: true })
+
 const MARKER = {
-  move: new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28 }),
-  capture: new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.32 }),
+  move: tint(token('--accent'), 0.34),
+  capture: tint(token('--accent'), 0.6),
   selected: new THREE.MeshBasicMaterial({ color: token('--accent') }),
-  last: new THREE.MeshBasicMaterial({ color: token('--last'), transparent: true, opacity: 0.3 }),
-  check: new THREE.MeshBasicMaterial({ color: token('--danger'), transparent: true, opacity: 0.45 }),
+  last: tint(token('--last'), 0.3),
+  check: tint(token('--danger'), 0.45),
+  blocked: tint(token('--danger'), 0.5),
+  blockedBar: new THREE.MeshBasicMaterial({ color: token('--danger') }),
 }
 const dotGeo = new THREE.CircleGeometry(0.15, 24)
 const ringGeo = new THREE.RingGeometry(0.4, 0.47, 32)
 const tileGeo2 = new THREE.PlaneGeometry(0.98, 0.98)
+const barGeo = new THREE.PlaneGeometry(0.5, 0.085)
 
 function addMarker(square: Square, geo: THREE.BufferGeometry, mat: THREE.Material, y = 0.011) {
   const m = new THREE.Mesh(geo, mat)
   const { x, z } = squareToWorld(square)
   m.position.set(x, y, z)
   m.rotation.x = -Math.PI / 2
+  // depthTest 를 끈 재질은 그리는 순서로만 앞뒤가 정해진다.
   markers.add(m)
+}
+
+/** 갈 수 없는 칸: 빨간 칸 + X. 초록(갈 수 있음)과 색으로 먼저 갈린다. */
+function addCross(square: Square) {
+  addMarker(square, tileGeo2, MARKER.blocked, 0.011)
+  for (const roll of [Math.PI / 4, -Math.PI / 4]) {
+    const bar = new THREE.Mesh(barGeo, MARKER.blockedBar)
+    const { x, z } = squareToWorld(square)
+    bar.position.set(x, 0.014, z)
+    bar.rotation.set(-Math.PI / 2, 0, roll)
+    markers.add(bar)
+  }
 }
 
 export interface Highlights {
   selected?: Square | null
   moves?: Square[]
   captures?: Square[]
+  blocked?: Square[]
   last?: [Square, Square] | null
   check?: Square | null
 }
@@ -386,13 +414,54 @@ export function highlight(h: Highlights) {
   if (h.last) for (const sq of h.last) addMarker(sq, tileGeo2, MARKER.last, 0.009)
   if (h.check) addMarker(h.check, tileGeo2, MARKER.check, 0.01)
   if (h.selected) addMarker(h.selected, ringGeo, MARKER.selected, 0.012)
-  for (const sq of h.moves ?? []) addMarker(sq, dotGeo, MARKER.move)
-  for (const sq of h.captures ?? []) addMarker(sq, ringGeo, MARKER.capture)
+  for (const sq of h.moves ?? []) {
+    addMarker(sq, tileGeo2, MARKER.move, 0.011)
+    addMarker(sq, dotGeo, MARKER.capture, 0.012)
+  }
+  for (const sq of h.captures ?? []) {
+    addMarker(sq, tileGeo2, MARKER.move, 0.011)
+    addMarker(sq, ringGeo, MARKER.capture, 0.012)
+  }
+  for (const sq of h.blocked ?? []) addCross(sq)
+}
+
+// ---------------------------------------------------------------- 체력 표시
+
+const HP_BAR = {
+  back: new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.55 }),
+  fill: new THREE.MeshBasicMaterial({ color: token('--accent') }),
+  hurt: new THREE.MeshBasicMaterial({ color: token('--danger') }),
+}
+const hpBackGeo = new THREE.PlaneGeometry(0.62, 0.1)
+const hpFillGeo = new THREE.PlaneGeometry(0.58, 0.062)
+
+/**
+ * 다친 기물 머리 위에만 체력 바를 세운다. 만피는 표시하지 않는다 — 32개가 전부 떠 있으면
+ * 반상이 계기판이 된다. 카메라를 향해 세우는 것은 tick() 에서 매 프레임 맞춘다.
+ */
+export function showHealth(list: { square: Square; ratio: number }[]) {
+  healthBars.clear()
+  for (const { square, ratio } of list) {
+    const piece = pieces.get(square)
+    if (!piece) continue
+    const y = piece.root.position.y + (piece.root.userData.height ?? 1) + 0.28
+    const { x, z } = squareToWorld(square)
+
+    const back = new THREE.Mesh(hpBackGeo, HP_BAR.back)
+    back.position.set(x, y, z)
+    back.renderOrder = 4
+    const fill = new THREE.Mesh(hpFillGeo, ratio <= 0.3 ? HP_BAR.hurt : HP_BAR.fill)
+    // 왼쪽부터 줄어들게: 폭을 줄이고 그만큼 왼쪽으로 민다.
+    fill.scale.x = Math.max(0.02, ratio)
+    fill.position.set(x - (0.58 * (1 - ratio)) / 2, y, z)
+    fill.renderOrder = 5
+    healthBars.add(back, fill)
+  }
 }
 
 // ---------------------------------------------------------------- 카메라
 
-const BOARD_VIEW = { y: 9.4, z: 10.4 }
+const BOARD_VIEW = { y: 11.2, z: 9.4 }
 
 export function setOrientation(human: Color) {
   flipped = human === 'b'
@@ -503,5 +572,7 @@ export async function playDuel(
 function tick() {
   const dt = clock.getDelta()
   for (const p of pieces.values()) p.mixer.update(dt)
+  // 체력 바는 언제나 카메라를 마주 본다. 결투 중에는 카메라가 크게 움직인다.
+  for (const bar of healthBars.children) bar.quaternion.copy(camera.quaternion)
   renderer.render(scene, camera)
 }

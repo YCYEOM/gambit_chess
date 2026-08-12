@@ -47,11 +47,32 @@ describe('duel', () => {
     expect(crit.damage).toBeGreaterThan(normal.damage)
   })
 
-  it('같은 기물끼리는 선공 이점으로 공격자가 유리하다', () => {
+  it('첫 타격만 기습이다', () => {
+    const { strikes } = duel('r', 'r')
+    expect(strikes[0].ambush).toBe(true)
+    expect(strikes.slice(1).every((s) => !s.ambush)).toBe(true)
+  })
+
+  it('기습은 같은 조건의 평타보다 아프다', () => {
+    // rng 를 고정하면 첫 타격(기습)과 세 번째 타격(공격자 평타)의 조건이 같아진다.
+    const { strikes } = duel('r', 'r', cycle(0.99, 0.5))
+    const [first, , third] = strikes
+    expect(first.ambush).toBe(true)
+    expect(third.by).toBe('attacker')
+    expect(first.damage).toBeGreaterThan(third.damage)
+  })
+
+  it('같은 기물끼리는 선공 + 기습으로 공격자가 확실히 유리하다', () => {
     let wins = 0
     for (let i = 0; i < 4000; i++) if (duel('n', 'n').winner === 'attacker') wins++
-    expect(wins / 4000).toBeGreaterThan(0.6)
-    expect(wins / 4000).toBeLessThan(0.8)
+    expect(wins / 4000).toBeGreaterThan(0.7)
+    expect(wins / 4000).toBeLessThan(0.85)
+  })
+
+  it('기습이 있어도 폰이 나이트를 치는 것은 여전히 불리하다', () => {
+    let wins = 0
+    for (let i = 0; i < 8000; i++) if (duel('p', 'n').winner === 'attacker') wins++
+    expect(wins / 8000).toBeLessThan(0.5) // 기물 가치가 뒤집히면 안 된다
   })
 
   it('폰이 퀸을 이기는 일은 드물지만 불가능하지는 않다', () => {

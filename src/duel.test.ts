@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { Chess } from 'chess.js'
-import { playMove, findKing } from './duel'
+import { playMove, findKing, blockedSquares } from './duel'
 
 /** 전투 결과를 고정한다: 0 을 계속 내면 최소 피해 + 크리티컬 없음 → 선공(공격자)이 이긴다. */
 const attackerWins = () => 0
@@ -89,5 +89,53 @@ describe('playMove', () => {
     const game = new Chess('rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 1')
     const out = playUntil(game, { from: 'f3', to: 'e5' }, true)
     expect(out.loser).toBeNull()
+  })
+})
+
+describe('blockedSquares', () => {
+  const sorted = (game: Chess, sq: Parameters<typeof blockedSquares>[1]) => blockedSquares(game, sq).sort()
+
+  it('킹은 상대가 겨누는 인접 칸이 막힌다', () => {
+    // 흑 룩 e8 이 e 파일을 겨눈다 → 킹 e1 은 e2 로 못 간다.
+    const game = new Chess('4r2k/8/8/8/8/8/8/4K3 w - - 0 1')
+    expect(sorted(game, 'e1')).toEqual(['e2'])
+  })
+
+  it('핀에 걸린 기물은 모든 칸이 막힌다', () => {
+    // 백 비숍 e2 가 흑 룩 e8 과 백 킹 e1 사이에 묶여 있다.
+    const game = new Chess('4r2k/8/8/8/8/8/4B3/4K3 w - - 0 1')
+    expect(game.moves({ square: 'e2' })).toEqual([])
+    expect(sorted(game, 'e2')).toEqual(['a6', 'b5', 'c4', 'd1', 'd3', 'f1', 'f3', 'g4', 'h5'])
+  })
+
+  it('체크 중에는 체크를 풀지 못하는 수가 막힌 것으로 나온다', () => {
+    // 흑 룩 e8 이 e 파일로 체크. 백 룩 a4 는 e4 로 막는 수 하나만 합법이다.
+    const game = new Chess('4r2k/8/8/8/R7/8/8/4K3 w - - 0 1')
+    expect(game.inCheck()).toBe(true)
+    expect(game.moves({ square: 'a4' })).toEqual(['Re4'])
+    const blocked = sorted(game, 'a4')
+    expect(blocked).toContain('a5')
+    expect(blocked).toContain('h4')
+    expect(blocked).not.toContain('e4') // 합법수는 막힌 칸이 아니다
+  })
+
+  it('자기 킹이 서 있는 칸은 막힌 칸으로 세지 않는다', () => {
+    // probe 에서 킹을 치우면 그 칸이 비어 보인다. 실제로는 갈 수 없는 칸이다.
+    const game = new Chess('4r2k/8/8/8/8/8/8/R3K3 w - - 0 1')
+    expect(blockedSquares(game, 'a1')).not.toContain('e1')
+  })
+
+  it('막힌 칸과 합법수는 겹치지 않는다', () => {
+    const game = new Chess()
+    for (const sq of ['e2', 'g1', 'b1'] as const) {
+      const legal = new Set(game.moves({ square: sq, verbose: true }).map((m) => m.to))
+      expect(blockedSquares(game, sq).filter((s) => legal.has(s))).toEqual([])
+    }
+  })
+
+  it('상대 기물이나 빈 칸을 고르면 아무것도 없다', () => {
+    const game = new Chess()
+    expect(blockedSquares(game, 'e7')).toEqual([]) // 흑 폰, 지금은 백 차례
+    expect(blockedSquares(game, 'e4')).toEqual([]) // 빈 칸
   })
 })
