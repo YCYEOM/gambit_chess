@@ -55,7 +55,7 @@ function render() {
     moves: legal.filter((m) => !m.captured).map((m) => m.to),
     captures: legal.filter((m) => m.captured).map((m) => m.to),
     blocked: selected ? blockedSquares(game, selected) : [],
-    last: last ? [last.from, last.to] : null,
+    last: last ? { from: last.from, to: last.to, repelled: last.repelled } : null,
     check: game.inCheck() ? findKing(game, game.turn()) ?? null : null,
   })
 

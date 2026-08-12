@@ -366,11 +366,16 @@ const MARKER = {
   check: tint(token('--danger'), 0.45),
   blocked: tint(token('--danger'), 0.5),
   blockedBar: new THREE.MeshBasicMaterial({ color: token('--danger') }),
+  arrow: tint(token('--last'), 0.9),
+  arrowRepelled: tint(token('--danger'), 0.9),
 }
 const dotGeo = new THREE.CircleGeometry(0.15, 24)
 const ringGeo = new THREE.RingGeometry(0.4, 0.47, 32)
 const tileGeo2 = new THREE.PlaneGeometry(0.98, 0.98)
 const barGeo = new THREE.PlaneGeometry(0.5, 0.085)
+// 화살표는 길이가 매번 달라진다. 단위 상자를 늘려 쓰면 geometry 를 새로 만들지 않는다.
+const unitBox = new THREE.BoxGeometry(1, 1, 1)
+const headGeo = new THREE.ConeGeometry(0.19, 0.34, 16)
 
 function addMarker(square: Square, geo: THREE.BufferGeometry, mat: THREE.Material, y = 0.011) {
   const m = new THREE.Mesh(geo, mat)
@@ -393,18 +398,55 @@ function addCross(square: Square) {
   }
 }
 
+/**
+ * 직전 수를 반상 위에 화살표로 그린다. 칸 두 개만 물들이면 "어디서 어디로" 가 안 읽히고,
+ * 특히 기물이 빽빽할 때 어느 기물이 움직였는지 알 수 없다.
+ * 전투에 져서 무산된 수는 빨간 화살표 — 갔다가 죽었다는 뜻이다.
+ */
+function addArrow(from: Square, to: Square, repelled: boolean) {
+  const a = squareToWorld(from)
+  const b = squareToWorld(to)
+  const dx = b.x - a.x
+  const dz = b.z - a.z
+  const length = Math.hypot(dx, dz)
+  if (length < 0.01) return
+
+  const material = repelled ? MARKER.arrowRepelled : MARKER.arrow
+  const head = 0.34
+  // 도착 칸 한가운데까지 그리면 그 자리에 선 기물이 화살촉을 가린다. 칸 앞에서 끊는다.
+  const reach = Math.max(0.4, length - 0.45)
+  const shaftLength = Math.max(0.05, reach - head)
+
+  const arrow = new THREE.Group()
+  const shaft = new THREE.Mesh(unitBox, material)
+  shaft.scale.set(0.12, 0.02, shaftLength)
+  shaft.position.z = shaftLength / 2
+  const tip = new THREE.Mesh(headGeo, material)
+  tip.rotation.x = Math.PI / 2 // 콘은 +y 를 보므로 +z 로 눕힌다
+  tip.position.z = shaftLength + head / 2
+  arrow.add(shaft, tip)
+
+  arrow.position.set(a.x, 0.02, a.z)
+  // rotation.y = atan2(x, z) 면 로컬 +z 가 목표 방향을 가리킨다.
+  arrow.rotation.y = Math.atan2(dx, dz)
+  markers.add(arrow)
+}
+
 export interface Highlights {
   selected?: Square | null
   moves?: Square[]
   captures?: Square[]
   blocked?: Square[]
-  last?: [Square, Square] | null
+  last?: { from: Square; to: Square; repelled: boolean } | null
   check?: Square | null
 }
 
 export function highlight(h: Highlights) {
   markers.clear()
-  if (h.last) for (const sq of h.last) addMarker(sq, tileGeo2, MARKER.last, 0.009)
+  if (h.last) {
+    for (const sq of [h.last.from, h.last.to]) addMarker(sq, tileGeo2, MARKER.last, 0.009)
+    addArrow(h.last.from, h.last.to, h.last.repelled)
+  }
   if (h.check) addMarker(h.check, tileGeo2, MARKER.check, 0.01)
   if (h.selected) addMarker(h.selected, ringGeo, MARKER.selected, 0.012)
   for (const sq of h.moves ?? []) {

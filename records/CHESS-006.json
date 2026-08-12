@@ -14,10 +14,26 @@
   "models_used": [],
   "verification": {
     "evaluations_run": [
-      { "name": "typecheck", "level": 1, "status": "pass" },
-      { "name": "unit", "level": 2, "status": "pass" },
-      { "name": "build", "level": 2, "status": "pass" },
-      { "name": "design check", "level": 3, "status": "pass" }
+      {
+        "name": "typecheck",
+        "level": 1,
+        "status": "pass"
+      },
+      {
+        "name": "unit",
+        "level": 2,
+        "status": "pass"
+      },
+      {
+        "name": "build",
+        "level": 2,
+        "status": "pass"
+      },
+      {
+        "name": "design check",
+        "level": 3,
+        "status": "pass"
+      }
     ],
     "not_verified": [
       "AI 가 지나치게 소극적으로 보이는지 — 사람 판단",
@@ -25,7 +41,10 @@
       "Chrome 외 브라우저"
     ]
   },
-  "critic_findings": { "total": 0, "open_high_or_medium": 0 },
+  "critic_findings": {
+    "total": 0,
+    "open_high_or_medium": 0
+  },
   "known_limitations": [
     "AI 의 체력 판단은 뿌리에서만 정확하다. 더 깊은 수는 만피 기준으로 본다 — 체력 지도가 칸을 키로 하므로 가상 위치에서 조회하면 엉뚱한 기물의 값이 나온다.",
     "AI 는 여전히 물러나 쉬는 판단을 하지 않는다. 다친 기물을 뒤로 빼는 수를 평가에 넣지 않았다.",
@@ -37,7 +56,10 @@
   ],
   "docs_updated": {
     "needed": true,
-    "updated": ["README.md", "DESIGN.md"]
+    "updated": [
+      "README.md",
+      "DESIGN.md"
+    ]
   },
   "lessons": {
     "recorded": true,
@@ -54,5 +76,11 @@
     "rendered_verification": true,
     "environment": "Chrome, http://localhost:5173 (vite dev)",
     "notes": "실제 대국으로 확인. 1. e4 Nf6 2. Qh5 Nxe4 에서 f6 의 해골 나이트가 두 칸 건너 e4 로 잡으러 올 때, 원래 칸에 선 채로 싸우지 않고 폰 바로 앞까지 걸어와 붙었다. 카메라가 그 둘로 들어가 화면을 가득 채웠고 계기판에 '42 치명타!' 와 폰의 빨간 체력 바가 함께 떴다. 바꾸기 전에는 나이트가 f6 에 남고 폰이 e4 에 있어 둘 사이 빈 칸이 화면 중앙을 차지했다."
+  },
+  "human_approval": {
+    "approved": true,
+    "approver": "user",
+    "at": "2026-08-12T06:28:14.179Z",
+    "notes": "AI 승률 반영과 붙어서 싸우는 연출 승인. 뿌리 밖에서는 만피 가정, AI 가 물러나 쉬지 않는 점, 직선 접근 연출을 수용한다"
   }
 }

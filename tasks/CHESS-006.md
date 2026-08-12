@@ -1,7 +1,7 @@
 ---
 id: CHESS-006
 title: AI가 전투 승률을 고려하고, 멀리 있는 기물도 붙어서 싸우게
-status: HUMAN_REVIEW
+status: DONE
 type: feature
 profile: web
 
