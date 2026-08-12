@@ -18,6 +18,18 @@
 
 프로젝트에 `nan2026.yaml`이 있으면 `nan/AGENT_WORKFLOW.md`도 읽는다.
 NAN의 concept/runtime 승인과 evidence gate는 대회 의사결정에만 적용하며 일반 상태 전환 승인으로 확대하지 마라.
+## 로컬 설정
+
+BASS 패키지는 공개 저장소에 넣지 않는다 (`bass-platform` 은 UNLICENSED·private).
+`tools/*.tgz` 는 gitignore 되어 있다. 새 환경에서 붙이려면:
+
+```bash
+npm install --no-save ./tools/bass-platform-0.2.1.tgz
+```
+
+`--no-save` 로 설치해야 package.json 이 깨끗하게 유지된다. `bass.yaml`·`tasks/`·`records/`
+는 이 프로젝트의 기록이므로 저장소에 남는다.
+
 ## 원천
 
 - 동적 실행 안내: `bass agent guide --json`

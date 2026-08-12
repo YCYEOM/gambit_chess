@@ -124,3 +124,11 @@ npm run build
   걷는 애니메이션은 넣지 않았다.
 - **드래그 앤 드롭** — 클릭 두 번으로 충분.
 - **Web Worker** — 깊이 4까지는 메인 스레드로 버틴다. 더 깊게 가려면 옮길 것.
+
+## 라이선스
+
+코드는 [MIT](LICENSE).
+
+**3D 모델은 별개다** — [KayKit](https://kaylousberg.com) (Kay Lousberg) 의 **CC0** 팩이다.
+출처 표기 의무는 없지만 `public/models/kaykit/CREDITS.md` 에 적어 두었다. 원본이 아니라
+`tools/strip-anims.mjs` 로 애니메이션을 다섯 개만 남긴 판본이다.

@@ -13,6 +13,8 @@ import { clone as skinClone } from 'three/examples/jsm/utils/SkeletonUtils.js'
 import type { Chess, Color, PieceSymbol, Square } from 'chess.js'
 
 const FILES = 'abcdefgh'
+// GitHub Pages 프로젝트 사이트는 하위 경로에 놓인다. 절대 경로로 두면 모델을 못 찾는다.
+const MODELS = `${import.meta.env.BASE_URL}models/kaykit`
 
 interface Role {
   file: string
@@ -232,15 +234,15 @@ async function load(path: string) {
 /** 모델 파일을 미리 받아 둔다. 첫 수에서 기물이 늦게 나타나지 않게. */
 export async function preload() {
   const roles = [...Object.values(WHITE), ...Object.values(BLACK)]
-  await Promise.all(roles.map((r) => load(`/models/kaykit/${r.file}.glb`)))
+  await Promise.all(roles.map((r) => load(`${MODELS}/${r.file}.glb`)))
   await Promise.all(
-    roles.flatMap((r) => (r.hold ?? []).map((w) => load(`/models/kaykit/gear/${w.file}.gltf`))),
+    roles.flatMap((r) => (r.hold ?? []).map((w) => load(`${MODELS}/gear/${w.file}.gltf`))),
   )
 }
 
 async function spawn(type: PieceSymbol, color: Color, square: Square): Promise<Piece> {
   const spec = ARMY[color][type]
-  const src = await load(`/models/kaykit/${spec.file}.glb`)
+  const src = await load(`${MODELS}/${spec.file}.glb`)
   const root = skinClone(src.scene)
 
   root.traverse((o) => {
@@ -260,7 +262,7 @@ async function spawn(type: PieceSymbol, color: Color, square: Square): Promise<P
   for (const w of spec.hold ?? []) {
     const slot = findBone(root, w.bone)
     if (!slot) { console.warn(`${spec.file}: ${w.bone} 본이 없다`); continue }
-    const gear = await load(`/models/kaykit/gear/${w.file}.gltf`)
+    const gear = await load(`${MODELS}/gear/${w.file}.gltf`)
     slot.add(gear.scene.clone(true))
   }
 
