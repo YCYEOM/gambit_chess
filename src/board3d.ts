@@ -199,6 +199,14 @@ const baseGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.06, 32)
 
 /** 몸은 항상 보인다. 무기·투구·모자·망토만 선택 대상. */
 const OPTIONAL = /(Sword|Axe|Shield|Staff|Wand|Crossbow|Knife|Spellbook|Mug|Throwable|Helmet|Hat|Hood|Cape|Cloak|Badge|Quiver|Arrow|Offhand)/i
+/**
+ * 머리는 장비가 아니다. 이름에 장비 낱말이 섞여 있어도 몸이다 —
+ * 두건 쓴 머리가 통째로 하나인 `Rogue_Head_Hooded` 가 "Hood" 때문에 장비로 걸려
+ * 백 비숍이 목 없이 서 있었다. 벗길 수 있는 머리는 없다.
+ */
+const BODY = /Head/i
+
+const isGear = (name: string) => OPTIONAL.test(name) && !BODY.test(name)
 
 /**
  * three.js 는 glTF 노드 이름에서 애니메이션 경로 예약 문자(`.` 등)를 지운다.
@@ -249,7 +257,7 @@ async function spawn(type: PieceSymbol, color: Color, square: Square): Promise<P
 
   root.traverse((o) => {
     if (!(o as THREE.Mesh).isMesh) return
-    o.visible = !OPTIONAL.test(o.name) || (spec.gear ?? []).includes(o.name)
+    o.visible = !isGear(o.name) || (spec.gear ?? []).includes(o.name)
   })
 
   // 배율은 몸 기준으로 정한다. 무기를 먼저 붙이면 지팡이 하나가 키를 좌우한다.

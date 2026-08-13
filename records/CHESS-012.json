@@ -1,0 +1,46 @@
+{
+  "task_id": "CHESS-012",
+  "summary_of_changes": "백 비숍이 머리 없이 서 있던 것을 고쳤다. 장비 메시를 이름으로 골라 켜고 끄는데, 두건과 머리가 한 덩어리인 Rogue_Head_Hooded 가 이름의 \"Hood\" 때문에 장비로 걸려 숨겨져 있었다. 머리를 장비 판정에서 빼는 것으로 고쳤다 — 그 이름 하나를 기어 목록에 더하는 대신 판정을 고쳐, 같은 덫이 다음 모델에서 또 걸리지 않게 했다.",
+  "why": "사용자 제보 — '비숍은 나이트 모델링에서 머리를 뗀 것 같은데 사람으로 만들어 달라.' 실제로 나이트와 같은 도적 몸에 머리만 빠진 상태였고, README 는 '두건 사수' 라고 적고 있었다.",
+  "files_changed": ["src/board3d.ts", "DESIGN.md"],
+  "models_used": [],
+  "verification": {
+    "evaluations_run": [
+      { "name": "typecheck", "level": 1, "status": "pass" },
+      { "name": "unit", "level": 2, "status": "pass" },
+      { "name": "build", "level": 2, "status": "pass" },
+      { "name": "design check", "level": 3, "status": "pass" }
+    ],
+    "not_verified": [
+      "두건 사수가 나이트와 충분히 달라 보이는지 — 사람 판단",
+      "흑 기물 여덟은 화면에서 하나씩 확대해 보지 않았다. 해골 모델의 머리 이름에는 장비 낱말이 없어 이번 변경의 영향을 받지 않는다는 것은 파일에서 확인했다.",
+      "Chrome 외 브라우저"
+    ]
+  },
+  "critic_findings": { "total": 1, "open_high_or_medium": 0 },
+  "known_limitations": [
+    "장비를 이름으로 고르는 방식은 그대로다. 모델 제작자가 장비 낱말이 섞인 이름을 몸 메시에 붙이면 또 걸린다 — 머리만 예외로 두었다.",
+    "무료 팩에 모델이 모자라 백 나이트와 비숍은 여전히 같은 도적 몸이다. 두건과 무기(단검 둘 대 석궁)로만 갈린다."
+  ],
+  "out_of_scope_findings": [],
+  "docs_updated": { "needed": true, "updated": ["DESIGN.md"] },
+  "lessons": {
+    "recorded": true,
+    "candidates": [
+      "이름으로 메시를 고르는 규칙은 제작자의 작명에 인질로 잡힌다. 두건과 머리가 한 덩어리라는 사실 하나가 기물을 목 없이 만들었다 — 이런 규칙에는 '무슨 일이 있어도 보이는 것' 목록이 함께 있어야 한다.",
+      "화면에 있는 것을 문서가 다르게 적고 있어도 아무도 모른다. README 는 처음부터 '두건 사수' 라고 적었지만 화면에는 두건도 머리도 없었다 — 사용자가 볼 때까지 아무 검사도 이걸 잡지 못했다."
+    ]
+  },
+  "rollback": { "method": "단일 커밋 revert. 영속 데이터가 없다." },
+  "design": {
+    "rendered_verification": true,
+    "environment": "Chrome, http://localhost:5173/gambit_chess/ (vite dev)",
+    "notes": "백 여덟 기물을 확대해 확인했다. c1·f1 비숍이 초록 두건을 쓴 머리를 갖고 서 있고, b1·g1 나이트(맨머리 갈색)와 위에서 봐도 구분된다. 고치기 전에는 같은 자리에 머리 없는 몸통만 있었다. 룩(야만전사)·퀸(마법사 보라 모자)·킹(은 투구)·폰의 장비 구성은 그대로다."
+  },
+  "human_approval": {
+    "approved": true,
+    "approver": "user",
+    "at": "2026-08-13T09:05:00.000Z",
+    "notes": "비숍을 사람으로 만들어 달라는 요청. 머리를 되살리는 것으로 처리"
+  }
+}
