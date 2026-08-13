@@ -3,6 +3,7 @@ import { bestMove, LEVELS } from './ai'
 import { STATS } from './combat'
 import * as state from './pieceState'
 import * as items from './items'
+import * as run from './run'
 import { playMove, findKing, blockedSquares, type MoveOutcome } from './duel'
 import * as board3d from './board3d'
 
@@ -15,6 +16,8 @@ const boardEl = document.getElementById('board') as HTMLCanvasElement
 const modeEl = document.getElementById('mode') as HTMLSelectElement
 const sideEl = document.getElementById('side') as HTMLSelectElement
 const levelEl = document.getElementById('level') as HTMLSelectElement
+const runEl = document.getElementById('run')!
+const rewardEl = document.getElementById('reward')!
 
 const game = new Chess()
 let human: Color = 'w'
@@ -58,6 +61,28 @@ function statusText(): string {
   return hint ? `${turn} — ${hint}` : turn
 }
 
+/** 끝난 판의 결과. 아직 안 끝났으면 null. */
+function result(): 'win' | 'loss' | 'draw' | null {
+  if (fallen) return fallen === human ? 'loss' : 'win'
+  if (game.isCheckmate()) return game.turn() === human ? 'loss' : 'win'
+  if (game.isDraw() || game.isStalemate()) return 'draw'
+  return null
+}
+
+/** 지금 이 런의 상태 — 연승·다음 상대·내가 쌓은 강화. 판이 바뀌어도 남는 것들이다. */
+function runBar() {
+  const duelMode = modeEl.value === 'duel'
+  runEl.hidden = !duelMode
+  if (!duelMode) return
+  const level = LEVELS[run.levelIndex(Number(levelEl.value))]
+  const parts = [
+    `<span><b>${run.streak()}연승</b> · 최고 ${Math.max(run.best(), run.streak())}</span>`,
+    `<span>상대 ${level.label}</span>`,
+    ...run.rewards().map((r) => `<span class="up">${r.label}</span>`),
+  ]
+  runEl.innerHTML = parts.join('')
+}
+
 /** 반상 밖(상태줄·기보·컨트롤)만 그린다. 반상 자체는 board3d 가 맡는다. */
 function render() {
   const legal = selected ? game.moves({ square: selected, verbose: true }) : []
@@ -95,6 +120,7 @@ function render() {
   )
   if (duelMode) board3d.showBuffed(state.buffed())
   itemLegend()
+  runBar()
 }
 
 /** 반상에 놓인 아이템이 뭔지 알려 준다. 색만 봐서는 효과를 모른다. */
@@ -214,7 +240,65 @@ async function apply(from: Square, to: Square): Promise<boolean> {
 
   await board3d.sync(game)
   render()
+  if (over()) finish()
   return again
+}
+
+// ---------------------------------------------------------------- 연승 런
+
+/**
+ * 판이 끝난 순간. 이겼으면 강화 세 장을 내밀고 다음 판으로, 아니면 런이 거기서 끝난다.
+ * 정통 체스는 전투가 없어 강화가 걸 곳이 없다 — 런도 돌리지 않는다.
+ */
+function finish() {
+  if (modeEl.value !== 'duel') return
+  const outcome = result()
+  if (!outcome) return
+
+  // 마지막 수가 눈에 남을 틈을 준다. 결정타 직후 화면이 덮이면 뭘 맞았는지 모른다.
+  setTimeout(() => {
+    if (outcome === 'win') {
+      run.won()
+      openReward(`승리 — ${run.streak()}연승`, '보상을 하나 고른다', run.offer().map((r) => ({
+        title: r.label, what: r.what, pick: () => { run.take(r); void newRound() },
+      })))
+    } else if (outcome === 'draw') {
+      // 무승부로 런을 끊지 않는다. 스테일메이트는 이기고 있을 때 더 잘 나서, 끊으면
+      // 잘하고 있던 사람이 벌을 받는 꼴이 된다. 대신 얻는 것도 없다 — 상대도 그대로다.
+      openReward(`무승부 — ${drawReason()}`, '연승은 그대로. 보상은 없다.', [{
+        title: '다음 판',
+        what: run.streak() ? `${run.streak()}연승 이어서` : '같은 난이도로 다시',
+        pick: () => { void newRound() },
+      }])
+    } else {
+      const { streak, unlocked } = run.ended()
+      openReward(
+        '패배 — 런 종료',
+        `${streak}연승에서 끝났다 · 최고 ${run.best()}`
+          + (unlocked.length ? ` · 새 카드 해금: ${unlocked.join(' · ')}` : ''),
+        [{ title: '다시 시작', what: '연승과 보상을 처음부터', pick: () => { void newGame() } }],
+      )
+    }
+    render()
+  }, 700)
+}
+
+function openReward(head: string, sub: string, cards: { title: string; what: string; pick: () => void }[]) {
+  rewardEl.querySelector('.head')!.textContent = head
+  rewardEl.querySelector('.sub')!.textContent = sub
+  rewardEl.querySelector('.cards')!.replaceChildren(
+    ...cards.map((c) => {
+      const el = document.createElement('button')
+      el.className = 'card'
+      el.innerHTML = '<b></b><span></span>'
+      el.querySelector('b')!.textContent = c.title
+      el.querySelector('span')!.textContent = c.what
+      el.onclick = () => { rewardEl.hidden = true; c.pick() }
+      return el
+    }),
+  )
+  rewardEl.hidden = false
+  ;(rewardEl.querySelector('.card') as HTMLButtonElement | null)?.focus()
 }
 
 async function onSquare(sq: Square) {
@@ -252,7 +336,7 @@ function aiTurn() {
   // 탐색이 UI를 막으므로 한 프레임 양보한 뒤 계산한다.
   setTimeout(async () => {
     // 결투 모드면 상태를 넘겨 준다 — 다친 기물로 덤비지 않고 다친 적을 노린다.
-    const level = LEVELS[Number(levelEl.value)]
+    const level = LEVELS[modeEl.value === 'duel' ? run.levelIndex(Number(levelEl.value)) : Number(levelEl.value)]
     const move = bestMove(
       game,
       level.depth,
@@ -267,7 +351,19 @@ function aiTurn() {
   }, 20)
 }
 
+/** 같은 런의 다음 판. 얻은 강화를 그대로 안고 시작한다. */
+async function newRound() {
+  await startBoard()
+}
+
+/** 런까지 처음부터. 진행 중이던 연승은 여기서 끝난 것으로 친다. */
 async function newGame() {
+  run.ended()
+  rewardEl.hidden = true
+  await startBoard()
+}
+
+async function startBoard() {
   game.reset()
   human = sideEl.value as Color
   selected = null
@@ -279,6 +375,7 @@ async function newGame() {
   state.reset()
   items.reset()
   duelEl.hidden = true
+  if (modeEl.value === 'duel') run.applyTo(game, human)
   board3d.setOrientation(human)
   await board3d.sync(game)
   render()
@@ -305,7 +402,7 @@ document.getElementById('undo')!.onclick = async () => {
   render()
 }
 
-// 난이도는 ai.ts 의 LEVELS 하나만 보고 만든다 — 이름·깊이·시간이 갈리지 않게.
+// 난이도는 ai.ts 의 LEVELS 하나만 보고 만든다 — 이름·깊이·손떨림이 갈리지 않게.
 levelEl.innerHTML = LEVELS.map((l, i) => `<option value="${i}">${l.label}</option>`).join('')
 levelEl.value = String(LEVELS.findIndex((l) => l.label === '어려움'))
 

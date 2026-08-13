@@ -64,6 +64,36 @@
   #legend .item { display: inline-flex; align-items: center; gap: 6px; }
   #legend .item i { width: 10px; height: 10px; border-radius: 2px; transform: rotate(45deg); }
 
+  /* ---- 연승 런 ----
+     상태줄이 "지금 이 판", 여기가 "지금 이 런". 얻은 강화는 다음 판에도 남으므로
+     반상 밖에 계속 떠 있어야 한다. */
+  #run[hidden] { display: none; }
+  #run {
+    width: min(92vw, 1000px); display: flex; gap: 6px 14px; flex-wrap: wrap;
+    justify-content: center; font-size: 13px; color: #b6b2ae;
+  }
+  #run b { color: var(--accent); font-weight: 700; }
+  #run .up { color: var(--buff); }
+
+  /* 승리·패배 뒤에만 뜬다. 판이 끝난 순간이라 반상을 덮어도 가릴 정보가 없다. */
+  #reward[hidden] { display: none; }
+  #reward {
+    position: fixed; inset: 0; z-index: 5; padding: 20px;
+    display: flex; flex-direction: column; gap: 16px; align-items: center; justify-content: center;
+    background: #000000d0; text-align: center;
+  }
+  #reward .head { font-size: 19px; font-weight: 700; }
+  #reward .sub { font-size: 14px; color: #b6b2ae; }
+  #reward .cards { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  #reward .card {
+    width: 168px; padding: 14px; text-align: left; line-height: 1.45;
+    background: var(--panel); border: 1px solid #4a4643; border-radius: 8px;
+    color: var(--text); font: inherit; cursor: pointer;
+  }
+  #reward .card:hover { border-color: var(--accent); }
+  #reward .card b { display: block; margin-bottom: 4px; }
+  #reward .card span { font-size: 13px; color: #b6b2ae; }
+
   /* ---- 전투 계기판 ----
      전투 자체는 반상 위에서 벌어진다. 여기는 HP 처럼 3D 로 읽기 어려운 수치만 맡는다. */
   #duel[hidden] { display: none; }
@@ -91,6 +121,12 @@
 <body>
   <h1>♞ GAMBIT CHESS</h1>
   <div id="status"></div>
+  <div id="run" hidden></div>
+  <div id="reward" hidden>
+    <div class="head"></div>
+    <div class="sub"></div>
+    <div class="cards"></div>
+  </div>
   <div id="duel" hidden>
     <div class="side atk">
       <div class="who"><span class="name"></span><span class="dmg"></span></div>

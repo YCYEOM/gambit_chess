@@ -532,11 +532,15 @@ export function showItems(list: { square: Square; token: string }[]) {
   }
 }
 
+// 아이템 고리는 빈 칸에 놓이지만 이 고리는 기물이 선 칸에 놓인다.
+// 기물 받침(baseGeo, 반지름 0.4)보다 바깥이라야 보인다 — 안쪽에 그리면 받침에 덮인다.
+const buffRingGeo = new THREE.RingGeometry(0.42, 0.48, 32)
+
 /** 능력을 얻은 기물 발밑 고리. 어느 기물이 특별한지 반상에서 보이게. */
 export function showBuffed(squares: Square[]) {
   for (const square of squares) {
     const { x, z } = squareToWorld(square)
-    const ring = new THREE.Mesh(itemBaseGeo, MARKER.buff)
+    const ring = new THREE.Mesh(buffRingGeo, MARKER.buff)
     ring.position.set(x, 0.013, z)
     ring.rotation.x = -Math.PI / 2
     markers.add(ring)
