@@ -1,5 +1,5 @@
 import { Chess, type PieceSymbol, type Square, type Color } from 'chess.js'
-import { bestMove } from './ai'
+import { bestMove, LEVELS } from './ai'
 import { STATS } from './combat'
 import * as state from './pieceState'
 import * as items from './items'
@@ -40,10 +40,18 @@ let hint: string | null = null
 const busy = () => thinking || dueling
 const over = () => game.isGameOver() || fallen !== null
 
+/** 왜 무승부인지. "이겼는데 무승부" 로 보이는 순간에 규칙 이름 하나는 있어야 납득이 된다. */
+function drawReason(): string {
+  if (game.isStalemate()) return '스테일메이트 · 상대가 둘 수가 없다'
+  if (game.isThreefoldRepetition()) return '같은 자리가 세 번 나왔다'
+  if (game.isInsufficientMaterial()) return '남은 기물로는 이길 수 없다'
+  return '50수 동안 잡지도, 폰을 옮기지도 않았다'
+}
+
 function statusText(): string {
   if (fallen) return `킹이 쓰러졌다 — ${fallen === human ? '패배' : '승리'}`
   if (game.isCheckmate()) return `체크메이트 — ${game.turn() === human ? '패배' : '승리'}`
-  if (game.isDraw() || game.isStalemate()) return '무승부'
+  if (game.isDraw() || game.isStalemate()) return `무승부 — ${drawReason()}`
   if (dueling) return '전투 중…'
   if (thinking) return 'AI가 고민 중…'
   const turn = `${game.turn() === 'w' ? '백' : '흑'} 차례${game.inCheck() ? ' (체크!)' : ''}`
@@ -244,10 +252,13 @@ function aiTurn() {
   // 탐색이 UI를 막으므로 한 프레임 양보한 뒤 계산한다.
   setTimeout(async () => {
     // 결투 모드면 상태를 넘겨 준다 — 다친 기물로 덤비지 않고 다친 적을 노린다.
+    const level = LEVELS[Number(levelEl.value)]
     const move = bestMove(
       game,
-      Number(levelEl.value),
+      level.depth,
       modeEl.value === 'duel' ? state.stateOf : undefined,
+      level.noise,
+      level.ms,
     )
     thinking = false
     const again = move ? await apply(move.from, move.to) : false
@@ -293,6 +304,10 @@ document.getElementById('undo')!.onclick = async () => {
   await board3d.sync(game)
   render()
 }
+
+// 난이도는 ai.ts 의 LEVELS 하나만 보고 만든다 — 이름·깊이·시간이 갈리지 않게.
+levelEl.innerHTML = LEVELS.map((l, i) => `<option value="${i}">${l.label}</option>`).join('')
+levelEl.value = String(LEVELS.findIndex((l) => l.label === '어려움'))
 
 board3d.init(boardEl, (sq) => { void onSquare(sq) })
 addEventListener('resize', board3d.resize)
