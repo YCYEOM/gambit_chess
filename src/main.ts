@@ -31,6 +31,8 @@ let dueling = false
 /** 무르기는 그 수를 두기 직전으로 통째로 되돌린다 — 재행동 때문에 game.undo() 로는 부족하다. */
 let log: {
   san: string; from: Square; to: Square; repelled: boolean
+  /** 캐슬링에서 함께 움직인 룩. 화살표를 두 개 그려야 뛰어넘은 것처럼 안 보인다. */
+  rook: [Square, Square] | null
   fen: string
   pieces: state.Snapshot
   items: items.Snapshot
@@ -99,7 +101,7 @@ function render() {
     moves: legal.filter((m) => !m.captured).map((m) => m.to),
     captures: legal.filter((m) => m.captured).map((m) => m.to),
     blocked: selected ? blockedSquares(game, selected) : [],
-    last: last ? { from: last.from, to: last.to, repelled: last.repelled } : null,
+    last: last ? { from: last.from, to: last.to, repelled: last.repelled, rook: last.rook } : null,
     check: game.inCheck() ? findKing(game, game.turn()) ?? null : null,
   })
 
@@ -194,7 +196,10 @@ async function apply(from: Square, to: Square): Promise<boolean> {
     : ({ move: game.move({ from, to, promotion: 'q' }), fight: null, repelled: false, loser: null } as MoveOutcome)
 
   // 무산 표시(✗)는 전투가 끝난 뒤에 붙인다. 먼저 넣으면 기보가 결과를 미리 알려준다.
-  const ply = { san: outcome.move.san, from, to, repelled: false, ...before }
+  const ply = {
+    san: outcome.move.san, from, to, repelled: false,
+    rook: state.castlingRook(outcome.move), ...before,
+  }
   log.push(ply)
 
   if (outcome.fight) {

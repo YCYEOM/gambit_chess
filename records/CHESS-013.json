@@ -1,0 +1,48 @@
+{
+  "task_id": "CHESS-013",
+  "summary_of_changes": "캐슬링에서 룩의 화살표도 그린다. 킹은 밝게, 함께 넘어온 룩은 흐리게 — 룩을 안 그리니 킹이 룩을 뛰어넘은 것처럼 보였다. 룩 정보는 체력 장부가 쓰던 pieceState.castlingRook 을 export 해 그대로 썼고, addArrow 는 색을 인자로 받게 바꿨다.",
+  "why": "사용자 제보 — '상대 왕이 룩을 띄워 넘어서 움직일 수 있는 것 같다.' 캐슬링이었고 판정도 이동도 정확했지만, 화살표가 킹만 있어 규칙 위반처럼 읽혔다. CHESS-007 이 알려진 한계로 남겨 둔 항목이 실제로 오해를 만든 셈이다.",
+  "files_changed": ["src/board3d.ts", "src/main.ts", "src/pieceState.ts", "README.md", "DESIGN.md"],
+  "models_used": [],
+  "verification": {
+    "evaluations_run": [
+      { "name": "typecheck", "level": 1, "status": "pass" },
+      { "name": "unit", "level": 2, "status": "pass" },
+      { "name": "build", "level": 2, "status": "pass" },
+      { "name": "design check", "level": 3, "status": "pass" }
+    ],
+    "not_verified": [
+      "룩 화살표가 킹 모델에 일부 가리는데 그걸로 충분히 읽히는지 — 사람 판단",
+      "무르기·새 게임 뒤 화살표가 사라지는 것은 CHESS-007 에서 확인했고 이번 변경으로 경로가 달라지지 않았다 (같은 markers.clear()).",
+      "Chrome 외 브라우저"
+    ]
+  },
+  "critic_findings": { "total": 0, "open_high_or_medium": 0 },
+  "known_limitations": [
+    "룩은 여전히 순간이동한다. 킹만 미끄러지고 룩은 다음 sync 에서 자리를 바꾼다.",
+    "룩 화살표는 킹과 같은 줄에 서므로 킹 모델에 일부 가린다. 두 칸의 색으로 보완한다.",
+    "앙파상은 잡힌 폰이 도착 칸에 없다는 것을 따로 표시하지 않는다."
+  ],
+  "out_of_scope_findings": [],
+  "docs_updated": { "needed": true, "updated": ["README.md", "DESIGN.md"] },
+  "lessons": {
+    "recorded": true,
+    "candidates": [
+      "'알려진 한계' 로 적어 둔다고 사용자가 그것을 한계로 읽지는 않는다. 캐슬링에서 룩을 안 그린 것은 문서에 남아 있었지만, 화면에서는 규칙 위반(킹이 룩을 넘음)으로 읽혔다 — 표시가 빠지면 없는 게 아니라 '틀린 것' 이 된다.",
+      "한 수에 두 기물이 움직이는 수는 표시도 둘이어야 한다. 캐슬링·앙파상처럼 규칙이 예외를 두는 곳은 렌더링도 예외를 둬야 한다."
+    ]
+  },
+  "rollback": { "method": "단일 커밋 revert. 영속 데이터가 없다." },
+  "design": {
+    "rendered_verification": true,
+    "environment": "Chrome, http://localhost:5173/gambit_chess/ (vite dev)",
+    "notes": "양쪽 캐슬링을 실제로 두어 확인했다. 킹사이드(O-O)에서는 킹 e1→g1 의 밝은 화살표와 룩 h1→f1 의 흐린 화살표가 함께 떴고, 퀸사이드(O-O-O)에서도 킹 e1→c1 밝은 화살표와 룩 a1→d1 흐린 화살표가 떴다. 룩 화살표는 c1 에 선 킹 모델에 일부 가리지만 a1 쪽 자루와 두 칸의 색으로 읽힌다. 기보에는 O-O-O 로 남는다.",
+    "human_approval_placeholder": true
+  },
+  "human_approval": {
+    "approved": true,
+    "approver": "user",
+    "at": "2026-08-13T09:20:00.000Z",
+    "notes": "캐슬링이 규칙 위반처럼 보인다는 제보에 대한 처리로 룩 화살표 추가를 승인"
+  }
+}

@@ -377,6 +377,7 @@ const MARKER = {
   blocked: tint(token('--danger'), 0.5),
   blockedBar: new THREE.MeshBasicMaterial({ color: token('--danger') }),
   arrow: tint(token('--last'), 0.9),
+  arrowRook: tint(token('--last'), 0.45), // 캐슬링에서 함께 움직인 룩 — 주인공은 킹이다
   arrowRepelled: tint(token('--danger'), 0.9),
   buff: tint(token('--buff'), 0.85),
 }
@@ -414,7 +415,7 @@ function addCross(square: Square) {
  * 특히 기물이 빽빽할 때 어느 기물이 움직였는지 알 수 없다.
  * 전투에 져서 무산된 수는 빨간 화살표 — 갔다가 죽었다는 뜻이다.
  */
-function addArrow(from: Square, to: Square, repelled: boolean) {
+function addArrow(from: Square, to: Square, material: THREE.Material) {
   const a = squareToWorld(from)
   const b = squareToWorld(to)
   const dx = b.x - a.x
@@ -422,7 +423,6 @@ function addArrow(from: Square, to: Square, repelled: boolean) {
   const length = Math.hypot(dx, dz)
   if (length < 0.01) return
 
-  const material = repelled ? MARKER.arrowRepelled : MARKER.arrow
   const head = 0.34
   // 도착 칸 한가운데까지 그리면 그 자리에 선 기물이 화살촉을 가린다. 칸 앞에서 끊는다.
   const reach = Math.max(0.4, length - 0.45)
@@ -448,7 +448,7 @@ export interface Highlights {
   moves?: Square[]
   captures?: Square[]
   blocked?: Square[]
-  last?: { from: Square; to: Square; repelled: boolean } | null
+  last?: { from: Square; to: Square; repelled: boolean; rook?: [Square, Square] | null } | null
   check?: Square | null
 }
 
@@ -456,7 +456,12 @@ export function highlight(h: Highlights) {
   markers.clear()
   if (h.last) {
     for (const sq of [h.last.from, h.last.to]) addMarker(sq, tileGeo2, MARKER.last, 0.009)
-    addArrow(h.last.from, h.last.to, h.last.repelled)
+    addArrow(h.last.from, h.last.to, h.last.repelled ? MARKER.arrowRepelled : MARKER.arrow)
+    // 캐슬링은 두 기물이 한 수에 움직인다. 룩을 안 그리면 킹이 룩을 뛰어넘은 것처럼 보인다.
+    if (h.last.rook) {
+      for (const sq of h.last.rook) addMarker(sq, tileGeo2, MARKER.last, 0.009)
+      addArrow(h.last.rook[0], h.last.rook[1], MARKER.arrowRook)
+    }
   }
   if (h.check) addMarker(h.check, tileGeo2, MARKER.check, 0.01)
   if (h.selected) addMarker(h.selected, ringGeo, MARKER.selected, 0.012)

@@ -72,7 +72,7 @@ export function restore(snap: Snapshot) {
 }
 
 /** 캐슬링에서 함께 움직이는 룩. chess.js 의 flags 로 어느 쪽인지 알 수 있다. */
-function castlingRook(move: Move): [Square, Square] | null {
+export function castlingRook(move: Move): [Square, Square] | null {
   const rank = move.color === 'w' ? '1' : '8'
   if (move.flags.includes('k')) return [`h${rank}` as Square, `f${rank}` as Square]
   if (move.flags.includes('q')) return [`a${rank}` as Square, `d${rank}` as Square]
