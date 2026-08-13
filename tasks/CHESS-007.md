@@ -1,7 +1,7 @@
 ---
 id: CHESS-007
 title: 직전 수를 화살표로 보여주기
-status: HUMAN_REVIEW
+status: DONE
 type: feature
 profile: web
 

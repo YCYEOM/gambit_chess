@@ -2,14 +2,35 @@
   "task_id": "CHESS-007",
   "summary_of_changes": "직전 수를 반상 위에 화살표로 그린다. 출발 칸에서 도착 칸 방향으로 자루와 촉을 두고, 전투에 져서 무산된 공격은 빨간색으로 구분한다. 화살표는 도착 칸 앞에서 끊어 그 자리에 선 기물이 촉을 가리지 않게 했다.",
   "why": "직전 수 표시가 칸 두 개의 옅은 틴트뿐이라 방향도, 어느 기물이 움직였는지도 읽히지 않았다. 사용자 요청.",
-  "files_changed": ["src/board3d.ts", "src/main.ts", "README.md", "DESIGN.md"],
+  "files_changed": [
+    "src/board3d.ts",
+    "src/main.ts",
+    "README.md",
+    "DESIGN.md"
+  ],
   "models_used": [],
   "verification": {
     "evaluations_run": [
-      { "name": "typecheck", "level": 1, "status": "pass" },
-      { "name": "unit", "level": 2, "status": "pass" },
-      { "name": "build", "level": 2, "status": "pass" },
-      { "name": "design check", "level": 3, "status": "pass" }
+      {
+        "name": "typecheck",
+        "level": 1,
+        "status": "pass"
+      },
+      {
+        "name": "unit",
+        "level": 2,
+        "status": "pass"
+      },
+      {
+        "name": "build",
+        "level": 2,
+        "status": "pass"
+      },
+      {
+        "name": "design check",
+        "level": 3,
+        "status": "pass"
+      }
     ],
     "not_verified": [
       "화살표가 반상을 어지럽히는지 — 취향 판단",
@@ -17,14 +38,23 @@
       "Chrome 외 브라우저"
     ]
   },
-  "critic_findings": { "total": 0, "open_high_or_medium": 0 },
+  "critic_findings": {
+    "total": 0,
+    "open_high_or_medium": 0
+  },
   "known_limitations": [
     "나이트도 직선 화살표다. 실제 L 자 경로는 그리지 않는다.",
     "직전 한 수만 표시한다. 이전 수 이력은 기보로만 볼 수 있다.",
     "캐슬링은 킹의 이동만 그린다. 함께 움직인 룩은 표시되지 않는다."
   ],
   "out_of_scope_findings": [],
-  "docs_updated": { "needed": true, "updated": ["README.md", "DESIGN.md"] },
+  "docs_updated": {
+    "needed": true,
+    "updated": [
+      "README.md",
+      "DESIGN.md"
+    ]
+  },
   "lessons": {
     "recorded": true,
     "candidates": [
@@ -32,10 +62,18 @@
       "길이가 매번 달라지는 도형은 단위 geometry 를 scale 로 늘려 쓴다. 수마다 새로 만들면 markers.clear() 가 씬에서 떼어낼 뿐 GPU 버퍼는 남는다."
     ]
   },
-  "rollback": { "method": "단일 커밋 revert. 영속 데이터가 없다." },
+  "rollback": {
+    "method": "단일 커밋 revert. 영속 데이터가 없다."
+  },
   "design": {
     "rendered_verification": true,
     "environment": "Chrome, http://localhost:5173 (vite dev)",
     "notes": "실제 대국으로 확인. 1. e4 Nf6 이후 g8 에서 f6 으로 노란 화살표가 그려지고, 촉이 도착 칸 앞에서 끊겨 해골 나이트를 가리킨다. 끊기 전에는 촉이 기물 뒤로 완전히 숨어 자루만 보였다. 새 게임과 무르기 후 이전 화살표가 남지 않는 것도 확인했다."
+  },
+  "human_approval": {
+    "approved": true,
+    "approver": "user",
+    "at": "2026-08-12T09:38:53.054Z",
+    "notes": "직전 수 화살표 승인. 나이트도 직선 화살표인 점, 직전 한 수만 표시하는 점, 캐슬링 룩이 안 그려지는 점을 수용한다"
   }
 }
