@@ -45,7 +45,6 @@ const over = () => game.isGameOver() || fallen !== null
 
 /** 왜 무승부인지. "이겼는데 무승부" 로 보이는 순간에 규칙 이름 하나는 있어야 납득이 된다. */
 function drawReason(): string {
-  if (game.isStalemate()) return '스테일메이트 · 상대가 둘 수가 없다'
   if (game.isThreefoldRepetition()) return '같은 자리가 세 번 나왔다'
   if (game.isInsufficientMaterial()) return '남은 기물로는 이길 수 없다'
   return '50수 동안 잡지도, 폰을 옮기지도 않았다'
@@ -54,7 +53,11 @@ function drawReason(): string {
 function statusText(): string {
   if (fallen) return `킹이 쓰러졌다 — ${fallen === human ? '패배' : '승리'}`
   if (game.isCheckmate()) return `체크메이트 — ${game.turn() === human ? '패배' : '승리'}`
-  if (game.isDraw() || game.isStalemate()) return `무승부 — ${drawReason()}`
+  if (game.isStalemate()) {
+    const stuck = game.turn() === human
+    return `스테일메이트 · ${stuck ? '내가' : '상대가'} 둘 수가 없다 — ${stuck ? '패배' : '승리'}`
+  }
+  if (game.isDraw()) return `무승부 — ${drawReason()}`
   if (dueling) return '전투 중…'
   if (thinking) return 'AI가 고민 중…'
   const turn = `${game.turn() === 'w' ? '백' : '흑'} 차례${game.inCheck() ? ' (체크!)' : ''}`
@@ -65,7 +68,11 @@ function statusText(): string {
 function result(): 'win' | 'loss' | 'draw' | null {
   if (fallen) return fallen === human ? 'loss' : 'win'
   if (game.isCheckmate()) return game.turn() === human ? 'loss' : 'win'
-  if (game.isDraw() || game.isStalemate()) return 'draw'
+  // 스테일메이트는 몰아붙인 쪽의 승리로 친다. 체스는 무승부로 보지만 이 게임은 이미
+  // 전투·아이템·킹 포획으로 규칙을 벗어나 있고, "이겼는데 무승부" 는 아케이드로 안 맞는다.
+  // isDraw() 가 스테일메이트를 포함하므로 반드시 이 판정이 먼저다.
+  if (game.isStalemate()) return game.turn() === human ? 'loss' : 'win'
+  if (game.isDraw()) return 'draw'
   return null
 }
 
