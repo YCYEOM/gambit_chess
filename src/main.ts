@@ -83,10 +83,8 @@ function runBar() {
   const duelMode = modeEl.value === 'duel'
   runEl.hidden = !duelMode
   if (!duelMode) return
-  const level = LEVELS[run.levelIndex(Number(levelEl.value))]
   const parts = [
     `<span><b>${run.streak()}연승</b> · 최고 ${Math.max(run.best(), run.streak())}</span>`,
-    `<span>상대 ${level.label}</span>`,
     ...run.rewards().map((r) => `<span class="up">${r.label}</span>`),
   ]
   runEl.innerHTML = parts.join('')
@@ -187,13 +185,26 @@ function showStrike(struck: 'atk' | 'def', s: { damage: number; crit: boolean; a
 // ---------------------------------------------------------------- 수 적용
 
 /** 수를 두고 화면에 반영한다. 재행동 아이템을 먹었으면 true. */
-async function apply(from: Square, to: Square): Promise<boolean> {
-  // ponytail: 승진은 항상 퀸. 언더프로모션이 필요하면 여기서 선택 UI를 띄운다.
+/** 승진할 기물을 고르게 한다. 카드가 필요한 화면은 이미 있으니 그대로 쓴다. */
+function choosePromotion(): Promise<PieceSymbol> {
+  const duelMode = modeEl.value === 'duel'
+  return new Promise((resolve) => {
+    openReward('폰이 끝에 닿았다', '무엇으로 승진할까', (['q', 'r', 'b', 'n'] as const).map((type) => ({
+      title: board3d.roleName(human, type),
+      what: duelMode
+        ? `체력 ${STATS[type].hp} · 공격력 ${STATS[type].atk}`
+        : { q: '퀸', r: '룩', b: '비숍', n: '나이트' }[type],
+      pick: () => resolve(type),
+    })))
+  })
+}
+
+async function apply(from: Square, to: Square, promotion: PieceSymbol = 'q'): Promise<boolean> {
   const duelMode = modeEl.value === 'duel'
   const before = { fen: game.fen(), pieces: state.snapshot(), items: items.snapshot() }
   const outcome = duelMode
-    ? playMove(game, { from, to, promotion: 'q' }, Math.random, state.stateOf)
-    : ({ move: game.move({ from, to, promotion: 'q' }), fight: null, repelled: false, loser: null } as MoveOutcome)
+    ? playMove(game, { from, to, promotion }, Math.random, state.stateOf)
+    : ({ move: game.move({ from, to, promotion }), fight: null, repelled: false, loser: null } as MoveOutcome)
 
   // 무산 표시(✗)는 전투가 끝난 뒤에 붙인다. 먼저 넣으면 기보가 결과를 미리 알려준다.
   const ply = {
@@ -239,6 +250,10 @@ async function apply(from: Square, to: Square): Promise<boolean> {
   let again = false
   if (duelMode) {
     state.applyMove(outcome.move, outcome.repelled, outcome.fight)
+    // 승진하면 종류가 바뀐다. 런에서 쌓은 강화도 새 종류 기준으로 다시 계산한다.
+    if (outcome.move.promotion && !outcome.repelled) {
+      run.repromote(outcome.move.to, outcome.move.piece, outcome.move.promotion)
+    }
     // 쉰 기물만 회복한다. 방금 움직인 기물은 뺀다.
     state.regen(game, outcome.move.color, outcome.repelled ? undefined : outcome.move.to)
     const picked = items.pickUp(game, outcome.move.to, outcome.repelled)
@@ -322,7 +337,9 @@ async function onSquare(sq: Square) {
     if (move) {
       const from = selected
       selected = null
-      const again = await apply(from, sq)
+      render() // 고르는 동안 반상에 선택 표시가 남아 있지 않게
+      const promotion = move.flags.includes('p') ? await choosePromotion() : undefined
+      const again = await apply(from, sq, promotion)
       if (!over() && !again) aiTurn()
       return
     }
@@ -348,7 +365,7 @@ function aiTurn() {
   // 탐색이 UI를 막으므로 한 프레임 양보한 뒤 계산한다.
   setTimeout(async () => {
     // 결투 모드면 상태를 넘겨 준다 — 다친 기물로 덤비지 않고 다친 적을 노린다.
-    const level = LEVELS[modeEl.value === 'duel' ? run.levelIndex(Number(levelEl.value)) : Number(levelEl.value)]
+    const level = LEVELS[Number(levelEl.value)]
     const move = bestMove(
       game,
       level.depth,
@@ -357,7 +374,7 @@ function aiTurn() {
       level.ms,
     )
     thinking = false
-    const again = move ? await apply(move.from, move.to) : false
+    const again = move ? await apply(move.from, move.to, move.promotion) : false
     render()
     if (again && !over()) aiTurn() // 재행동을 먹었으면 AI 가 한 번 더 둔다
   }, 20)

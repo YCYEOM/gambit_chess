@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { Chess } from 'chess.js'
 import * as run from './run'
 import * as state from './pieceState'
-import { LEVELS } from './ai'
 
 /** node 에는 localStorage 가 없다. 해금이 최고 기록에서 파생하므로 여기서만 흉내 낸다. */
 const store = new Map<string, string>()
@@ -25,14 +24,6 @@ describe('연승 런', () => {
     const cards = run.offer()
     expect(cards).toHaveLength(3)
     expect(new Set(cards.map((c) => c.label)).size).toBe(3)
-  })
-
-  it('이길수록 난이도가 오르고 최강에서 멈춘다', () => {
-    expect(run.levelIndex(2)).toBe(2)
-    run.won()
-    expect(run.levelIndex(2)).toBe(3)
-    for (let i = 0; i < 20; i++) run.won()
-    expect(run.levelIndex(2)).toBe(LEVELS.length - 1)
   })
 
   it('런이 끝나면 연승과 보상이 사라진다', () => {
@@ -65,6 +56,32 @@ describe('연승 런', () => {
       const game = new Chess()
       run.applyTo(game, 'w')
       expect(state.stateOf('e2', 'p').atk).toBe(2)
+    })
+  })
+
+  describe('승진', () => {
+    const card = (target: string, kind: 'atk' | 'crit') =>
+      run.pool().find((r) => r.kind === kind && r.target === target)!
+
+    it('승진한 기물은 새 종류의 강화를 받고 폰 몫은 내려놓는다', () => {
+      run.take(card('p', 'atk')) // 폰 +1
+      run.take(card('q', 'atk')) // 퀸 +3
+      const game = new Chess()
+      run.applyTo(game, 'w')
+      expect(state.stateOf('a2', 'p').atk).toBe(1)
+
+      run.repromote('a2', 'p', 'q') // 그 자리에서 퀸이 됐다고 치자
+      expect(state.stateOf('a2', 'q').atk).toBe(3)
+    })
+
+    it('전군 강화는 승진해도 그대로 남는다', () => {
+      setBest(2) // 전군 카드 해금
+      const all = run.pool().find((r) => r.kind === 'atk' && r.target === 'all')!
+      run.take(all)
+      const game = new Chess()
+      run.applyTo(game, 'w')
+      run.repromote('a2', 'p', 'n')
+      expect(state.stateOf('a2', 'n').atk).toBe(all.kind === 'atk' ? all.amount : 0)
     })
   })
 

@@ -2,8 +2,9 @@
  * 연승 런 — 한 판 이기면 보상을 하나 골라 다음 판으로 이어진다. 지면 거기서 끝이고
  * 최고 연승만 남는다.
  *
- * 한 판이 단발로 끝나면 플레이 시간이 짧다. 이긴다는 것에 "다음 판이 더 세지고, 내 기물도
- * 더 세진다"는 값을 붙여 판을 이어 붙인다.
+ * 한 판이 단발로 끝나면 플레이 시간이 짧다. 이긴다는 것에 "내 기물이 더 세진다"는 값을
+ * 붙여 판을 이어 붙인다. 상대 난이도는 사용자가 고른 그대로다 — 이기고 있는데 상대가
+ * 저절로 세지면 이긴 값이 아니라 벌이 된다.
  *
  * 보상은 두 종류다.
  *  - 강화: 전투 보정(`pieceState` 의 crit·atk)을 그대로 쓴다. 아이템이 이미 쓰는 배관이라
@@ -15,7 +16,6 @@
  */
 import type { Chess, Color, PieceSymbol, Square } from 'chess.js'
 import { grant } from './pieceState'
-import { LEVELS } from './ai'
 
 export interface Upgrade {
   kind: 'atk' | 'crit'
@@ -84,7 +84,7 @@ const BASE: Reward[] = (Object.keys(SIZE) as PieceSymbol[]).flatMap((p) => [
 ])
 
 /** 전군 카드. 종류를 안 가리는 대신 값이 작다 (폰 기준). */
-const ARMY: Reward[] = [upgrade('all', 'atk', 1), upgrade('all', 'crit', 0.05)]
+const ARMY: Upgrade[] = [upgrade('all', 'atk', 1), upgrade('all', 'crit', 0.05)]
 
 /** 합성 카드. 가치가 오르는 방향으로만 간다 — 룩 둘 → 퀸은 손해지만 한 기물에 몰아준다. */
 const FUSE: Fusion[] = [
@@ -145,7 +145,7 @@ export function pool(): Reward[] {
   })
 }
 
-/** 한 판 이겼다. 다음 판은 한 단계 더 세다. */
+/** 한 판 이겼다. */
 export function won() {
   wins++
 }
@@ -179,9 +179,6 @@ export function offer(rng: () => number = Math.random): Reward[] {
   return out
 }
 
-/** 이길수록 세진다. 고른 난이도에서 한 판마다 한 단계씩, 최강에서 멈춘다. */
-export const levelIndex = (base: number) => Math.min(base + wins, LEVELS.length - 1)
-
 /** 중앙에서 먼 칸일수록 크다. 합성 재료는 가장자리부터 내놓는다. */
 const edge = (square: Square) => Math.abs('abcdefgh'.indexOf(square[0]) - 3.5)
 
@@ -190,6 +187,19 @@ function mine(game: Chess, side: Color, type: PieceSymbol): Square[] {
   for (const row of game.board())
     for (const sq of row) if (sq && sq.color === side && sq.type === type) out.push(sq.square)
   return out
+}
+
+/**
+ * 승진하면 몸이 바뀐다. 강화도 지금 종류를 따라가야 한다 — 폰 몫을 빼고 새 종류 몫을 얹는다.
+ * 전군 강화는 어느 종류든 대상이라 그대로 두고, 아이템으로 얻은 개인 효과도 건드리지 않는다.
+ */
+export function repromote(square: Square, from: PieceSymbol, to: PieceSymbol) {
+  for (const r of taken) {
+    if (r.kind === 'fuse' || r.target === 'all') continue
+    const sign = r.target === to ? 1 : r.target === from ? -1 : 0
+    if (sign === 0) continue
+    grant(square, r.kind === 'atk' ? { atk: sign * r.amount } : { crit: sign * r.amount })
+  }
 }
 
 /**

@@ -1,0 +1,51 @@
+{
+  "task_id": "CHESS-014",
+  "summary_of_changes": "연승에 따라 오르던 상대 난이도를 없애 고른 그대로 고정했다. 폰이 끝 줄에 닿으면 퀸·룩·비숍·나이트 중에서 고르게 하고(결투 모드에서는 체력·공격력을 함께 보여준다), AI 도 자기가 고른 기물로 승진한다 — 전에는 AI 의 선택을 버리고 퀸으로 덮었다. 승진하면 런에서 쌓은 강화가 새 종류를 따라간다: 폰 몫을 빼고 그 종류 몫을 얹으며, 전군 강화와 아이템 효과는 그대로 둔다.",
+  "why": "사용자 요청 세 가지 — 난이도는 고정, 승진은 선택, 그렇게 고른 기물에도 연승 중 얻은 능력치 적용.",
+  "files_changed": ["src/main.ts", "src/run.ts", "src/run.test.ts", "README.md", "DESIGN.md"],
+  "models_used": [],
+  "verification": {
+    "evaluations_run": [
+      { "name": "typecheck", "level": 1, "status": "pass" },
+      { "name": "unit", "level": 2, "status": "pass" },
+      { "name": "build", "level": 2, "status": "pass" },
+      { "name": "design check", "level": 3, "status": "pass" }
+    ],
+    "not_verified": [
+      "난이도가 고정되면 연승이 길어질수록 판이 쉬워진다 — 어디까지 쉬워지는지 긴 런으로 재보지 않았다",
+      "승진 강화 재계산은 단위 테스트로만 확인했다 (화면에서는 강화를 쌓은 런을 만들지 못했다)",
+      "Chrome 외 브라우저"
+    ]
+  },
+  "critic_findings": { "total": 0, "open_high_or_medium": 0 },
+  "known_limitations": [
+    "상대는 이제 어떤 경우에도 세지지 않는다. 연승이 길어질수록 내 기물만 강해지므로 판이 점점 쉬워진다 — 사용자가 그렇게 요청했다.",
+    "승진 선택 중에는 화면이 반상을 덮는다. 그 사이 무르기·새 게임을 누를 수 없다.",
+    "아이템으로 얻은 개인 효과는 승진해도 그대로 따라간다 (CHESS-008 의 규칙).",
+    "합성으로 바뀐 기물은 판 시작 때 계산되므로 이 경로를 타지 않는다."
+  ],
+  "out_of_scope_findings": [
+    "AI 가 고른 승진 기물이 버려지고 있었다. bestMove 가 돌려주는 Move 에 promotion 이 들어 있는데 apply() 가 항상 'q' 로 덮었다 — 결투 모드에서는 나이트가 나은 국면도 있으므로 그대로 쓰게 했다."
+  ],
+  "docs_updated": { "needed": true, "updated": ["README.md", "DESIGN.md"] },
+  "lessons": {
+    "recorded": true,
+    "candidates": [
+      "'값을 더하는 함수' 는 음수를 받으면 빼는 함수가 된다. 강화를 다시 계산하려고 새 API 를 만들 뻔했는데 grant 에 음수를 넣는 것으로 끝났다.",
+      "일반 컴포넌트로 만들어 둔 화면은 다음 요구를 공짜로 받는다. 보상 카드 화면이 승진 선택을 그대로 처리했다 — 제목·설명·카드 목록만 받게 해 둔 덕이다.",
+      "난이도를 자동으로 올리는 장치는 '이겼다' 의 보상을 갉아먹을 수 있다. 사용자는 상대가 세지는 것을 성취가 아니라 벌로 읽었다."
+    ]
+  },
+  "rollback": { "method": "단일 커밋 revert. 영속 데이터가 없다." },
+  "design": {
+    "rendered_verification": true,
+    "environment": "Chrome, http://localhost:5173/gambit_chess/ (vite dev)",
+    "notes": "a7 폰을 a8 으로 옮기니 반상을 덮는 화면에 '폰이 끝에 닿았다 / 무엇으로 승진할까' 와 카드 넷(마법사 체력36·공격력14 · 야만전사 30·11 · 두건 사수 26·9 · 도적 26·9)이 떴다. '도적' 을 고르니 a8 에 도적이 서고 기보에 '1. a8=N' 이 남았다. 런 줄에서 '상대 X' 가 사라져 '0연승 · 최고 0' 만 남는 것도 확인했다."
+  },
+  "human_approval": {
+    "approved": true,
+    "approver": "user",
+    "at": "2026-08-13T09:30:00.000Z",
+    "notes": "난이도 고정·승진 선택·승진 기물 강화 적용을 요청했고 그대로 구현"
+  }
+}
