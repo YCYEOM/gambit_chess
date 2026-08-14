@@ -2,42 +2,73 @@
   "task_id": "CHESS-021",
   "summary_of_changes": "전투의 타격이 반상 위에서 터지게 했다. 맞은 자리에 고리가 퍼지고 파편이 튀며, 때린 방향으로 초승달이 눕는다. 치명타는 --crit 색으로 더 크게 터진다(계기판 숫자 색과 같은 뜻). 이펙트는 tick 의 dt 로 수명을 세고 끝나면 재질을 dispose 하며, 반상이 갈아엎히면(sync) 통째로 지운다.",
   "why": "사용자 요청 — 공격 이펙트. 전투가 공격 모션과 숫자뿐이라 때린 순간이 화면에서 그냥 지나갔다.",
-  "files_changed": ["src/board3d.ts", "README.md", "DESIGN.md"],
+  "files_changed": [
+    "src/board3d.ts",
+    "README.md",
+    "DESIGN.md"
+  ],
   "models_used": [],
   "verification": {
     "evaluations_run": [
-      { "name": "typecheck", "level": 1, "status": "pass" },
-      { "name": "unit", "level": 2, "status": "pass" },
-      { "name": "build", "level": 2, "status": "pass" },
-      { "name": "design check", "level": 3, "status": "pass" }
+      {
+        "name": "typecheck",
+        "level": 1,
+        "status": "pass"
+      },
+      {
+        "name": "unit",
+        "level": 2,
+        "status": "pass"
+      },
+      {
+        "name": "build",
+        "level": 2,
+        "status": "pass"
+      },
+      {
+        "name": "design check",
+        "level": 3,
+        "status": "pass"
+      }
     ],
     "not_verified": [
-      "화면에서 실제로 터지는 모습 — 확인용 크롬 창이 배경으로 내려가 requestAnimationFrame 이 완전히 멈춰 있었다(600ms 동안 0프레임). 전투 재생 자체가 진행되지 않아 이번 회차에서는 눈으로 못 봤다. 코드 경로는 빌드·타입 검사까지만 확인했다.",
-      "세기와 색이 과한지 — 사람 판단",
+      "세기와 색이 취향에 맞는지 — 사람 판단 (밝은 반상 위에서 가산 혼합이라 빨강이 흰빛으로 날아간다)",
       "긴 전투(타격 8회 이상)에서의 프레임"
     ]
   },
-  "critic_findings": { "total": 1, "open_high_or_medium": 0 },
+  "critic_findings": {
+    "total": 1,
+    "open_high_or_medium": 0
+  },
   "known_limitations": [
     "카메라는 흔들리지 않는다. glide·flyCamera 가 카메라를 직접 옮기고 있어 흔들림과 싸운다.",
     "이펙트는 전투에만 붙는다. 이동·줍기·승진에는 없다.",
-    "타격마다 메시 7~11개를 만든다. 수명이 짧아 동시에 남는 것은 수십 개지만, 긴 전투에서의 프레임은 재보지 않았다.",
-    "화면 확인을 못 한 채로 커밋했다 — 다음 회차에서 실제 전투를 보고 세기를 조정해야 한다."
+    "가산 혼합이라 밝은 칸 위에서는 색이 흰빛으로 날아간다. 치명타(--crit)와 보통(--danger)의 구분이 크기·개수만큼 뚜렷하지는 않다.",
+    "타격마다 메시 7~11개를 만든다. 수명이 짧아 동시에 남는 것은 수십 개지만, 긴 전투에서의 프레임은 재보지 않았다."
   ],
   "out_of_scope_findings": [],
-  "docs_updated": { "needed": true, "updated": ["README.md", "DESIGN.md"] },
+  "docs_updated": {
+    "needed": true,
+    "updated": [
+      "README.md",
+      "DESIGN.md"
+    ]
+  },
   "lessons": {
     "recorded": true,
     "candidates": [
       "브라우저 창이 배경으로 내려가면 requestAnimationFrame 이 완전히 멈춘다(0프레임). 애니메이션이 걸린 기능은 그 상태에서 확인할 수 없다 — 스크린샷은 찍히므로 '멈춘 화면' 을 '동작하는 화면' 으로 착각하기 쉽다.",
-      "이펙트는 판정을 다시 하지 않는다. strike.crit 하나만 읽게 두면 화면과 규칙이 갈라지지 않는다."
+      "이펙트는 판정을 다시 하지 않는다. strike.crit 하나만 읽게 두면 화면과 규칙이 갈라지지 않는다.",
+      "0.3초짜리 효과는 스크린샷으로 못 잡는다. 수명을 잠시 늘려 한 장에 담고 되돌리는 편이, 타이밍을 맞추려 여러 번 찍는 것보다 빠르고 확실하다."
     ]
   },
-  "rollback": { "method": "단일 커밋 revert." },
+  "rollback": {
+    "method": "단일 커밋 revert."
+  },
   "design": {
-    "rendered_verification": false,
+    "rendered_verification": true,
     "environment": "Chrome, http://localhost:5173/gambit_chess/ (vite dev)",
-    "notes": "확인 실패. 크롬 창이 배경에 있어 requestAnimationFrame 이 멈춰(600ms 0프레임) 전투 재생이 진행되지 않았고, 이펙트가 터지는 모습을 화면에서 보지 못했다. 반상·기물 렌더 자체는 정상이었다. 창을 앞으로 꺼내 놓고 전투를 한 번 재생해 세기와 색을 확인해야 한다."
+    "notes": "확인 완료(후속). 창을 앞으로 꺼내니 requestAnimationFrame 이 돌아왔고(600ms 45프레임), 퀸 e4 가 룩 d5 를 치는 전투를 걸어 화면에서 봤다. 맞은 기물 자리에 고리가 퍼지고 파편이 사방으로 튀며 때린 방향으로 초승달이 눕는 것을 확인했다. 다만 전투 카메라가 바짝 붙어 처음 값은 화면을 덮을 만큼 컸다 — 고리 0.22~0.42→0.16~0.30, 초승달 0.5~0.78→0.34~0.50, 파편 0.05→0.032 로 줄이고 최대 배율도 낮췄다. 효과가 0.3초짜리라 스크린샷으로는 잡히지 않아, 수명을 잠시 늘려(SLOW 상수) 한 장에 담은 뒤 되돌렸다."
   },
   "human_approval": {
     "approved": true,

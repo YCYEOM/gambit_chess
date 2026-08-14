@@ -633,10 +633,10 @@ interface Effect {
 
 const effects: Effect[] = []
 /** 퍼지는 고리 — 맞은 자리. */
-const flashGeo = new THREE.RingGeometry(0.22, 0.42, 24)
+const flashGeo = new THREE.RingGeometry(0.16, 0.3, 24)
 /** 초승달 — 때린 방향. 어느 쪽에서 들어온 타격인지 읽힌다. */
-const slashGeo = new THREE.RingGeometry(0.5, 0.78, 24, 1, Math.PI * 0.18, Math.PI * 0.64)
-const sparkGeo = new THREE.SphereGeometry(0.05, 6, 4)
+const slashGeo = new THREE.RingGeometry(0.34, 0.5, 24, 1, Math.PI * 0.18, Math.PI * 0.64)
+const sparkGeo = new THREE.SphereGeometry(0.032, 6, 4)
 
 function emit(geo: THREE.BufferGeometry, color: THREE.Color, at: THREE.Vector3, e: Omit<Effect, 'obj' | 'age'>) {
   const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
@@ -658,10 +658,10 @@ function playStrike(hitter: Piece, victim: Piece, crit: boolean) {
   const at = chest(victim)
   const size = crit ? 1.45 : 1
 
-  emit(flashGeo, color, at, { life: 0.28, from: 0.5 * size, to: 2.1 * size, billboard: true })
+  emit(flashGeo, color, at, { life: 0.28, from: 0.45 * size, to: 1.5 * size, billboard: true })
 
   // 초승달은 때린 쪽에서 맞은 쪽을 향해 눕는다.
-  const slash = emit(slashGeo, color, at, { life: 0.22, from: 0.8 * size, to: 1.5 * size })
+  const slash = emit(slashGeo, color, at, { life: 0.22, from: 0.75 * size, to: 1.25 * size })
   const dir = hitter.root.position.clone().sub(victim.root.position).setY(0)
   slash.lookAt(at.clone().add(dir))
   slash.rotateZ(Math.PI / 2)
