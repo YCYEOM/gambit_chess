@@ -39,6 +39,27 @@
     display: block; width: min(92vw, 1000px, 82vh); aspect-ratio: 1.32;
     border-radius: 6px; box-shadow: 0 8px 32px #0008; touch-action: none; cursor: pointer;
   }
+
+  /* ---- 폰 ----
+     반상은 가로로 긴 캔버스인데 폰 화면은 세로로 길다. 비율을 그대로 두면 폭에 눌려
+     납작해지고 아래로 300px 가 빈다 — 반상이 화면을 지배한다는 원칙과 정반대가 된다.
+     그래서 화면 모양에 맞춰 캔버스 비율 자체를 바꾼다. 카메라는 좁아진 만큼 뒤로
+     물러선다 (board3d 의 pullBack). */
+  @media (orientation: portrait) and (max-width: 560px) {
+    body { gap: 10px; padding: 10px; }
+    #board { width: min(96vw, calc(62vh * 0.92)); aspect-ratio: 0.92; }
+    #moves { max-height: 48px; }
+  }
+
+  /* 가로로 눕힌 폰은 높이가 없다. 제목을 빼고 여백을 줄여야 스크롤이 안 생기고,
+     반상은 남는 가로 폭을 쓰도록 더 넓은 비율로 간다. */
+  @media (orientation: landscape) and (max-height: 520px) {
+    body { gap: 6px; padding: 8px; }
+    h1 { display: none; }
+    #board { width: min(96vw, calc(55vh * 1.7)); aspect-ratio: 1.7; }
+    #moves { max-height: 30px; padding: 4px 12px; }
+    #legend { font-size: 12px; }
+  }
   #panel { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; }
   button, select {
     background: var(--panel); color: var(--text); border: 1px solid #4a4643;

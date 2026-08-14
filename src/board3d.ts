@@ -563,6 +563,27 @@ export function showBuffed(squares: Square[]) {
 // ---------------------------------------------------------------- 카메라
 
 const BOARD_VIEW = { y: 11.2, z: 9.4 }
+/** 이 비율에서 비스듬한 시점이 딱 맞는다. 반상은 이보다 좁은 화면을 가로로 못 채운다. */
+const WIDE = 1.32
+/** 반상 테두리 반폭(4.35) + 여유. 이만큼은 가로 시야에 들어와야 양옆이 안 잘린다. */
+const HALF = 4.6
+
+/**
+ * 화면이 세로로 길수록 위에서 내려다본다.
+ *
+ * 비스듬히 보면 8×8 반상이 가로로 긴 모양(약 1.32:1)으로 투영된다. 세로로 긴 폰에서는
+ * 그 모양이 폭에 먼저 부딪혀 화면 높이가 통째로 남는다 — 캔버스만 키워 봐야 위아래가
+ * 검게 빌 뿐이다. 시점을 세우면 투영이 정사각형에 가까워져 높이를 쓴다.
+ */
+function viewFor(aspect: number) {
+  const tilt = Math.min(1, Math.max(0, (WIDE - aspect) / (WIDE - 0.8)))
+  const y = BOARD_VIEW.y + 3.4 * tilt
+  const z = BOARD_VIEW.z * (1 - 0.5 * tilt)
+  // 세워도 좁으면 양옆이 잘린다. 남은 만큼만 뒤로 물러선다.
+  const tan = Math.tan((camera.fov * Math.PI) / 360)
+  const pull = Math.max(1, HALF / (Math.hypot(y, z) * tan * aspect))
+  return { y: y * pull, z: z * pull }
+}
 
 export function setOrientation(human: Color) {
   flipped = human === 'b'
@@ -571,7 +592,8 @@ export function setOrientation(human: Color) {
 
 function resetCamera() {
   const sign = flipped ? -1 : 1
-  camera.position.set(0, BOARD_VIEW.y, BOARD_VIEW.z * sign)
+  const { y, z } = viewFor(camera.aspect || WIDE)
+  camera.position.set(0, y, z * sign)
   camera.lookAt(0, 0.15, 0)
 }
 
@@ -582,6 +604,8 @@ export function resize() {
   renderer.setSize(w, h, false)
   camera.aspect = w / h
   camera.updateProjectionMatrix()
+  // 화면을 돌리면 비율이 바뀐다 — 물러서는 정도도 다시 잡는다.
+  if (!cameraLocked) resetCamera()
 }
 
 // ---------------------------------------------------------------- 전투
@@ -684,8 +708,9 @@ export async function playDuel(
   await sleep(900)
 
   cameraLocked = false
+  const back = viewFor(camera.aspect || WIDE)
   await flyCamera(
-    new THREE.Vector3(0, BOARD_VIEW.y, BOARD_VIEW.z * sign),
+    new THREE.Vector3(0, back.y, back.z * sign),
     new THREE.Vector3(0, 0.15, 0),
     460,
   )

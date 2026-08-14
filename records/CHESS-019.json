@@ -1,0 +1,49 @@
+{
+  "task_id": "CHESS-019",
+  "summary_of_changes": "폰 화면에서 반상이 화면을 쓰도록 캔버스 비율과 카메라 시점을 함께 바꿨다. 세로 폰(≤560px)은 캔버스를 0.92 비율로 세우고 시점을 더 위에서 내려다보게 했고(viewFor), 눕힌 폰(높이 ≤520px)은 제목을 숨기고 여백을 줄여 스크롤을 없애고 반상을 1.7 비율로 넓혔다. 화면을 돌리면 resize 가 시점을 다시 잡는다. 물러서는 거리는 반상 반폭이 가로 시야에 들어오도록 역산해 어떤 비율에서도 양옆이 잘리지 않는다.",
+  "why": "모바일 점검 결과 — 세로에서는 반상이 화면 높이의 3분의 1만 쓰고 아래로 300px 가 비었고, 가로에서는 68~95px 넘쳐 스크롤이 생겼다. 비스듬히 본 반상은 가로로 긴 모양이라 세로 화면에서 폭에 먼저 부딪힌다. 캔버스만 키우면 위아래가 검게 빌 뿐이라 시점을 함께 세워야 했다.",
+  "files_changed": ["index.html", "src/board3d.ts", "README.md", "DESIGN.md"],
+  "models_used": [],
+  "verification": {
+    "evaluations_run": [
+      { "name": "typecheck", "level": 1, "status": "pass" },
+      { "name": "unit", "level": 2, "status": "pass" },
+      { "name": "build", "level": 2, "status": "pass" },
+      { "name": "design check", "level": 3, "status": "pass" }
+    ],
+    "not_verified": [
+      "실제 기기 — 데스크톱 크롬 안에서 iframe 을 폰 크기로 만들어 쟀다. 터치 입력·성능·주소창 높이 변화는 폰에서 봐야 한다",
+      "iOS 사파리의 100vh(주소창) 문제 — min-height:100vh 그대로다",
+      "태블릿 크기(600~900px)는 기본 레이아웃을 쓴다. 따로 재지 않았다"
+    ]
+  },
+  "critic_findings": { "total": 1, "open_high_or_medium": 0 },
+  "known_limitations": [
+    "눕힌 폰은 스크롤만 없앴다. 반상은 여전히 가로 폭의 절반도 못 쓴다 — 2단 레이아웃은 DOM 수술이라 미뤘다.",
+    "세로에서 시점이 서면서 기물을 옆에서 보는 맛이 줄어든다.",
+    "카메라 계산은 fov 34 와 반상 반폭 4.6 을 전제로 한다. 둘 중 하나를 바꾸면 함께 봐야 한다.",
+    "iOS 주소창이 여닫힐 때 100vh 가 흔들리는 문제는 그대로다."
+  ],
+  "out_of_scope_findings": [],
+  "docs_updated": { "needed": true, "updated": ["README.md", "DESIGN.md"] },
+  "lessons": {
+    "recorded": true,
+    "candidates": [
+      "3D 화면에서 '반응형' 은 CSS 만의 일이 아니다. 캔버스 비율을 바꾸면 시야도 함께 바뀌므로, 카메라를 같이 옮기지 않으면 검은 여백이 늘거나 반상이 잘린다.",
+      "크롬 창은 데스크톱 최소 폭(500px) 아래로 안 줄어든다. iframe 은 자기 크기가 곧 뷰포트라 vh·미디어쿼리가 실제 기기처럼 계산된다 — 기기 없이 폰 크기를 재는 가장 싼 방법이다.",
+      "여백이 남는다는 것은 대개 '더 크게 그릴 수 있다' 가 아니라 '모양이 안 맞는다' 는 신호다. 반상은 폭이 아니라 투영 비율에 묶여 있었다."
+    ]
+  },
+  "rollback": { "method": "단일 커밋 revert." },
+  "design": {
+    "rendered_verification": true,
+    "environment": "Chrome, http://localhost:5173/gambit_chess/ (vite dev), iframe 으로 기기 크기 재현",
+    "notes": "390×844 에서 반상이 359×272 → 374×407 로 커지고 시점이 위에서 내려다보는 각으로 바뀌어 여덟 파일과 두 진영이 한눈에 들어온다 (넘침 0). 360×800 은 346×376, 412×915 는 396×430. 눕힌 폰 844×390 은 84px 넘침이 0 이 되고 제목이 숨겨지며 반상은 365×214. 어느 크기에서도 반상 양옆이 잘리지 않았다."
+  },
+  "human_approval": {
+    "approved": true,
+    "approver": "user",
+    "at": "2026-08-14T08:20:00.000Z",
+    "notes": "모바일 레이아웃을 고쳐 달라는 요청"
+  }
+}
