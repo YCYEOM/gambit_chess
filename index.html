@@ -166,7 +166,12 @@
      펼친 패널은 반상 위에 떠오른다 — 자리를 차지하면 열고 닫을 때마다 반상이 흔들리고,
      3D 캔버스는 그때마다 리사이즈와 카메라 재계산까지 따라온다. */
   @media (max-width: 560px), (max-height: 560px) {
-    #menu { display: block; }
+    /* 여는 버튼은 화면 구석에 뜬다. 줄 하나를 차지하면 그만큼 반상이 밀린다 —
+       버튼 하나 때문에 자리를 내줄 이유가 없다. */
+    #menu {
+      display: block; position: fixed; z-index: 5;
+      padding: 8px 11px; opacity: .9;
+    }
     #panel {
       display: none; position: fixed; z-index: 4;
       flex-direction: column; align-items: stretch; width: 172px;
@@ -180,33 +185,27 @@
     body { gap: 10px; padding: 10px; }
     #board { width: min(96vw, calc(66vh * 0.92)); aspect-ratio: 0.92; }
     #moves { max-height: 48px; }
-    /* 세로에서는 아래쪽 가운데 — 엄지가 닿는 자리다. */
-    #panel { left: 50%; bottom: 56px; transform: translateX(-50%); }
+    /* 세로에서는 아래쪽 가운데 — 엄지가 닿는 자리다. 버튼도 그 손이 닿는 구석에 둔다. */
+    #panel { left: 50%; bottom: 62px; transform: translateX(-50%); }
+    #menu { right: 10px; bottom: 10px; }
   }
 
   /* 가로로 눕힌 폰은 높이가 없고 폭이 남는다. 세로 한 줄을 고집하면 반상이 높이에 눌려
      작아지면서 좌우가 통째로 빈다 — 그래서 여기서만 두 칸으로 간다.
      반상이 왼쪽에서 높이를 다 쓰고, 나머지는 오른쪽 좁은 칸에 쌓인다. */
+  /* 눕힌 폰은 높이가 없다. 반상이 높이를 다 쓰고, 나머지는 전부 구석에 띄운다 —
+     띠를 하나라도 세우면 그 폭만큼 반상이 작아진다. */
   @media (orientation: landscape) and (max-height: 560px) {
-    body {
-      display: grid;
-      grid-template-columns: auto minmax(96px, 150px);
-      grid-auto-rows: min-content;
-      align-content: center; justify-content: center;
-      gap: 6px 12px; padding: 8px;
-    }
-    h1 { display: none; }
-    #board {
-      /* 높이를 먼저 쓰고, 오른쪽 띠 자리가 모자라면 폭에 맞춘다.
-         컨트롤이 떠 있는 구조라 접든 펴든 이 값은 그대로다. */
-      grid-column: 1; grid-row: 1 / span 6; align-self: center;
-      width: min(calc(96vh * 1.32), calc(100vw - 130px)); aspect-ratio: 1.32;
-    }
-    #status, #run, #menu, #duel, #legend { grid-column: 2; width: auto; }
-    #menu { justify-self: start; }
-    /* 가로에서는 오른쪽 띠 옆에 붙인다. */
-    #panel { right: 8px; top: 50%; transform: translateY(-50%); }
-    #moves { display: none; } /* 기보는 가로에서 접는다 — 반상이 먼저다 */
+    body { gap: 0; padding: 6px; }
+    h1, #moves { display: none; } /* 기보는 가로에서 접는다 — 반상이 먼저다 */
+    #board { width: min(calc(96vh * 1.32), 97vw); aspect-ratio: 1.32; }
+    /* 상태·연승은 반상 위 오른쪽 구석에 겹친다. 한 줄짜리 글이라 반상을 가리지 않는다. */
+    #status, #run { position: fixed; right: 12px; text-align: right; z-index: 3; }
+    #status { top: 8px; }
+    #run { top: 32px; justify-content: flex-end; }
+    #menu { right: 10px; top: 62px; }
+    #panel { right: 10px; top: 100px; }
+    #duel, #legend { position: fixed; left: 8px; right: 8px; bottom: 6px; z-index: 3; width: auto; }
     #legend { font-size: 12px; }
   }
 </style>
