@@ -42,13 +42,22 @@
     font: 15px/1.5 system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif;
     /* 더블탭 확대와 그에 딸린 300ms 지연을 없앤다. 손가락 두 개 확대는 남는다. */
     touch-action: manipulation;
+    /* 터치로 칸을 누르면 브라우저가 캔버스를 "선택" 해 판 전체에 파란 막을 씌운다.
+       빠르게 두 번 누르면 특히 잘 뜬다. 게임 화면에서 고를 것은 칸이지 요소가 아니다. */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
   }
+  /* 기보는 예외 — 복사할 수 있어야 한다. */
+  #moves { -webkit-user-select: text; user-select: text; }
   h1 { margin: 0; font-size: 22px; letter-spacing: .06em; }
   #board {
     /* 82vh 항목이 세로 제약이다. 가로만 걸면 제목·기보까지 더한 페이지가 화면을 넘겨
        반상 아래쪽이 잘린다 (aspect-ratio 1.32 → 높이 = 너비 / 1.32). */
     display: block; width: min(92vw, 1000px, 82vh); aspect-ratio: 1.32;
     border-radius: 6px; box-shadow: 0 8px 32px #0008; touch-action: none; cursor: pointer;
+    /* 길게 눌러도 이미지 저장 메뉴가 뜨지 않는다 — 반상은 그림이 아니라 조작면이다. */
+    -webkit-touch-callout: none;
   }
 
   /* ---- 폰 ----
