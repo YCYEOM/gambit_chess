@@ -185,9 +185,10 @@
     body { gap: 10px; padding: 10px; }
     #board { width: min(96vw, calc(66vh * 0.92)); aspect-ratio: 0.92; }
     #moves { max-height: 48px; }
-    /* 세로에서는 아래쪽 가운데 — 엄지가 닿는 자리다. 버튼도 그 손이 닿는 구석에 둔다. */
-    #panel { left: 50%; bottom: 62px; transform: translateX(-50%); }
-    #menu { right: 10px; bottom: 10px; }
+    /* 세로에서도 버튼은 위 구석이다. 반상 아래쪽은 기물이 서 있는 자리라 손가락이 그쪽을
+       오가는데, 버튼이 거기 있으면 잘못 눌린다. 패널은 버튼 밑으로 펼쳐진다. */
+    #menu { right: 10px; top: 10px; }
+    #panel { left: 50%; top: 54px; transform: translateX(-50%); }
   }
 
   /* 가로로 눕힌 폰은 높이가 없고 폭이 남는다. 세로 한 줄을 고집하면 반상이 높이에 눌려
