@@ -171,7 +171,11 @@
     #menu {
       display: block; position: fixed; z-index: 5;
       padding: 8px 11px; opacity: .9;
+      /* 노치·상태바 밑으로 들어가지 않게. 브라우저에서는 0 이라 아무것도 안 바뀐다. */
+      right: calc(10px + env(safe-area-inset-right, 0px));
     }
+    /* 펼친 패널은 버튼 아래에서 열린다 — 누른 자리에서 나와야 어디서 나온 것인지 읽힌다. */
+    #panel { right: calc(10px + env(safe-area-inset-right, 0px)); left: auto; transform: none; }
     #panel {
       display: none; position: fixed; z-index: 4;
       flex-direction: column; align-items: stretch; width: 172px;
@@ -185,10 +189,13 @@
     body { gap: 10px; padding: 10px; }
     #board { width: min(96vw, calc(66vh * 0.92)); aspect-ratio: 0.92; }
     #moves { max-height: 48px; }
-    /* 세로에서도 버튼은 위 구석이다. 반상 아래쪽은 기물이 서 있는 자리라 손가락이 그쪽을
-       오가는데, 버튼이 거기 있으면 잘못 눌린다. 패널은 버튼 밑으로 펼쳐진다. */
-    #menu { right: 10px; top: 10px; }
-    #panel { left: 50%; top: 54px; transform: translateX(-50%); }
+    /* 제목 줄 오른쪽에 앉힌다. 반상 아래쪽은 기물이 서 있고 손가락이 오가는 자리라
+       버튼을 거기 두면 잘못 눌린다. 패널은 버튼 밑으로 펼쳐진다. */
+    body { padding-top: calc(10px + env(safe-area-inset-top, 0px)); }
+    /* top 은 main.ts 의 alignMenu 가 제목 줄에 맞춰 넣는다. 여기 값은 그 전 한 순간용. */
+    #menu { top: calc(12px + env(safe-area-inset-top, 0px)); }
+    #panel { top: calc(56px + env(safe-area-inset-top, 0px)); }
+
   }
 
   /* 가로로 눕힌 폰은 높이가 없고 폭이 남는다. 세로 한 줄을 고집하면 반상이 높이에 눌려
@@ -201,11 +208,14 @@
     h1, #moves { display: none; } /* 기보는 가로에서 접는다 — 반상이 먼저다 */
     #board { width: min(calc(96vh * 1.32), 97vw); aspect-ratio: 1.32; }
     /* 상태·연승은 반상 위 오른쪽 구석에 겹친다. 한 줄짜리 글이라 반상을 가리지 않는다. */
-    #status, #run { position: fixed; right: 12px; text-align: right; z-index: 3; }
-    #status { top: 8px; }
-    #run { top: 32px; justify-content: flex-end; }
-    #menu { right: 10px; top: 62px; }
-    #panel { right: 10px; top: 100px; }
+    #status, #run {
+      position: fixed; right: calc(12px + env(safe-area-inset-right, 0px));
+      text-align: right; z-index: 3;
+    }
+    #status { top: calc(8px + env(safe-area-inset-top, 0px)); }
+    #run { top: calc(32px + env(safe-area-inset-top, 0px)); justify-content: flex-end; }
+    #menu { top: calc(62px + env(safe-area-inset-top, 0px)); }
+    #panel { top: calc(100px + env(safe-area-inset-top, 0px)); }
     #duel, #legend { position: fixed; left: 8px; right: 8px; bottom: 6px; z-index: 3; width: auto; }
     #legend { font-size: 12px; }
   }

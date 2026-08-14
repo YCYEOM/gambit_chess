@@ -161,6 +161,7 @@ function render() {
   if (isDuel()) board3d.showBuffed(state.buffed())
   itemLegend()
   runBar()
+  alignMenu()
 }
 
 /** 반상에 놓인 아이템이 뭔지 알려 준다. 색만 봐서는 효과를 모른다. */
@@ -484,6 +485,25 @@ document.getElementById('undo')!.onclick = async () => {
 
 // 눕힌 폰에서는 컨트롤을 접어 둔다. 이 버튼은 가로에서만 보인다 (CSS 가 정한다).
 const menuEl = document.getElementById('menu') as HTMLButtonElement
+
+/**
+ * ☰ 는 제목 줄 오른쪽에 앉는다. 본문이 세로 가운데 정렬이라 제목의 높이가 화면마다
+ * 달라지므로 고정 좌표로는 못 맞춘다 — 제목을 재서 붙인다.
+ * 가로에서는 제목이 없으므로(display:none) 인라인 값을 비워 CSS 에 맡긴다.
+ */
+function alignMenu() {
+  const title = document.querySelector('h1')!.getBoundingClientRect()
+  if (!title.height) { // 가로 — 제목이 없다
+    menuEl.style.top = ''
+    panelEl.style.top = ''
+    return
+  }
+  const top = Math.round(title.top + (title.height - menuEl.offsetHeight) / 2)
+  menuEl.style.top = `${top}px`
+  panelEl.style.top = `${top + menuEl.offsetHeight + 8}px` // 패널은 버튼 바로 아래에서 열린다
+}
+addEventListener('resize', alignMenu)
+
 menuEl.onclick = () => {
   const open = document.body.classList.toggle('controls')
   menuEl.setAttribute('aria-label', open ? '설정 닫기' : '설정 열기')
