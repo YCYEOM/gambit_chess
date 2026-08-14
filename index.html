@@ -162,10 +162,26 @@
      납작해지고 아래로 300px 가 빈다 — 반상이 화면을 지배한다는 원칙과 정반대가 된다.
      그래서 화면 모양에 맞춰 캔버스 비율 자체를 바꾼다. 카메라는 좁아진 만큼 뒤로
      물러선다 (board3d 의 pullBack). */
+  /* 폰이면 세로든 가로든 컨트롤을 접는다. 늘 펼쳐 두면 반상이 그만큼 밀린다.
+     펼친 패널은 반상 위에 떠오른다 — 자리를 차지하면 열고 닫을 때마다 반상이 흔들리고,
+     3D 캔버스는 그때마다 리사이즈와 카메라 재계산까지 따라온다. */
+  @media (max-width: 560px), (max-height: 560px) {
+    #menu { display: block; }
+    #panel {
+      display: none; position: fixed; z-index: 4;
+      flex-direction: column; align-items: stretch; width: 172px;
+      background: #262421f2; border: 1px solid #4a4643; border-radius: 8px;
+      padding: 10px; box-shadow: 0 8px 32px #000a;
+    }
+    body.controls #panel { display: flex; }
+  }
+
   @media (orientation: portrait) and (max-width: 560px) {
     body { gap: 10px; padding: 10px; }
-    #board { width: min(96vw, calc(62vh * 0.92)); aspect-ratio: 0.92; }
+    #board { width: min(96vw, calc(66vh * 0.92)); aspect-ratio: 0.92; }
     #moves { max-height: 48px; }
+    /* 세로에서는 아래쪽 가운데 — 엄지가 닿는 자리다. */
+    #panel { left: 50%; bottom: 56px; transform: translateX(-50%); }
   }
 
   /* 가로로 눕힌 폰은 높이가 없고 폭이 남는다. 세로 한 줄을 고집하면 반상이 높이에 눌려
@@ -187,16 +203,9 @@
       width: min(calc(96vh * 1.32), calc(100vw - 130px)); aspect-ratio: 1.32;
     }
     #status, #run, #menu, #duel, #legend { grid-column: 2; width: auto; }
-    #menu { display: block; justify-self: start; }
-    /* 컨트롤은 평소에 접혀 있다. 반쯤 빈 칸이 화면 삼분의 일을 먹느니, 필요할 때 편다.
-       펼친 패널은 반상 위에 떠서 열고 닫아도 반상 크기가 흔들리지 않는다. */
-    #panel {
-      display: none; position: fixed; right: 8px; top: 50%; transform: translateY(-50%);
-      z-index: 4; flex-direction: column; align-items: stretch; width: 172px;
-      background: #262421f2; border: 1px solid #4a4643; border-radius: 8px; padding: 10px;
-      box-shadow: 0 8px 32px #000a;
-    }
-    body.controls #panel { display: flex; }
+    #menu { justify-self: start; }
+    /* 가로에서는 오른쪽 띠 옆에 붙인다. */
+    #panel { right: 8px; top: 50%; transform: translateY(-50%); }
     #moves { display: none; } /* 기보는 가로에서 접는다 — 반상이 먼저다 */
     #legend { font-size: 12px; }
   }

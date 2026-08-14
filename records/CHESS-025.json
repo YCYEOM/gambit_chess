@@ -1,15 +1,36 @@
 {
   "task_id": "CHESS-025",
-  "summary_of_changes": "가로에서 컨트롤을 접었다. 오른쪽 칸에는 상태·연승·☰ 만 남고, ☰ 를 누르면 컨트롤이 반상 위로 떠오른다. 그리드 안에서 펼치면 반상이 줄었다 늘었다 하며 카메라까지 다시 잡히므로 떠 있는 패널로 만들었다 — 접든 펴든 반상 크기가 그대로다. 오른쪽 띠가 좁아진 만큼 반상이 커졌다(915×412 기준 484×367 → 522×396). 기보는 가로에서 접는다.",
+  "summary_of_changes": "가로에서 컨트롤을 접었다. 오른쪽 칸에는 상태·연승·☰ 만 남고, ☰ 를 누르면 컨트롤이 반상 위로 떠오른다. 그리드 안에서 펼치면 반상이 줄었다 늘었다 하며 카메라까지 다시 잡히므로 떠 있는 패널로 만들었다 — 접든 펴든 반상 크기가 그대로다. 오른쪽 띠가 좁아진 만큼 반상이 커졌다(915×412 기준 484×367 → 522×396). 기보는 가로에서 접는다. 이어서 세로에서도 같은 방식으로 접었다 — 폰이면 방향을 가리지 않고 컨트롤은 ☰ 로 열고 닫는다. 패널 스타일은 한 규칙(max-width 560 또는 max-height 560)에 모으고 뜨는 위치만 방향별로 다르게 뒀다: 세로는 아래쪽 가운데, 가로는 오른쪽.",
   "why": "사용자 제보 — 가로에서 우측 패널이 너무 넓다. 한 줄로 붙이거나 펼침으로 열고 닫는 편이 낫겠다. CHESS-023 의 두 칸 배치에서 오른쪽 칸이 반쯤 빈 채로 화면 삼분의 일을 먹고 있었다.",
-  "files_changed": ["index.html", "src/main.ts", "README.md", "DESIGN.md"],
+  "files_changed": [
+    "index.html",
+    "src/main.ts",
+    "README.md",
+    "DESIGN.md"
+  ],
   "models_used": [],
   "verification": {
     "evaluations_run": [
-      { "name": "typecheck", "level": 1, "status": "pass" },
-      { "name": "unit", "level": 2, "status": "pass" },
-      { "name": "build", "level": 2, "status": "pass" },
-      { "name": "design check", "level": 3, "status": "pass" }
+      {
+        "name": "typecheck",
+        "level": 1,
+        "status": "pass"
+      },
+      {
+        "name": "unit",
+        "level": 2,
+        "status": "pass"
+      },
+      {
+        "name": "build",
+        "level": 2,
+        "status": "pass"
+      },
+      {
+        "name": "design check",
+        "level": 3,
+        "status": "pass"
+      }
     ],
     "not_verified": [
       "실제 기기에서의 손맛 — iframe 으로 크기만 재현했다",
@@ -17,16 +38,26 @@
       "첫 진입을 접힌 채로 두는 것이 맞는지 — 사람 판단"
     ]
   },
-  "critic_findings": { "total": 1, "open_high_or_medium": 0 },
+  "critic_findings": {
+    "total": 1,
+    "open_high_or_medium": 0
+  },
   "known_limitations": [
     "가로에서는 기보를 볼 수 없다.",
-    "컨트롤이 반상 오른쪽 위에 떠서 그 아래 칸을 가린다. 열어 둔 채로 두면 반상 일부가 안 보인다.",
-    "접기 상태는 저장하지 않는다. 새로 고치면 다시 접힌다."
+    "펼친 패널이 반상 일부를 가린다 (세로는 아래쪽, 가로는 오른쪽 위). 열어 둔 채로 두면 그만큼 안 보인다.",
+    "접기 상태는 저장하지 않는다. 새로 고치면 다시 접힌다.",
+    "데스크톱은 그대로 늘 펼쳐져 있다 — 화면이 넓어 접을 이유가 없다."
   ],
   "out_of_scope_findings": [
     "버튼을 JS 로 `hidden` 해제하게 만들었더니 세로·데스크톱에도 ☰ 가 남았다. hidden 은 UA 스타일시트의 display:none 이라 저자 규칙이 이긴다 — 보이고 감추는 주체를 CSS 하나로 모았다."
   ],
-  "docs_updated": { "needed": true, "updated": ["README.md", "DESIGN.md"] },
+  "docs_updated": {
+    "needed": true,
+    "updated": [
+      "README.md",
+      "DESIGN.md"
+    ]
+  },
   "lessons": {
     "recorded": true,
     "candidates": [
@@ -34,11 +65,13 @@
       "같은 요소의 보임을 JS(hidden)와 CSS(display) 둘이 나눠 맡으면 반드시 어긋난다. 한쪽에 몰아야 한다."
     ]
   },
-  "rollback": { "method": "단일 커밋 revert." },
+  "rollback": {
+    "method": "단일 커밋 revert."
+  },
   "design": {
     "rendered_verification": true,
     "environment": "Chrome, http://localhost:5173/gambit_chess/ (vite dev), iframe 으로 기기 크기 재현",
-    "notes": "915×412 에서 오른쪽에 '백 차례 · 0연승 · 최고 0' 과 ☰ 만 남고 반상이 522×396 으로 커진 것을 확인했다. ☰ 를 누르면 글자가 ✕ 로 바뀌고 컨트롤 다섯 개가 세로로 쌓인 카드가 반상 위에 떠오른다(패널 display none → flex). 다시 누르면 접힌다. 반상 크기는 접든 펴든 522×396 그대로다. 데스크톱과 세로(390×844)에서는 ☰ 가 없고 컨트롤이 늘 보인다. 넘침은 모든 크기에서 0."
+    "notes": "915×412 에서 오른쪽에 '백 차례 · 0연승 · 최고 0' 과 ☰ 만 남고 반상이 522×396 으로 커진 것을 확인했다. ☰ 를 누르면 글자가 ✕ 로 바뀌고 컨트롤 다섯 개가 세로로 쌓인 카드가 반상 위에 떠오른다(패널 display none → flex). 다시 누르면 접힌다. 반상 크기는 접든 펴든 522×396 그대로다. 데스크톱과 세로(390×844)에서는 ☰ 가 없고 컨트롤이 늘 보인다. 넘침은 모든 크기에서 0. 후속(세로): 390×844·360×800 에서도 ☰ 가 뜨고 눌러서 열고 닫는 것을 확인했다. 펼치면 컨트롤 다섯 개가 세로로 쌓인 카드가 반상 아래쪽 가운데에 떠오르고, 반상 크기는 374×407·346×376 그대로다. 데스크톱은 여전히 ☰ 없이 컨트롤이 늘 보인다."
   },
   "human_approval": {
     "approved": true,
