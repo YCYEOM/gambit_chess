@@ -98,6 +98,7 @@ for (const [name, size, pad] of [
   ['icon-192.png', 192, 0.06],
   ['icon-512.png', 512, 0.06],
   ['icon-maskable-512.png', 512, 0.2], // 마스크가 잘라도 남을 만큼 안쪽에
+  ['apple-touch-icon.png', 180, 0.06], // iOS 는 매니페스트가 아니라 이 파일을 쓴다
 ]) {
   const out = png(size, pad)
   writeFileSync(new URL(`../public/${name}`, import.meta.url), out)

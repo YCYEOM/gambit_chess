@@ -486,6 +486,33 @@ document.getElementById('undo')!.onclick = async () => {
 levelEl.innerHTML = LEVELS.map((l, i) => `<option value="${i}">${l.label}</option>`).join('')
 levelEl.value = String(LEVELS.findIndex((l) => l.label === '어려움'))
 
+/**
+ * 아이폰에는 설치 배너가 없다. 안드로이드 크롬은 알아서 띄우지만 iOS 는 공유 시트의
+ * "홈 화면에 추가" 가 유일한 길이라, 모르면 없는 기능이 된다. 그 한 줄만 알려 준다.
+ */
+function installHint() {
+  const el = document.getElementById('install')!
+  const ios = /iP(hone|ad|od)/.test(navigator.userAgent)
+    // 아이패드는 사파리에서 자기를 맥이라고 말한다. 손가락이 있으면 아이패드다.
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  const installed = matchMedia('(display-mode: standalone)').matches
+    || (navigator as unknown as { standalone?: boolean }).standalone === true
+  let dismissed = false
+  try { dismissed = localStorage.getItem('gambit.installHint') === 'off' } catch { /* 저장이 막혀도 뜬다 */ }
+  if (!ios || installed || dismissed) return
+
+  el.innerHTML = '<span>앱처럼 쓰려면 — 공유 <b>⬆</b> 에서 <b>홈 화면에 추가</b></span>'
+  const close = document.createElement('button')
+  close.textContent = '닫기'
+  close.onclick = () => {
+    el.hidden = true
+    try { localStorage.setItem('gambit.installHint', 'off') } catch { /* 못 적어도 그만이다 */ }
+  }
+  el.append(close)
+  el.hidden = false
+}
+installHint()
+
 // 홈 화면에 추가하면 앱처럼 뜨고, 한 번 받은 모델(4.2MB)은 오프라인에서도 돈다.
 // 개발 중에는 달지 않는다 — 캐시가 남아 고친 것이 안 보이는 것만큼 헷갈리는 일이 없다.
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
