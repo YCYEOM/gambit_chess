@@ -93,6 +93,7 @@ let cameraLocked = false
 const markers = new THREE.Group()
 const healthBars = new THREE.Group()
 const itemGroup = new THREE.Group()
+const fxGroup = new THREE.Group()
 const clock = new THREE.Clock()
 let spin = 0
 
@@ -125,7 +126,7 @@ export function init(canvas: HTMLCanvasElement, onPick: (sq: Square) => void) {
   scene.add(fill)
 
   buildBoard()
-  scene.add(markers, healthBars, itemGroup)
+  scene.add(markers, healthBars, itemGroup, fxGroup)
 
   canvas.addEventListener('pointerdown', (e) => {
     const sq = pick(e)
@@ -327,6 +328,7 @@ function despawn(piece: Piece) {
  * 스킨 메시를 매 수마다 32개 복제하면 눈에 띄게 끊긴다.
  */
 export async function sync(game: Chess) {
+  clearEffects() // 무르기·새 게임으로 반상이 갈아엎히면 남은 타격 흔적도 지운다
   const want = new Map<Square, { type: PieceSymbol; color: Color }>()
   for (const row of game.board())
     for (const cell of row) if (cell) want.set(cell.square, { type: cell.type, color: cell.color })
@@ -608,6 +610,100 @@ export function resize() {
   if (!cameraLocked) resetCamera()
 }
 
+// ---------------------------------------------------------------- 타격 이펙트
+
+/**
+ * 타격이 눈에 보여야 한다. 전에는 공격 모션과 숫자뿐이라, 때린 순간이 화면에서 지나갔다.
+ *
+ * 판정은 이미 `combat.ts` 가 끝냈다 (DESIGN: 전투 결과를 화면에서 계산하지 않는다).
+ * 여기서 읽는 것은 "치명타였나" 하나뿐이고, 나머지는 재생이다.
+ */
+interface Effect {
+  obj: THREE.Mesh
+  age: number
+  life: number
+  /** 시작·끝 배율. 고리는 퍼지고 파편은 그대로다. */
+  from: number
+  to: number
+  /** 있으면 날아간다 (파편). */
+  velocity?: THREE.Vector3
+  /** 있으면 언제나 카메라를 마주 본다 (고리·초승달). */
+  billboard?: boolean
+}
+
+const effects: Effect[] = []
+/** 퍼지는 고리 — 맞은 자리. */
+const flashGeo = new THREE.RingGeometry(0.22, 0.42, 24)
+/** 초승달 — 때린 방향. 어느 쪽에서 들어온 타격인지 읽힌다. */
+const slashGeo = new THREE.RingGeometry(0.5, 0.78, 24, 1, Math.PI * 0.18, Math.PI * 0.64)
+const sparkGeo = new THREE.SphereGeometry(0.05, 6, 4)
+
+function emit(geo: THREE.BufferGeometry, color: THREE.Color, at: THREE.Vector3, e: Omit<Effect, 'obj' | 'age'>) {
+  const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+    color, transparent: true, depthWrite: false, side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+  }))
+  mesh.position.copy(at)
+  mesh.scale.setScalar(e.from)
+  fxGroup.add(mesh)
+  effects.push({ obj: mesh, age: 0, ...e })
+  return mesh
+}
+
+/** 맞은 기물 가슴께. 발밑에 그리면 기물에 가려 안 보인다. */
+const chest = (p: Piece) => p.root.position.clone().setY(0.62)
+
+function playStrike(hitter: Piece, victim: Piece, crit: boolean) {
+  const color = token(crit ? '--crit' : '--danger')
+  const at = chest(victim)
+  const size = crit ? 1.45 : 1
+
+  emit(flashGeo, color, at, { life: 0.28, from: 0.5 * size, to: 2.1 * size, billboard: true })
+
+  // 초승달은 때린 쪽에서 맞은 쪽을 향해 눕는다.
+  const slash = emit(slashGeo, color, at, { life: 0.22, from: 0.8 * size, to: 1.5 * size })
+  const dir = hitter.root.position.clone().sub(victim.root.position).setY(0)
+  slash.lookAt(at.clone().add(dir))
+  slash.rotateZ(Math.PI / 2)
+
+  for (let i = 0; i < (crit ? 9 : 5); i++) {
+    const a = Math.random() * Math.PI * 2
+    const up = 1.6 + Math.random() * 1.8
+    emit(sparkGeo, color, at, {
+      life: 0.42, from: size, to: size,
+      velocity: new THREE.Vector3(Math.cos(a) * 1.5, up, Math.sin(a) * 1.5),
+    })
+  }
+}
+
+/** 남은 이펙트를 지운다 — 새 게임·무르기에서 전투 흔적이 남지 않게. */
+function clearEffects() {
+  for (const e of effects) (e.obj.material as THREE.Material).dispose()
+  effects.length = 0
+  fxGroup.clear()
+}
+
+function stepEffects(dt: number) {
+  for (let i = effects.length - 1; i >= 0; i--) {
+    const e = effects[i]
+    e.age += dt
+    const t = e.age / e.life
+    if (t >= 1) {
+      ;(e.obj.material as THREE.Material).dispose()
+      fxGroup.remove(e.obj)
+      effects.splice(i, 1)
+      continue
+    }
+    e.obj.scale.setScalar(e.from + (e.to - e.from) * t)
+    ;(e.obj.material as THREE.MeshBasicMaterial).opacity = 1 - t * t
+    if (e.velocity) {
+      e.obj.position.addScaledVector(e.velocity, dt)
+      e.velocity.y -= 7 * dt // 파편은 떨어진다
+    }
+    if (e.billboard) e.obj.quaternion.copy(camera.quaternion)
+  }
+}
+
 // ---------------------------------------------------------------- 전투
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
@@ -698,6 +794,7 @@ export async function playDuel(
     onStrike(i)
     await sleep(step * 0.45)
     play(victim, 'Hit')
+    playStrike(hitter, victim, s.crit)
     await sleep(step * 0.55)
   }
 
@@ -724,6 +821,7 @@ function tick() {
   // 체력 바는 언제나 카메라를 마주 본다. 결투 중에는 카메라가 크게 움직인다.
   for (const bar of healthBars.children) bar.quaternion.copy(camera.quaternion)
   // 아이템은 떠서 돌며 위아래로 흔들린다 — 반상의 정적인 것들과 구분된다.
+  stepEffects(dt)
   spin += dt
   for (const obj of itemGroup.children) {
     if ((obj as THREE.Mesh).geometry !== itemGeo) continue
