@@ -66,56 +66,64 @@ export function blockedSquares(game: Chess, from: Square): Square[] {
 }
 
 /**
- * 킹은 겨눠진 칸으로도 나설 수 있다. 이 게임의 잡기는 확률이라 그 칸은 "죽는 칸" 이 아니라
- * "죽을 수도 있는 칸" 이기 때문이다 — 몰린 킹이 뚫고 나가 보는 것이 이 게임의 수다.
+ * 자기 킹이 잡힐 수 있는 수도 둘 수 있다. 이 게임의 잡기는 확률이라 "겨눠졌다" 는 사형이
+ * 아니라 "죽을 수도 있다" 이기 때문이다 — 몰린 킹이 뚫고 나가 보는 것도, 핀에 걸린 기물을
+ * 그냥 움직여 보는 것도 이 게임에서는 수가 된다. 대신 상대가 와서 전투에 이겨야 킹이 죽는다.
  *
  * chess.js 는 그런 수를 만들어 주지 않으므로 합법성 검사를 끈 내부 수 생성으로 직접 둔다.
  * ponytail: chess.js 1.4 의 비공개 API (ai.ts 와 같은 것들). 판올림 때 함께 확인한다.
  * 이 경로로 둔 수는 chess.js 의 반복 장부에 세지 않는다 — 공개 move() 만 그 장부를 만진다.
  */
-interface RawMove { piece: PieceSymbol; from: number; to: number }
+interface RawMove { piece: PieceSymbol; from: number; to: number; captured?: PieceSymbol; promotion?: PieceSymbol; flags: number }
 type Engine = {
   _moves(opts?: { legal?: boolean }): RawMove[]
   _makeMove(move: RawMove): void
 }
 /** 0x88 칸 번호 → 칸 이름. */
 const nameOf = (index: number) => `${FILES[index & 15]}${8 - (index >> 4)}` as Square
+/** chess.js 의 비트 플래그 → Move.flags 글자. 앙파상('e')·승진('p') 은 뒤에서 쓴다. */
+const FLAG_BITS: [number, string][] = [[1, 'n'], [2, 'c'], [4, 'b'], [8, 'e'], [16, 'p'], [32, 'k'], [64, 'q']]
 
-function forceKingMove(game: Chess, from: Square, to: Square): Move | null {
-  const king = game.get(from)
-  if (king?.type !== 'k' || king.color !== game.turn()) return null
+export function forceMove(
+  game: Chess,
+  req: { from: Square; to: Square; promotion?: string },
+): Move | null {
+  const piece = game.get(req.from)
+  if (!piece || piece.color !== game.turn()) return null
 
   const engine = game as unknown as Engine
-  const raw = engine._moves({ legal: false })
-    .find((m) => m.piece === 'k' && nameOf(m.from) === from && nameOf(m.to) === to)
+  const raw = engine._moves({ legal: false }).find((m) =>
+    nameOf(m.from) === req.from && nameOf(m.to) === req.to
+    && (!m.promotion || m.promotion === (req.promotion ?? 'q')))
   if (!raw) return null
 
-  const captured = game.get(to)?.type
+  const flags = FLAG_BITS.filter(([bit]) => raw.flags & bit).map(([, letter]) => letter).join('')
+  const captured = raw.captured
   engine._makeMove(raw)
-  // 탐색도 기보도 쓰는 것은 몇 개뿐이라 그것만 채운 Move 를 만든다.
+  // 기보와 장부가 쓰는 것만 채운다. SAN 은 같은 칸에 갈 수 있는 기물이 둘일 때의
+  // 구분 표기(Nbd2)를 붙이지 않는다 — 드문 수라 기보 한 줄의 정확도만 조금 떨어진다.
+  const mark = piece.type === 'p' ? (captured ? `${req.from[0]}x` : '') : piece.type.toUpperCase() + (captured ? 'x' : '')
   return {
-    color: king.color, from, to, piece: 'k', captured,
-    flags: captured ? 'c' : 'n',
-    san: `K${captured ? 'x' : ''}${to}`,
+    color: piece.color, from: req.from, to: req.to, piece: piece.type, captured, flags,
+    promotion: raw.promotion,
+    san: `${mark}${req.to}${raw.promotion ? `=${raw.promotion.toUpperCase()}` : ''}`,
   } as unknown as Move
 }
 
-/** 합법수면 그대로 두고, 킹이 위험을 무릅쓴 수면 억지로 둔다. */
+/** 합법수면 그대로 두고, 위험을 무릅쓴 수면 억지로 둔다. */
 function makeMove(game: Chess, req: { from: Square; to: Square; promotion?: string }): Move {
   try {
     return game.move(req)
   } catch (err) {
-    const forced = forceKingMove(game, req.from, req.to)
+    const forced = forceMove(game, req)
     if (!forced) throw err
     return forced
   }
 }
 
-/** 정통 모드 — 전투가 없다. 킹을 잡으면 그 자리에서 끝난다. */
+/** 정통 체스 모드 — 전투도, 위험을 무릅쓴 수도 없다. 규칙 그대로다. */
 export function plainMove(game: Chess, req: { from: Square; to: Square; promotion?: string }): MoveOutcome {
-  const move = makeMove(game, req)
-  const enemy: Color = move.color === 'w' ? 'b' : 'w'
-  return { move, fight: null, repelled: false, loser: move.captured === 'k' ? enemy : null }
+  return { move: game.move(req), fight: null, repelled: false, loser: null }
 }
 
 /**

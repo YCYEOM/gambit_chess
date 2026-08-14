@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { Chess } from 'chess.js'
-import { playMove, findKing, blockedSquares } from './duel'
+import { playMove, plainMove, findKing, blockedSquares } from './duel'
 
 /** 전투 결과를 고정한다: 0 을 계속 내면 최소 피해 + 크리티컬 없음 → 선공(공격자)이 이긴다. */
 const attackerWins = () => 0
@@ -96,6 +96,25 @@ describe('playMove', () => {
     expect(game.turn()).toBe('b')
     // 나선 킹은 이제 잡을 수 있는 자리에 있다 — 상대에게 그 수가 보여야 한다.
     expect(game.moves({ verbose: true }).some((m) => m.captured === 'k')).toBe(true)
+  })
+
+  it('핀에 걸린 기물도 둘 수 있다 — 킹을 열어 두는 셈이다', () => {
+    // 백 비숍 e2 가 흑 룩 e8 과 백 킹 e1 사이에 묶여 있다. 체스 규칙으로는 어디로도 못 간다.
+    const game = new Chess('4r2k/8/8/8/8/8/4B3/4K3 w - - 0 1')
+    expect(game.moves({ square: 'e2' })).toEqual([])
+
+    const out = playMove(game, { from: 'e2', to: 'd3' })
+    expect(out.move.san).toBe('Bd3')
+    expect(game.get('d3')).toEqual({ type: 'b', color: 'w' })
+    expect(game.turn()).toBe('b')
+    // 킹이 열렸다 — 상대에게 잡는 수가 보인다.
+    expect(game.moves({ verbose: true }).some((m) => m.captured === 'k')).toBe(true)
+  })
+
+  it('정통 체스 모드는 그런 수를 받아 주지 않는다', () => {
+    const game = new Chess('4r2k/8/8/8/8/8/4B3/4K3 w - - 0 1')
+    expect(() => plainMove(game, { from: 'e2', to: 'd3' })).toThrow()
+    expect(game.get('e2')).toEqual({ type: 'b', color: 'w' }) // 반상은 그대로
   })
 
   it('나선 킹이 전투에서 버티면 오히려 상대가 죽는다', () => {

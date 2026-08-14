@@ -43,20 +43,30 @@ let fallen: Color | null = null
 let hint: string | null = null
 
 const busy = () => thinking || dueling
+/** 결투 모드인가. 규칙을 푸는 것들은 전부 이 안에서만 일어난다. */
+const isDuel = () => modeEl.value === 'duel'
+
 /**
- * 내 킹이 나설 수 있는 위험 칸. 겨눠진 칸이라 chess.js 는 막지만 이 게임에서는 갈 수 있다 —
- * 그래서 체크메이트도 스테일메이트도 여기가 남아 있으면 아직 끝이 아니다.
+ * 빨간 칸으로도 둘 수 있는가. 표시는 "위험" 이지 "금지" 가 아니다 — 잡기가 확률이라
+ * 킹이 겨눠진 것은 사형이 아니기 때문이다. 그래서 체크메이트여도 이런 수가 남아 있으면
+ * 판은 아직 안 끝난다.
  *
- * 이 길은 사람에게만 열려 있다. AI 는 정통 체스 규칙 그대로 두고 몰리면 거기서 끝낸다 —
- * 사람이 몰아붙여 끝낸 판을 AI 가 반칙수로 빠져나가면 이긴 것이 이긴 게 아니다.
+ * 두 가지로 좁혀 둔다.
+ *  - 결투 모드만. 정통 체스는 규칙 그대로다.
+ *  - 사람만. 사람이 몰아붙여 끝낸 판을 AI 가 빠져나가면 이긴 것이 이긴 게 아니다.
  */
-function escapes(): Square[] {
-  if (game.turn() !== human) return []
-  const king = findKing(game, human)
-  return king ? blockedSquares(game, king) : []
+function canRisk(): boolean {
+  return isDuel() && game.turn() === human
 }
 
-const cornered = () => (game.isCheckmate() || game.isStalemate()) && escapes().length === 0
+/** 몰린 국면에서 빨간 칸으로라도 둘 수가 남아 있는지. 체크메이트일 때만 물어본다. */
+function hasRisky(): boolean {
+  if (!canRisk()) return false
+  return game.board().some((row) =>
+    row.some((p) => p?.color === human && blockedSquares(game, p.square).length > 0))
+}
+
+const cornered = () => (game.isCheckmate() || game.isStalemate()) && !hasRisky()
 const over = () => fallen !== null || cornered()
   || (!game.isCheckmate() && !game.isStalemate() && game.isGameOver())
 
@@ -73,12 +83,14 @@ function statusText(): string {
   if (game.isCheckmate()) {
     return cornered()
       ? `체크메이트 — ${stuck ? '패배' : '승리'}`
-      : '체크메이트 — 겨눠진 칸으로 나서는 수밖에 없다'
+      : '체크메이트 — 빨간 칸으로라도 두는 수밖에 없다'
   }
   if (game.isStalemate()) {
-    return cornered()
+    if (!cornered()) return '갈 곳이 빨간 칸뿐이다'
+    // 정통 체스에서는 스테일메이트가 무승부다. 결투 모드에서만 몰아붙인 쪽의 승리로 친다.
+    return isDuel()
       ? `갈 곳이 없다 · ${stuck ? '내가' : '상대가'} 둘 수가 없다 — ${stuck ? '패배' : '승리'}`
-      : '갈 곳이 겨눠진 칸뿐이다'
+      : '무승부 — 스테일메이트'
   }
   if (game.isDraw()) return `무승부 — ${drawReason()}`
   if (dueling) return '전투 중…'
@@ -90,19 +102,21 @@ function statusText(): string {
 /** 끝난 판의 결과. 아직 안 끝났으면 null. */
 function result(): 'win' | 'loss' | 'draw' | null {
   if (fallen) return fallen === human ? 'loss' : 'win'
-  // 체크메이트도 스테일메이트도 위험 칸이 남아 있으면 끝이 아니다. 완전히 갇혔을 때만
-  // 몰아붙인 쪽의 승리로 친다 — 체스는 스테일메이트를 무승부로 보지만 이 게임은 아니다.
-  if (cornered()) return game.turn() === human ? 'loss' : 'win'
-  if (game.isCheckmate() || game.isStalemate()) return null
+  // 빨간 칸으로라도 둘 수가 남아 있으면 아직 끝이 아니다.
+  if (game.isCheckmate() || game.isStalemate()) {
+    if (!cornered()) return null
+    // 정통 체스는 스테일메이트가 무승부다. 결투 모드에서만 몰아붙인 쪽의 승리로 친다.
+    if (game.isStalemate() && !isDuel()) return 'draw'
+    return game.turn() === human ? 'loss' : 'win'
+  }
   if (game.isDraw()) return 'draw'
   return null
 }
 
 /** 지금 이 런의 상태 — 연승·다음 상대·내가 쌓은 강화. 판이 바뀌어도 남는 것들이다. */
 function runBar() {
-  const duelMode = modeEl.value === 'duel'
-  runEl.hidden = !duelMode
-  if (!duelMode) return
+  runEl.hidden = !isDuel()
+  if (!isDuel()) return
   const parts = [
     `<span><b>${run.streak()}연승</b> · 최고 ${Math.max(run.best(), run.streak())}</span>`,
     ...run.rewards().map((r) => `<span class="up">${r.label}</span>`),
@@ -140,19 +154,18 @@ function render() {
     }),
   )
   movesEl.scrollTop = movesEl.scrollHeight
-  const duelMode = modeEl.value === 'duel'
-  board3d.showHealth(duelMode ? state.wounded(game) : [])
+  board3d.showHealth(isDuel() ? state.wounded(game) : [])
   board3d.showItems(
-    duelMode ? items.items().map(([square, kind]) => ({ square, token: items.ITEMS[kind].token })) : [],
+    isDuel() ? items.items().map(([square, kind]) => ({ square, token: items.ITEMS[kind].token })) : [],
   )
-  if (duelMode) board3d.showBuffed(state.buffed())
+  if (isDuel()) board3d.showBuffed(state.buffed())
   itemLegend()
   runBar()
 }
 
 /** 반상에 놓인 아이템이 뭔지 알려 준다. 색만 봐서는 효과를 모른다. */
 function itemLegend() {
-  const list = modeEl.value === 'duel' ? items.items() : []
+  const list = isDuel() ? items.items() : []
   legendEl.hidden = list.length === 0
   legendEl.replaceChildren(
     ...list.map(([square, kind]) => {
@@ -215,12 +228,11 @@ const HOW_IT_MOVES = {
 
 /** 승진할 기물을 고르게 한다. 카드가 필요한 화면은 이미 있으니 그대로 쓴다. */
 function choosePromotion(): Promise<PieceSymbol> {
-  const duelMode = modeEl.value === 'duel'
   return new Promise((resolve) => {
     openReward('폰이 끝에 닿았다', '무엇으로 승진할까', (['q', 'r', 'b', 'n'] as const).map((type) => ({
       // 기물 이름이 먼저다 — 반상에서 보이는 것은 역이지만, 고르는 것은 기물이다.
       title: `${STATS[type].name} · ${board3d.roleName(human, type)}`,
-      what: duelMode
+      what: isDuel()
         ? `${HOW_IT_MOVES[type]} · 체력 ${STATS[type].hp} · 공격력 ${STATS[type].atk}`
         : HOW_IT_MOVES[type],
       pick: () => resolve(type),
@@ -229,9 +241,8 @@ function choosePromotion(): Promise<PieceSymbol> {
 }
 
 async function apply(from: Square, to: Square, promotion: PieceSymbol = 'q'): Promise<boolean> {
-  const duelMode = modeEl.value === 'duel'
   const before = { fen: game.fen(), pieces: state.snapshot(), items: items.snapshot() }
-  const outcome = duelMode
+  const outcome = isDuel()
     ? playMove(game, { from, to, promotion }, Math.random, state.stateOf)
     : plainMove(game, { from, to, promotion })
 
@@ -277,7 +288,7 @@ async function apply(from: Square, to: Square, promotion: PieceSymbol = 'q'): Pr
   fallen = outcome.loser
 
   let again = false
-  if (duelMode) {
+  if (isDuel()) {
     state.applyMove(outcome.move, outcome.repelled, outcome.fight)
     // 승진하면 종류가 바뀐다. 런에서 쌓은 강화도 새 종류 기준으로 다시 계산한다.
     if (outcome.move.promotion && !outcome.repelled) {
@@ -373,16 +384,21 @@ async function onSquare(sq: Square) {
       return
     }
     if (blockedSquares(game, selected).includes(sq)) {
-      // 킹은 겨눠진 칸으로도 나선다. 잡히려면 상대가 와서 전투에 이겨야 한다.
-      if (game.get(selected)?.type === 'k') {
+      // 표시를 보고도 가겠다면 간다. 킹이 잡히려면 상대가 와서 전투에 이겨야 한다.
+      if (canRisk()) {
         const from = selected
+        const piece = game.get(from)
         selected = null
-        hint = '겨눠진 칸으로 나섰다'
-        const again = await apply(from, sq)
+        hint = piece?.type === 'k' ? '겨눠진 칸으로 나섰다' : '킹을 열어 두고 움직였다'
+        render()
+        const promotion = piece?.type === 'p' && (sq[1] === '8' || sq[1] === '1')
+          ? await choosePromotion()
+          : undefined
+        const again = await apply(from, sq, promotion)
         if (!over() && !again) aiTurn()
         return
       }
-      // 다른 기물이 막힌 이유는 하나다 — 그 수를 두면 킹이 잡힌다.
+      // 정통 체스는 규칙 그대로 막는다. 이유는 하나다 — 그 수를 두면 킹이 잡힌다.
       hint = game.inCheck() ? '지금은 체크부터 풀어야 한다' : '그 수를 두면 킹이 잡힌다'
       render()
       return
@@ -403,7 +419,7 @@ function aiTurn() {
     const move = bestMove(
       game,
       level.depth,
-      modeEl.value === 'duel' ? state.stateOf : undefined,
+      isDuel() ? state.stateOf : undefined,
       level.noise,
       level.ms,
     )
@@ -439,7 +455,7 @@ async function startBoard() {
   state.reset()
   items.reset()
   duelEl.hidden = true
-  if (modeEl.value === 'duel') run.applyTo(game, human)
+  if (isDuel()) run.applyTo(game, human)
   board3d.setOrientation(human)
   await board3d.sync(game)
   render()
