@@ -1,0 +1,49 @@
+{
+  "task_id": "CHESS-023",
+  "summary_of_changes": "눕힌 폰에서 세로 한 줄을 버리고 두 칸 그리드로 바꿨다. 반상이 왼쪽에서 높이를 다 쓰고(min(94vh × 1.32, 100vw − 190px)) 상태·런·컨트롤·기보는 오른쪽 좁은 칸에 쌓인다. 반상이 844×390 기준 365×214 → 484×367 로 커졌고 한 칸이 46px → 60px 이 된다. 작업 중 미디어 쿼리가 기본 규칙보다 앞에 있어 width: auto 가 무시되던 것(가로 461px 넘침)을 찾아, 브레이크포인트를 스타일시트 맨 뒤로 옮겼다.",
+  "why": "사용자 제보 — 가로 모드가 많이 불편하고 너무 작다. CHESS-019 에서 스크롤만 없앴을 뿐 반상은 작고 좌우 500px 가 비어 있었다.",
+  "files_changed": ["index.html", "README.md", "DESIGN.md"],
+  "models_used": [],
+  "verification": {
+    "evaluations_run": [
+      { "name": "typecheck", "level": 1, "status": "pass" },
+      { "name": "unit", "level": 2, "status": "pass" },
+      { "name": "build", "level": 2, "status": "pass" },
+      { "name": "design check", "level": 3, "status": "pass" }
+    ],
+    "not_verified": [
+      "실제 기기 — iframe 을 기기 크기로 만들어 쟀다. 주소창이 여닫히며 높이가 변하는 상황은 폰에서 봐야 한다",
+      "오른쪽 칸에서 컨트롤을 누르는 손맛 — 사람 판단",
+      "전투 계기판이 뜬 상태의 가로 배치 (숨어 있을 때만 쟀다)"
+    ]
+  },
+  "critic_findings": { "total": 1, "open_high_or_medium": 0 },
+  "known_limitations": [
+    "전투 계기판·아이템 안내줄도 오른쪽 좁은 칸에 들어간다. 계기판은 원래 가로로 넓게 쓰던 것이라 좁은 칸에서는 이름이 접힐 수 있다.",
+    "오른쪽 칸 아래가 비어 보인다. 기보가 짧을 때 특히 그렇다.",
+    "태블릿 가로(높이 >560px)는 기본 한 줄 배치를 그대로 쓴다."
+  ],
+  "out_of_scope_findings": [
+    "미디어 쿼리가 스타일시트 중간에 있었다. #moves 같은 기본 규칙과 특정도가 같아 나중에 오는 쪽이 이기므로, 앞에 둔 브레이크포인트는 조용히 무시된다 — 이번 작업에서 가로 461px 넘침으로 드러났다."
+  ],
+  "docs_updated": { "needed": true, "updated": ["README.md", "DESIGN.md"] },
+  "lessons": {
+    "recorded": true,
+    "candidates": [
+      "특정도가 같으면 순서가 곧 규칙이다. 미디어 쿼리는 스타일시트 맨 뒤에 두어야 한다 — 중간에 두면 '분명히 썼는데 안 먹는' 증상으로 나타나고, 그 원인은 화면 크기가 아니라 줄 번호다.",
+      "'스크롤만 없앴다' 는 고친 것이 아니다. CHESS-019 에서 넘침을 0 으로 만들고 넘어갔는데, 사용자에게는 여전히 못 쓸 화면이었다 — 수치가 통과해도 쓸 수 있는지는 따로 봐야 한다."
+    ]
+  },
+  "rollback": { "method": "단일 커밋 revert." },
+  "design": {
+    "rendered_verification": true,
+    "environment": "Chrome, http://localhost:5173/gambit_chess/ (vite dev), iframe 으로 기기 크기 재현",
+    "notes": "844×390 에서 반상이 왼쪽에 484×367 로 놓이고 오른쪽 칸에 상태·런 줄·컨트롤(2열로 접힘)·기보가 쌓이는 것을 눈으로 확인했다. 가로·세로 넘침 0. 800×360 은 447×338, 932×430 은 534×404, 667×375 는 465×352 이고 모두 넘침 0. 세로(390×844 · 360×800)는 이전과 같은 374×407 · 346×376 그대로다."
+  },
+  "human_approval": {
+    "approved": true,
+    "approver": "user",
+    "at": "2026-08-14T09:15:00.000Z",
+    "notes": "가로 모드가 불편하고 너무 작다는 제보"
+  }
+}
