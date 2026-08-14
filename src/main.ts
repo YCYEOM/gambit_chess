@@ -482,6 +482,14 @@ document.getElementById('undo')!.onclick = async () => {
   render()
 }
 
+// 눕힌 폰에서는 컨트롤을 접어 둔다. 이 버튼은 가로에서만 보인다 (CSS 가 정한다).
+const menuEl = document.getElementById('menu') as HTMLButtonElement
+menuEl.onclick = () => {
+  const open = document.body.classList.toggle('controls')
+  menuEl.setAttribute('aria-label', open ? '설정 닫기' : '설정 열기')
+  menuEl.textContent = open ? '✕' : '☰'
+}
+
 // 난이도는 ai.ts 의 LEVELS 하나만 보고 만든다 — 이름·깊이·손떨림이 갈리지 않게.
 levelEl.innerHTML = LEVELS.map((l, i) => `<option value="${i}">${l.label}</option>`).join('')
 levelEl.value = String(LEVELS.findIndex((l) => l.label === '어려움'))
