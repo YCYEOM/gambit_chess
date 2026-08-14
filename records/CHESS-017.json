@@ -1,0 +1,44 @@
+{
+  "task_id": "CHESS-017",
+  "summary_of_changes": "겨눠진 칸으로 나서는 길을 사람의 킹에만 남겼다. AI 는 정통 체스 규칙 그대로라 체크메이트·스테일메이트면 그 자리에서 판이 끝난다. escapes() 를 사람 차례로 한정하니 over·result·상태줄이 모두 따라왔고, AI 의 최후 수단 코드는 도달할 수 없게 되어 지웠다.",
+  "why": "사용자 요청 — AI 는 기존 규칙으로 유지. CHESS-016 에서 양쪽에 같은 길을 줬는데, 그러면 사람이 몰아붙여 만든 체크메이트를 AI 가 빠져나간다.",
+  "files_changed": ["src/main.ts", "README.md", "DESIGN.md"],
+  "models_used": [],
+  "verification": {
+    "evaluations_run": [
+      { "name": "typecheck", "level": 1, "status": "pass" },
+      { "name": "unit", "level": 2, "status": "pass" },
+      { "name": "build", "level": 2, "status": "pass" },
+      { "name": "design check", "level": 3, "status": "pass" }
+    ],
+    "not_verified": [
+      "사람만 빠져나가는 것이 균형으로서 어떤지 — 사람 판단",
+      "Chrome 외 브라우저"
+    ]
+  },
+  "critic_findings": { "total": 0, "open_high_or_medium": 0 },
+  "known_limitations": [
+    "규칙이 진영마다 다르다. 내 킹은 몰려도 나설 수 있고 AI 의 킹은 못 나선다.",
+    "AI 는 내 킹이 나설 수 있다는 것을 탐색에 넣지 않는다 — 체크메이트를 여전히 끝으로 본다."
+  ],
+  "out_of_scope_findings": [],
+  "docs_updated": { "needed": true, "updated": ["README.md", "DESIGN.md"] },
+  "lessons": {
+    "recorded": true,
+    "candidates": [
+      "규칙을 느슨하게 풀 때 누구에게 풀 것인지가 곧 게임의 성격이다. 양쪽에 똑같이 주면 공정하지만, 사람이 이겨서 만든 결말을 AI 가 지워 버린다."
+    ]
+  },
+  "rollback": { "method": "단일 커밋 revert." },
+  "design": {
+    "rendered_verification": true,
+    "environment": "Chrome, http://localhost:5173/gambit_chess/ (vite dev)",
+    "notes": "내가 체크메이트인 국면(6k1/8/8/8/8/8/5PPP/r5K1 w)에서는 '체크메이트 — 겨눠진 칸으로 나서는 수밖에 없다' 로 판이 계속되고, AI 가 체크메이트인 국면(R5k1/5ppp/8/8/8/8/8/6K1 b)에서는 '체크메이트 — 승리' 로 그 자리에서 끝난다."
+  },
+  "human_approval": {
+    "approved": true,
+    "approver": "user",
+    "at": "2026-08-14T03:30:00.000Z",
+    "notes": "AI 는 기존 규칙으로 유지해 달라는 요청"
+  }
+}

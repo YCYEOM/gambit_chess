@@ -44,11 +44,15 @@ let hint: string | null = null
 
 const busy = () => thinking || dueling
 /**
- * 킹이 나설 수 있는 위험 칸. 겨눠진 칸이라 chess.js 는 막지만 이 게임에서는 갈 수 있다 —
+ * 내 킹이 나설 수 있는 위험 칸. 겨눠진 칸이라 chess.js 는 막지만 이 게임에서는 갈 수 있다 —
  * 그래서 체크메이트도 스테일메이트도 여기가 남아 있으면 아직 끝이 아니다.
+ *
+ * 이 길은 사람에게만 열려 있다. AI 는 정통 체스 규칙 그대로 두고 몰리면 거기서 끝낸다 —
+ * 사람이 몰아붙여 끝낸 판을 AI 가 반칙수로 빠져나가면 이긴 것이 이긴 게 아니다.
  */
 function escapes(): Square[] {
-  const king = findKing(game, game.turn())
+  if (game.turn() !== human) return []
+  const king = findKing(game, human)
   return king ? blockedSquares(game, king) : []
 }
 
@@ -69,12 +73,12 @@ function statusText(): string {
   if (game.isCheckmate()) {
     return cornered()
       ? `체크메이트 — ${stuck ? '패배' : '승리'}`
-      : `체크메이트 — ${stuck ? '겨눠진 칸으로 나서는 수밖에 없다' : '상대가 몰렸다'}`
+      : '체크메이트 — 겨눠진 칸으로 나서는 수밖에 없다'
   }
   if (game.isStalemate()) {
     return cornered()
       ? `갈 곳이 없다 · ${stuck ? '내가' : '상대가'} 둘 수가 없다 — ${stuck ? '패배' : '승리'}`
-      : `${stuck ? '겨눠진 칸으로 나서는 수밖에 없다' : '상대가 몰렸다'}`
+      : '갈 곳이 겨눠진 칸뿐이다'
   }
   if (game.isDraw()) return `무승부 — ${drawReason()}`
   if (dueling) return '전투 중…'
@@ -404,11 +408,8 @@ function aiTurn() {
       level.ms,
     )
     thinking = false
-    // 합법수가 없어도 킹에게 나설 칸이 남았으면 아직 끝이 아니다.
-    const risky = move ? null : escapes()
-    const from = move ? move.from : findKing(game, game.turn())
-    const to = move ? move.to : risky?.[Math.floor(Math.random() * risky.length)]
-    const again = from && to ? await apply(from, to, move?.promotion) : false
+    // AI 는 합법수만 둔다. 둘 수가 없으면 그 자리에서 판이 끝난 것이다 (over 가 잡는다).
+    const again = move ? await apply(move.from, move.to, move.promotion) : false
     render()
     if (again && !over()) aiTurn() // 재행동을 먹었으면 AI 가 한 번 더 둔다
   }, 20)
