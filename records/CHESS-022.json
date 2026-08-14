@@ -1,39 +1,67 @@
 {
   "task_id": "CHESS-022",
-  "summary_of_changes": "터치로 칸을 누를 때 브라우저가 캔버스를 선택해 판 전체에 파란 막이 씌워지던 것을 막았다. 본문에서 선택과 탭 하이라이트를 끄고, 반상에는 길게 누르기 메뉴도 껐다. 기보(#moves)만 선택을 되살려 복사할 수 있게 남겼다.",
+  "summary_of_changes": "터치로 칸을 누를 때 브라우저가 캔버스를 선택해 판 전체에 파란 막이 씌워지던 것을 막았다. 본문에서 선택과 탭 하이라이트를 끄고, 반상에는 길게 누르기 메뉴도 껐다. 기보(#moves)만 선택을 되살려 복사할 수 있게 남겼다. CSS 만으로는 안 잡혔다는 제보를 받고(안드로이드에서 여전히 파랗게 덮임) 캔버스에 touchstart·selectstart·contextmenu·dragstart 의 기본 동작을 직접 막고, 물려받는 값(tap-highlight·user-select)도 캔버스에 다시 적었다. 칸은 pointerdown 에서 이미 집으므로 터치의 기본 동작은 버려도 잃을 것이 없다.",
   "why": "사용자 제보 — 모바일에서 기물을 누를 때마다 판 전체에 파란 막이 한 번씩 올라온다. 데스크톱 마우스로는 재현되지 않아 지금까지 안 보였다.",
-  "files_changed": ["index.html"],
+  "files_changed": [
+    "index.html"
+  ],
   "models_used": [],
   "verification": {
     "evaluations_run": [
-      { "name": "typecheck", "level": 1, "status": "pass" },
-      { "name": "unit", "level": 2, "status": "pass" },
-      { "name": "build", "level": 2, "status": "pass" },
-      { "name": "design check", "level": 3, "status": "pass" }
+      {
+        "name": "typecheck",
+        "level": 1,
+        "status": "pass"
+      },
+      {
+        "name": "unit",
+        "level": 2,
+        "status": "pass"
+      },
+      {
+        "name": "build",
+        "level": 2,
+        "status": "pass"
+      },
+      {
+        "name": "design check",
+        "level": 3,
+        "status": "pass"
+      }
     ],
     "not_verified": [
-      "실제 폰에서 파란 막이 사라졌는지 — 데스크톱 크롬에서는 터치 선택을 재현할 수 없다. 계산된 스타일(user-select: none, tap-highlight 투명, 기보만 text)까지만 확인했다",
+      "실제 폰에서 파란 막이 사라졌는지 — 데스크톱 크롬에서는 터치 하이라이트를 재현할 수 없다. 이벤트가 실제로 막히는 것(합성 이벤트의 defaultPrevented)과 계산된 스타일까지만 확인했다",
       "iOS 사파리의 길게 누르기 메뉴"
     ]
   },
-  "critic_findings": { "total": 0, "open_high_or_medium": 0 },
+  "critic_findings": {
+    "total": 0,
+    "open_high_or_medium": 0
+  },
   "known_limitations": [
     "기보 외의 텍스트(상태줄·런 줄·카드)는 선택되지 않는다.",
+    "캔버스에서 터치 기본 동작을 전부 막으므로, 나중에 두 손가락 확대·회전 같은 제스처를 붙이려면 이 처리를 다시 봐야 한다.",
     "-webkit-touch-callout 은 크롬 데스크톱에서 계산된 값으로 확인되지 않는다 (iOS 전용)."
   ],
   "out_of_scope_findings": [],
-  "docs_updated": { "needed": false, "updated": [] },
+  "docs_updated": {
+    "needed": false,
+    "updated": []
+  },
   "lessons": {
     "recorded": true,
     "candidates": [
-      "터치에만 나오는 결함은 데스크톱 확인으로 절대 안 걸린다. touch-action 을 넣었다고 선택까지 막힌 것은 아니다 — 확대·선택·하이라이트·길게 누르기는 각각 다른 스위치다."
+      "터치에만 나오는 결함은 데스크톱 확인으로 절대 안 걸린다. touch-action 을 넣었다고 선택까지 막힌 것은 아니다 — 확대·선택·하이라이트·길게 누르기는 각각 다른 스위치다.",
+      "CSS 로 끄는 것과 브라우저가 실제로 안 그리는 것은 다르다. 물려받는 속성이라도 문제가 나는 요소에 다시 적고, 그래도 남으면 이벤트의 기본 동작을 막아야 한다 — 특히 캔버스처럼 브라우저가 '내용' 으로 보는 요소에서."
     ]
   },
-  "rollback": { "method": "단일 커밋 revert." },
+  "rollback": {
+    "method": "단일 커밋 revert."
+  },
   "design": {
     "rendered_verification": true,
     "environment": "Chrome, http://localhost:5173/gambit_chess/ (vite dev)",
-    "notes": "계산된 스타일로 확인했다 — body 의 user-select: none, tap-highlight rgba(0,0,0,0), 반상 touch-action: none, 기보만 user-select: text. 파란 막 자체는 터치 기기에서만 나므로 데스크톱에서는 재현하지 못했다."
+    "notes": "계산된 스타일로 확인했다 — body 의 user-select: none, tap-highlight rgba(0,0,0,0), 반상 touch-action: none, 기보만 user-select: text. 파란 막 자체는 터치 기기에서만 나므로 데스크톱에서는 재현하지 못했다. 후속: 합성 이벤트로 캔버스의 touchstart·selectstart 가 실제로 preventDefault 되는 것을 확인했다 (defaultPrevented true). 기기에서의 최종 확인은 사용자 몫이다."
   },
   "human_approval": {
     "approved": true,

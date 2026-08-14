@@ -133,6 +133,16 @@ export function init(canvas: HTMLCanvasElement, onPick: (sq: Square) => void) {
     if (sq) onPick(sq)
   })
 
+  /**
+   * 누를 때마다 반상이 통째로 파랗게 덮이는 일이 있었다 (안드로이드). 캔버스가 선택되거나
+   * 탭 하이라이트가 씌워진 것인데, CSS 로 껐어도 브라우저에 따라 남는다.
+   * 칸은 pointerdown 에서 이미 집었으므로 터치의 기본 동작은 버려도 잃을 것이 없다.
+   */
+  canvas.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false })
+  for (const type of ['selectstart', 'contextmenu', 'dragstart']) {
+    canvas.addEventListener(type, (e) => e.preventDefault())
+  }
+
   resetCamera()
   resize()
   renderer.setAnimationLoop(tick)

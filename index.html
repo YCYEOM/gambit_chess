@@ -56,8 +56,13 @@
        반상 아래쪽이 잘린다 (aspect-ratio 1.32 → 높이 = 너비 / 1.32). */
     display: block; width: min(92vw, 1000px, 82vh); aspect-ratio: 1.32;
     border-radius: 6px; box-shadow: 0 8px 32px #0008; touch-action: none; cursor: pointer;
-    /* 길게 눌러도 이미지 저장 메뉴가 뜨지 않는다 — 반상은 그림이 아니라 조작면이다. */
+    /* 길게 눌러도 이미지 저장 메뉴가 뜨지 않는다 — 반상은 그림이 아니라 조작면이다.
+       상속으로 될 것 같지만 안드로이드 크롬·삼성 인터넷에서 캔버스가 통째로 파랗게
+       번쩍이는 일이 있어, 물려받는 값이라도 여기에 다시 적는다. */
     -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
   }
 
   /* ---- 폰 ----
