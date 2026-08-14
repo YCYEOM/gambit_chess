@@ -2,8 +2,15 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Gambit Chess</title>
+<!-- 홈 화면에 추가하면 앱처럼 뜬다. 아이콘은 tools/make-icons.mjs 가 그린다. -->
+<link rel="manifest" href="./manifest.webmanifest" />
+<link rel="icon" href="./icon-192.png" />
+<link rel="apple-touch-icon" href="./icon-192.png" />
+<meta name="theme-color" content="#262421" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Gambit" />
 <style>
   :root {
     --light: #eeddc0;
@@ -27,10 +34,14 @@
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0; min-height: 100vh; display: flex; flex-direction: column;
+    /* dvh 는 주소창이 여닫혀도 흔들리지 않는다. 100vh 는 그 값을 모르는 브라우저용. */
+    margin: 0; min-height: 100vh; min-height: 100dvh;
+    display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 14px; padding: 16px;
     background: var(--bg); color: var(--text);
     font: 15px/1.5 system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif;
+    /* 더블탭 확대와 그에 딸린 300ms 지연을 없앤다. 손가락 두 개 확대는 남는다. */
+    touch-action: manipulation;
   }
   h1 { margin: 0; font-size: 22px; letter-spacing: .06em; }
   #board {

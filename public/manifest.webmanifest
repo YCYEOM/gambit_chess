@@ -1,0 +1,16 @@
+{
+  "name": "Gambit Chess",
+  "short_name": "Gambit",
+  "description": "잡기가 확률인 체스. 기물이 칸에서 직접 싸우고, 이기면 다음 판으로 이어진다.",
+  "lang": "ko",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#262421",
+  "theme_color": "#262421",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

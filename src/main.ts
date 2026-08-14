@@ -486,6 +486,14 @@ document.getElementById('undo')!.onclick = async () => {
 levelEl.innerHTML = LEVELS.map((l, i) => `<option value="${i}">${l.label}</option>`).join('')
 levelEl.value = String(LEVELS.findIndex((l) => l.label === '어려움'))
 
+// 홈 화면에 추가하면 앱처럼 뜨고, 한 번 받은 모델(4.2MB)은 오프라인에서도 돈다.
+// 개발 중에는 달지 않는다 — 캐시가 남아 고친 것이 안 보이는 것만큼 헷갈리는 일이 없다.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  addEventListener('load', () => {
+    void navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`)
+  })
+}
+
 board3d.init(boardEl, (sq) => { void onSquare(sq) })
 addEventListener('resize', board3d.resize)
 statusEl.textContent = '기물 불러오는 중…'
