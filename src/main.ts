@@ -185,15 +185,24 @@ function showStrike(struck: 'atk' | 'def', s: { damage: number; crit: boolean; a
 // ---------------------------------------------------------------- 수 적용
 
 /** 수를 두고 화면에 반영한다. 재행동 아이템을 먹었으면 true. */
+/** 어떻게 움직이는 기물인지 한 줄. 역 이름만 보면 뭐가 퀸이고 뭐가 비숍인지 모른다. */
+const HOW_IT_MOVES = {
+  q: '직선과 대각선, 어디든',
+  r: '직선으로만',
+  b: '대각선으로만',
+  n: 'ㄱ 자로, 넘어서',
+} as const
+
 /** 승진할 기물을 고르게 한다. 카드가 필요한 화면은 이미 있으니 그대로 쓴다. */
 function choosePromotion(): Promise<PieceSymbol> {
   const duelMode = modeEl.value === 'duel'
   return new Promise((resolve) => {
     openReward('폰이 끝에 닿았다', '무엇으로 승진할까', (['q', 'r', 'b', 'n'] as const).map((type) => ({
-      title: board3d.roleName(human, type),
+      // 기물 이름이 먼저다 — 반상에서 보이는 것은 역이지만, 고르는 것은 기물이다.
+      title: `${STATS[type].name} · ${board3d.roleName(human, type)}`,
       what: duelMode
-        ? `체력 ${STATS[type].hp} · 공격력 ${STATS[type].atk}`
-        : { q: '퀸', r: '룩', b: '비숍', n: '나이트' }[type],
+        ? `${HOW_IT_MOVES[type]} · 체력 ${STATS[type].hp} · 공격력 ${STATS[type].atk}`
+        : HOW_IT_MOVES[type],
       pick: () => resolve(type),
     })))
   })

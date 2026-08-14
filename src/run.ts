@@ -16,6 +16,7 @@
  */
 import type { Chess, Color, PieceSymbol, Square } from 'chess.js'
 import { grant } from './pieceState'
+import { STATS } from './combat'
 
 export interface Upgrade {
   kind: 'atk' | 'crit'
@@ -37,10 +38,6 @@ export interface Fusion {
 
 export type Reward = Upgrade | Fusion
 
-const NAMES: Record<PieceSymbol, string> = {
-  p: '폰', n: '나이트', b: '비숍', r: '룩', q: '퀸', k: '킹',
-}
-
 /** 처음 배치 개수. 합성이 얼마나 남았는지 세는 기준이자 강화 크기의 기준이다. */
 const START: Record<PieceSymbol, number> = { p: 8, n: 2, b: 2, r: 2, q: 1, k: 1 }
 
@@ -60,7 +57,7 @@ const SIZE: Record<PieceSymbol, { atk: number; crit: number }> = {
 const pct = (n: number) => `${Math.round(n * 100)}%p`
 
 function upgrade(target: PieceSymbol | 'all', kind: 'atk' | 'crit', amount: number): Upgrade {
-  const who = target === 'all' ? '전군' : NAMES[target]
+  const who = target === 'all' ? '전군' : STATS[target].name
   const value = kind === 'atk' ? `+${amount}` : `+${pct(amount)}`
   return {
     kind, target, amount,
@@ -72,8 +69,8 @@ function upgrade(target: PieceSymbol | 'all', kind: 'atk' | 'crit', amount: numb
 function fusion(from: PieceSymbol, to: PieceSymbol, count: number): Fusion {
   return {
     kind: 'fuse', from, to, count,
-    label: `${NAMES[from]} → ${NAMES[to]}`,
-    what: `${NAMES[from]} ${count}을 ${NAMES[to]} 하나로`,
+    label: `${STATS[from].name} → ${STATS[to].name}`,
+    what: `${STATS[from].name} ${count}을 ${STATS[to].name} 하나로`,
   }
 }
 
