@@ -4,7 +4,7 @@ import { STATS } from './combat'
 import * as state from './pieceState'
 import * as items from './items'
 import * as run from './run'
-import { playMove, findKing, blockedSquares, type MoveOutcome } from './duel'
+import { playMove, plainMove, findKing, blockedSquares } from './duel'
 import * as board3d from './board3d'
 
 const statusEl = document.getElementById('status')!
@@ -43,7 +43,18 @@ let fallen: Color | null = null
 let hint: string | null = null
 
 const busy = () => thinking || dueling
-const over = () => game.isGameOver() || fallen !== null
+/**
+ * 킹이 나설 수 있는 위험 칸. 겨눠진 칸이라 chess.js 는 막지만 이 게임에서는 갈 수 있다 —
+ * 그래서 체크메이트도 스테일메이트도 여기가 남아 있으면 아직 끝이 아니다.
+ */
+function escapes(): Square[] {
+  const king = findKing(game, game.turn())
+  return king ? blockedSquares(game, king) : []
+}
+
+const cornered = () => (game.isCheckmate() || game.isStalemate()) && escapes().length === 0
+const over = () => fallen !== null || cornered()
+  || (!game.isCheckmate() && !game.isStalemate() && game.isGameOver())
 
 /** 왜 무승부인지. "이겼는데 무승부" 로 보이는 순간에 규칙 이름 하나는 있어야 납득이 된다. */
 function drawReason(): string {
@@ -54,10 +65,16 @@ function drawReason(): string {
 
 function statusText(): string {
   if (fallen) return `킹이 쓰러졌다 — ${fallen === human ? '패배' : '승리'}`
-  if (game.isCheckmate()) return `체크메이트 — ${game.turn() === human ? '패배' : '승리'}`
+  const stuck = game.turn() === human
+  if (game.isCheckmate()) {
+    return cornered()
+      ? `체크메이트 — ${stuck ? '패배' : '승리'}`
+      : `체크메이트 — ${stuck ? '겨눠진 칸으로 나서는 수밖에 없다' : '상대가 몰렸다'}`
+  }
   if (game.isStalemate()) {
-    const stuck = game.turn() === human
-    return `스테일메이트 · ${stuck ? '내가' : '상대가'} 둘 수가 없다 — ${stuck ? '패배' : '승리'}`
+    return cornered()
+      ? `갈 곳이 없다 · ${stuck ? '내가' : '상대가'} 둘 수가 없다 — ${stuck ? '패배' : '승리'}`
+      : `${stuck ? '겨눠진 칸으로 나서는 수밖에 없다' : '상대가 몰렸다'}`
   }
   if (game.isDraw()) return `무승부 — ${drawReason()}`
   if (dueling) return '전투 중…'
@@ -69,11 +86,10 @@ function statusText(): string {
 /** 끝난 판의 결과. 아직 안 끝났으면 null. */
 function result(): 'win' | 'loss' | 'draw' | null {
   if (fallen) return fallen === human ? 'loss' : 'win'
-  if (game.isCheckmate()) return game.turn() === human ? 'loss' : 'win'
-  // 스테일메이트는 몰아붙인 쪽의 승리로 친다. 체스는 무승부로 보지만 이 게임은 이미
-  // 전투·아이템·킹 포획으로 규칙을 벗어나 있고, "이겼는데 무승부" 는 아케이드로 안 맞는다.
-  // isDraw() 가 스테일메이트를 포함하므로 반드시 이 판정이 먼저다.
-  if (game.isStalemate()) return game.turn() === human ? 'loss' : 'win'
+  // 체크메이트도 스테일메이트도 위험 칸이 남아 있으면 끝이 아니다. 완전히 갇혔을 때만
+  // 몰아붙인 쪽의 승리로 친다 — 체스는 스테일메이트를 무승부로 보지만 이 게임은 아니다.
+  if (cornered()) return game.turn() === human ? 'loss' : 'win'
+  if (game.isCheckmate() || game.isStalemate()) return null
   if (game.isDraw()) return 'draw'
   return null
 }
@@ -213,7 +229,7 @@ async function apply(from: Square, to: Square, promotion: PieceSymbol = 'q'): Pr
   const before = { fen: game.fen(), pieces: state.snapshot(), items: items.snapshot() }
   const outcome = duelMode
     ? playMove(game, { from, to, promotion }, Math.random, state.stateOf)
-    : ({ move: game.move({ from, to, promotion }), fight: null, repelled: false, loser: null } as MoveOutcome)
+    : plainMove(game, { from, to, promotion })
 
   // 무산 표시(✗)는 전투가 끝난 뒤에 붙인다. 먼저 넣으면 기보가 결과를 미리 알려준다.
   const ply = {
@@ -309,7 +325,7 @@ function finish() {
     } else {
       const { streak, unlocked } = run.ended()
       openReward(
-        '패배 — 런 종료',
+        `패배 — ${fallen ? '킹이 쓰러졌다' : game.isCheckmate() ? '체크메이트' : '갈 곳이 없다'}`,
         `${streak}연승에서 끝났다 · 최고 ${run.best()}`
           + (unlocked.length ? ` · 새 카드 해금: ${unlocked.join(' · ')}` : ''),
         [{ title: '다시 시작', what: '연승과 보상을 처음부터', pick: () => { void newGame() } }],
@@ -352,13 +368,18 @@ async function onSquare(sq: Square) {
       if (!over() && !again) aiTurn()
       return
     }
-    // 형태상 갈 수 있어 보이는 칸을 눌렀다면 왜 안 되는지 말해 준다.
     if (blockedSquares(game, selected).includes(sq)) {
-      hint = game.get(selected)?.type === 'k'
-        ? '그 칸은 상대가 겨누고 있다'
-        : game.inCheck()
-          ? '지금은 체크부터 풀어야 한다'
-          : '그 수를 두면 킹이 잡힌다'
+      // 킹은 겨눠진 칸으로도 나선다. 잡히려면 상대가 와서 전투에 이겨야 한다.
+      if (game.get(selected)?.type === 'k') {
+        const from = selected
+        selected = null
+        hint = '겨눠진 칸으로 나섰다'
+        const again = await apply(from, sq)
+        if (!over() && !again) aiTurn()
+        return
+      }
+      // 다른 기물이 막힌 이유는 하나다 — 그 수를 두면 킹이 잡힌다.
+      hint = game.inCheck() ? '지금은 체크부터 풀어야 한다' : '그 수를 두면 킹이 잡힌다'
       render()
       return
     }
@@ -383,7 +404,11 @@ function aiTurn() {
       level.ms,
     )
     thinking = false
-    const again = move ? await apply(move.from, move.to, move.promotion) : false
+    // 합법수가 없어도 킹에게 나설 칸이 남았으면 아직 끝이 아니다.
+    const risky = move ? null : escapes()
+    const from = move ? move.from : findKing(game, game.turn())
+    const to = move ? move.to : risky?.[Math.floor(Math.random() * risky.length)]
+    const again = from && to ? await apply(from, to, move?.promotion) : false
     render()
     if (again && !over()) aiTurn() // 재행동을 먹었으면 AI 가 한 번 더 둔다
   }, 20)

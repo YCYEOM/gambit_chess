@@ -66,6 +66,59 @@ export function blockedSquares(game: Chess, from: Square): Square[] {
 }
 
 /**
+ * 킹은 겨눠진 칸으로도 나설 수 있다. 이 게임의 잡기는 확률이라 그 칸은 "죽는 칸" 이 아니라
+ * "죽을 수도 있는 칸" 이기 때문이다 — 몰린 킹이 뚫고 나가 보는 것이 이 게임의 수다.
+ *
+ * chess.js 는 그런 수를 만들어 주지 않으므로 합법성 검사를 끈 내부 수 생성으로 직접 둔다.
+ * ponytail: chess.js 1.4 의 비공개 API (ai.ts 와 같은 것들). 판올림 때 함께 확인한다.
+ * 이 경로로 둔 수는 chess.js 의 반복 장부에 세지 않는다 — 공개 move() 만 그 장부를 만진다.
+ */
+interface RawMove { piece: PieceSymbol; from: number; to: number }
+type Engine = {
+  _moves(opts?: { legal?: boolean }): RawMove[]
+  _makeMove(move: RawMove): void
+}
+/** 0x88 칸 번호 → 칸 이름. */
+const nameOf = (index: number) => `${FILES[index & 15]}${8 - (index >> 4)}` as Square
+
+function forceKingMove(game: Chess, from: Square, to: Square): Move | null {
+  const king = game.get(from)
+  if (king?.type !== 'k' || king.color !== game.turn()) return null
+
+  const engine = game as unknown as Engine
+  const raw = engine._moves({ legal: false })
+    .find((m) => m.piece === 'k' && nameOf(m.from) === from && nameOf(m.to) === to)
+  if (!raw) return null
+
+  const captured = game.get(to)?.type
+  engine._makeMove(raw)
+  // 탐색도 기보도 쓰는 것은 몇 개뿐이라 그것만 채운 Move 를 만든다.
+  return {
+    color: king.color, from, to, piece: 'k', captured,
+    flags: captured ? 'c' : 'n',
+    san: `K${captured ? 'x' : ''}${to}`,
+  } as unknown as Move
+}
+
+/** 합법수면 그대로 두고, 킹이 위험을 무릅쓴 수면 억지로 둔다. */
+function makeMove(game: Chess, req: { from: Square; to: Square; promotion?: string }): Move {
+  try {
+    return game.move(req)
+  } catch (err) {
+    const forced = forceKingMove(game, req.from, req.to)
+    if (!forced) throw err
+    return forced
+  }
+}
+
+/** 정통 모드 — 전투가 없다. 킹을 잡으면 그 자리에서 끝난다. */
+export function plainMove(game: Chess, req: { from: Square; to: Square; promotion?: string }): MoveOutcome {
+  const move = makeMove(game, req)
+  const enemy: Color = move.color === 'w' ? 'b' : 'w'
+  return { move, fight: null, repelled: false, loser: move.captured === 'k' ? enemy : null }
+}
+
+/**
  * chess.js 의 합법수 판정은 그대로 두고, 잡는 수의 결과만 전투로 뒤집는다.
  * 공격이 실패하면 공격자를 지우고 수비 기물을 제자리에 되돌리므로
  * 턴·캐슬링 권리·앙파상 칸이 모두 유효한 상태로 남고 game.undo() 도 그대로 동작한다.
@@ -82,8 +135,11 @@ export function playMove(
   /** 두 기물의 현재 상태(체력·아이템 효과). 없으면 만피·보정 없음 (정통 모드·테스트). */
   stateOf?: (square: Square, type: PieceSymbol) => { hp: number; crit: number; atk: number },
 ): MoveOutcome {
-  const move = game.move(req)
+  const move = makeMove(game, req)
   if (!move.captured) return { move, fight: null, repelled: false, loser: null }
+
+  const mover = move.color
+  const enemy: Color = mover === 'w' ? 'b' : 'w'
 
   const attackerState = stateOf?.(move.from, move.piece)
   const defenderState = stateOf?.(defenderSquareOf(move), move.captured)
@@ -96,19 +152,18 @@ export function playMove(
     defender: { crit: defenderState.crit, atk: defenderState.atk },
   }
   const fight = duel(move.piece, move.captured, rng, start, bonus)
-  if (fight.winner === 'attacker') return { move, fight, repelled: false, loser: null }
+  // 킹은 전투에서 죽어야 진다. 체크도 체크메이트도 경고일 뿐이다.
+  if (fight.winner === 'attacker') {
+    return { move, fight, repelled: false, loser: move.captured === 'k' ? enemy : null }
+  }
 
-  const mover = move.color
-  const enemy: Color = mover === 'w' ? 'b' : 'w'
   const defenderSquare = defenderSquareOf(move)
   game.remove(move.to)
   game.put({ type: move.captured, color: enemy }, defenderSquare)
 
-  // 킹이 직접 돌격했다가 지면 거기서 끝이다.
+  // 킹이 직접 돌격했다가 지면 거기서 끝이다 — 실제로 죽었다.
   if (move.piece === 'k') return { move, fight, repelled: true, loser: mover }
 
-  // 체크를 건 기물을 잡으러 갔다가 실패하면 킹이 무방비로 남는다.
-  const king = findKing(game, mover)
-  const exposed = !king || game.isAttacked(king, enemy)
-  return { move, fight, repelled: true, loser: exposed ? mover : null }
+  // 노출된 것만으로는 지지 않는다. 상대가 와서 전투에 이겨야 킹이 죽는다.
+  return { move, fight, repelled: true, loser: null }
 }

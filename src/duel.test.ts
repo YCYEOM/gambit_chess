@@ -63,14 +63,48 @@ describe('playMove', () => {
     expect(findKing(game, 'w')).toBeUndefined()
   })
 
-  it('체크를 건 기물 잡기에 실패해 킹이 노출되면 패배한다', () => {
-    // 흑 룩 e2 가 백 킹 e1 을 체크. 백 룩이 잡으러 가지만 실패하면 킹이 그대로 노출된다.
+  it('킹이 노출된 것만으로는 지지 않는다 — 잡혀야 진다', () => {
+    // 흑 룩 e2 가 백 킹 e1 을 체크. 백 룩이 잡으러 가지만 실패해 킹이 그대로 노출된다.
+    // 그래도 아직 살아 있다 — 상대가 와서 전투에 이겨야 죽는다.
     const game = new Chess('4k3/8/8/8/8/8/R3r3/4K3 w - - 0 1')
     expect(game.inCheck()).toBe(true)
     const out = playUntil(game, { from: 'a2', to: 'e2' }, true)
     expect(out.repelled).toBe(true)
-    expect(out.loser).toBe('w')
+    expect(out.loser).toBeNull()
     expect(game.get('e2')).toEqual({ type: 'r', color: 'b' })
+    expect(findKing(game, 'w')).toBe('e1')
+  })
+
+  it('킹을 잡아서 전투에 이기면 그 자리에서 끝난다', () => {
+    // 흑 룩 e2 가 백 킹 e1 을 잡으러 온다. 이기면 백의 패배다.
+    const game = new Chess('4k3/8/8/8/8/8/4r3/4K3 b - - 0 1')
+    const out = playUntil(game, { from: 'e2', to: 'e1' }, false) // 룩이 이긴 판
+    expect(out.repelled).toBe(false)
+    expect(out.loser).toBe('w')
+    expect(findKing(game, 'w')).toBeUndefined()
+  })
+
+  it('킹은 겨눠진 칸으로도 나선다', () => {
+    // 흑 룩 e8 이 e 파일을 겨눈다. 체스 규칙으로는 e1 → e2 가 불법이다.
+    const game = new Chess('4r2k/8/8/8/8/8/8/4K3 w - - 0 1')
+    expect(game.moves()).not.toContain('Ke2')
+
+    const out = playMove(game, { from: 'e1', to: 'e2' })
+    expect(out.move.san).toBe('Ke2')
+    expect(game.get('e2')).toEqual({ type: 'k', color: 'w' })
+    expect(game.get('e1')).toBeUndefined()
+    expect(game.turn()).toBe('b')
+    // 나선 킹은 이제 잡을 수 있는 자리에 있다 — 상대에게 그 수가 보여야 한다.
+    expect(game.moves({ verbose: true }).some((m) => m.captured === 'k')).toBe(true)
+  })
+
+  it('나선 킹이 전투에서 버티면 오히려 상대가 죽는다', () => {
+    const game = new Chess('4r2k/8/8/8/8/8/8/4K3 w - - 0 1')
+    playMove(game, { from: 'e1', to: 'e2' })
+    const out = playUntil(game, { from: 'e8', to: 'e2' }, true)
+    expect(out.loser).toBeNull()
+    expect(findKing(game, 'w')).toBe('e2')
+    expect(game.get('e8')).toBeUndefined() // 룩이 죽었다
   })
 
   it('history() 는 반상 수정을 되돌린다 — UI 가 자체 기보를 쓰는 이유', () => {
