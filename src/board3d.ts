@@ -369,7 +369,155 @@ const pieces = new Map<Square, Piece>()
 const cache = new Map<string, { scene: THREE.Object3D; clips: THREE.AnimationClip[] }>()
 const loader = new GLTFLoader()
 const BASE_COLOR = { w: token('--team-light'), b: token('--team-dark') }
-const baseGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.06, 32)
+
+/**
+ * 기물 발밑 원판 — 참나무 통나무 단면 사진을 img2threejs 로 재구성한 것.
+ * 스펙: docs/base-recon/object-sculpt-spec.json (strict-quality PASS)
+ *
+ * 레퍼런스에서 가져온 것 (실측한 반지름별 밝기 프로파일):
+ *  - 껍질 테 (r/R 0.88~1.00, 두께가 둘레마다 다르다 → 윤곽이 원이 아니다)
+ *  - 변재 띠 (0.72~0.88, 눈에 띄게 밝다 — 이게 "통나무 단면"으로 읽히게 하는 단서다)
+ *  - 심재 (0.05~0.72) 와 어두운 수(0~0.05), 수는 한가운데가 아니다
+ *  - 나이테 17줄, 바깥으로 갈수록 촘촘
+ *  - 광택이 전혀 없다. 톱으로 자른 면이라 반상의 니스와 정반대다
+ *
+ * 색은 진영 토큰이 정한다. 밴드 대비를 12% 안쪽으로 눌러 둔 이유가 그것이다 —
+ * 흰 쪽은 흰 쪽으로, 검은 쪽은 검은 쪽으로 남아야 어느 편인지가 한눈에 읽힌다.
+ * 껍질 테만은 중간 갈색 쪽으로 섞는다. 검정 쪽으로 섞으면 검은 진영에서 사라진다.
+ */
+const BASE_R = 0.4
+const BASE_H = 0.06
+/** 나무 쪽으로 섞을 목표색. 밝은 진영에서는 어두워지고 어두운 진영에서는 밝아진다. */
+const BASE_WOOD = { r: 0x6b, g: 0x4a, b: 0x2f }
+
+function sliceTexture(team: THREE.Color) {
+  const size = 256
+  const c = document.createElement('canvas')
+  c.width = c.height = size
+  const g = c.getContext('2d')!
+  const mid = size / 2
+  const lum = 0.2126 * team.r + 0.7152 * team.g + 0.0722 * team.b
+  /**
+   * 띠를 진영색에서 얼마나 떨어뜨릴지의 부호. 밝은 진영은 어둡게, 어두운 진영은 밝게 민다.
+   * 레퍼런스대로 "변재가 가장 밝다" 를 비율로 옮기면 검은 진영에서는 0.767 배가 그냥
+   * 검정이라 구조가 통째로 사라진다. 어두운 쪽에서는 명암을 뒤집어 그린다 — 세기는
+   * 레퍼런스를 따르고 방향만 바꾼다.
+   */
+  const dir = lum > 0.5 ? -1 : 1
+  /** dl 만큼 밀고, brown 만큼 나무색 쪽으로 섞는다. */
+  const band = (dl: number, brown: number) => {
+    const f = (v: number, w: number) => {
+      const shifted = Math.min(1, Math.max(0, v + dir * dl))
+      return Math.round((shifted * (1 - brown) + (w / 255) * brown) * 255)
+    }
+    return `rgb(${f(team.r, BASE_WOOD.r)},${f(team.g, BASE_WOOD.g)},${f(team.b, BASE_WOOD.b)})`
+  }
+  const r = seeded(4711)
+  /**
+   * 껍질 경계는 톱니가 아니라 몇 개의 큰 굴곡이다. 꼭짓점마다 난수를 주면 64개 이가 달린
+   * 톱날이 된다 — 잘라 낸 나무가 아니라 기계 부품으로 읽힌다. 낮은 주파수 셋을 겹친다.
+   */
+  const ph = [r() * 6.28, r() * 6.28, r() * 6.28]
+  const blob = (radius: number, amp: number) => {
+    g.beginPath()
+    for (let i = 0; i <= 96; i++) {
+      const a = (i / 96) * Math.PI * 2
+      const w = Math.sin(a * 3 + ph[0]) * 0.5 + Math.sin(a * 5 + ph[1]) * 0.3 + Math.sin(a * 8 + ph[2]) * 0.2
+      const rr = radius * (1 + amp * w)
+      const x = mid + Math.cos(a) * rr
+      const y = mid + Math.sin(a) * rr
+      i ? g.lineTo(x, y) : g.moveTo(x, y)
+    }
+    g.closePath()
+    g.fill()
+  }
+  // 띠 반지름은 실측 프로파일을 따른다: 껍질 0.94~1.00, 변재 0.78~0.94, 심재 ~0.78.
+  // 껍질을 두껍게 그리면 원판이 나무 단면이 아니라 접시 테두리로 읽힌다.
+  g.fillStyle = band(0.14, 0.55); blob(mid, 0)             // 껍질
+  g.fillStyle = band(0.00, 0.10); blob(mid * 0.94, 0.045)  // 변재 — 진영색에 가장 가깝다
+  g.fillStyle = band(0.09, 0.22); blob(mid * 0.78, 0.030)  // 심재
+  g.fillStyle = band(0.18, 0.34); blob(mid * 0.09, 0.150)  // 수
+
+  // 나이테. 원판 한가운데가 아니라 수를 중심으로 돈다.
+  const px = mid + mid * 0.07
+  const py = mid + mid * 0.04
+  g.strokeStyle = band(0.13, 0.28)
+  /**
+   * 34줄. 처음엔 17로 잡았는데, 반지름 프로파일을 4px 간격으로 훑는 바람에 나이테 주기가
+   * 앨리어싱돼 절반으로 세어졌다. 레퍼런스와 나란히 놓고 보니 훨씬 촘촘하다 — 세는 방법이
+   * 틀렸던 것이지 나무가 성긴 것이 아니었다.
+   */
+  const RINGS = 34
+  for (let i = 1; i <= RINGS; i++) {
+    // 바깥으로 갈수록 촘촘하게: 간격을 제곱근으로 준다.
+    const rr = mid * 0.93 * Math.sqrt(i / RINGS)
+    g.globalAlpha = 0.26 + r() * 0.20
+    g.lineWidth = 0.6 + r() * 0.7
+    g.beginPath()
+    g.arc(px, py, rr, 0, Math.PI * 2)
+    g.stroke()
+  }
+  // 톱자국 — 수에서 바깥으로 뻗는 가는 방사선.
+  g.globalAlpha = 0.06
+  g.lineWidth = 0.6
+  for (let i = 0; i < 90; i++) {
+    const a = r() * Math.PI * 2
+    g.beginPath()
+    g.moveTo(px, py)
+    g.lineTo(px + Math.cos(a) * mid, py + Math.sin(a) * mid)
+    g.stroke()
+  }
+  g.globalAlpha = 1
+  const tex = new THREE.CanvasTexture(c)
+  tex.colorSpace = THREE.SRGBColorSpace
+  return tex
+}
+
+/**
+ * 톱니 없는 원기둥 대신 둘레가 울퉁불퉁한 원기둥. 껍질이 붙은 단면은 정원이 아니다 —
+ * 이 실루엣 하나가 "잘라 낸 나무"와 "플라스틱 칩"을 가른다.
+ * 밑면은 만들지 않는다. 반상에 붙어 있어 한 번도 보이지 않는다.
+ */
+function sliceGeometry() {
+  const seg = 28
+  const r = seeded(1201)
+  const rim = Array.from({ length: seg }, () => BASE_R * (1 - 0.05 * r()))
+  const pos: number[] = []
+  const uv: number[] = []
+  const top = BASE_H / 2
+  const at = (i: number) => {
+    const a = (i / seg) * Math.PI * 2
+    return { x: Math.cos(a) * rim[i % seg], z: Math.sin(a) * rim[i % seg] }
+  }
+  // UV 는 위에서 내려다본 평면 투영. 그래야 캔버스의 동심 띠가 그대로 얹힌다.
+  const uvOf = (x: number, z: number) => [0.5 + x / (2 * BASE_R), 0.5 + z / (2 * BASE_R)]
+  for (let i = 0; i < seg; i++) {
+    const p = at(i)
+    const q = at(i + 1)
+    pos.push(0, top, 0, q.x, top, q.z, p.x, top, p.z)
+    uv.push(0.5, 0.5, ...uvOf(q.x, q.z), ...uvOf(p.x, p.z))
+    // 옆벽. 캔버스 가장자리를 물므로 저절로 껍질색이 된다.
+    pos.push(p.x, top, p.z, q.x, top, q.z, q.x, -top, q.z)
+    pos.push(p.x, top, p.z, q.x, -top, q.z, p.x, -top, p.z)
+    const up = uvOf(p.x, p.z)
+    const uq = uvOf(q.x, q.z)
+    uv.push(...up, ...uq, ...uq, ...up, ...uq, ...up)
+  }
+  const geo = new THREE.BufferGeometry()
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2))
+  geo.computeVertexNormals()
+  return geo
+}
+
+const baseGeo = sliceGeometry()
+/** 진영마다 하나씩. 기물마다 재질을 새로 만들면 32개가 된다. */
+const baseMat: Record<Color, THREE.MeshStandardMaterial> = {
+  // color 는 흰색으로 둔다. 진영색은 이미 캔버스에 구워져 있어서, 여기에 또 곱하면
+  // 어두운 진영이 검정 위에 검정이 된다.
+  w: new THREE.MeshStandardMaterial({ roughness: 0.92, map: sliceTexture(BASE_COLOR.w) }),
+  b: new THREE.MeshStandardMaterial({ roughness: 0.92, map: sliceTexture(BASE_COLOR.b) }),
+}
 
 /** 몸은 항상 보인다. 무기·투구·모자·망토만 선택 대상. */
 const OPTIONAL = /(Sword|Axe|Shield|Staff|Wand|Crossbow|Knife|Spellbook|Mug|Throwable|Helmet|Hat|Hood|Cape|Cloak|Badge|Quiver|Arrow|Offhand)/i
@@ -452,7 +600,7 @@ async function spawn(type: PieceSymbol, color: Color, square: Square): Promise<P
 
   root.traverse((o) => { if ((o as THREE.Mesh).isMesh) { o.castShadow = true; o.receiveShadow = true } })
 
-  const base = new THREE.Mesh(baseGeo, new THREE.MeshStandardMaterial({ color: BASE_COLOR[color], roughness: 0.5 }))
+  const base = new THREE.Mesh(baseGeo, baseMat[color])
   base.receiveShadow = true
   scene.add(base, root)
 

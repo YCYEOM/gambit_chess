@@ -1,0 +1,1908 @@
+{
+  "targetName": "Oak Log Slice Base",
+  "targetId": "oak-log-slice-base",
+  "schemaVersion": "2.1",
+  "terminologyProfile": {
+    "domain": "real-time procedural Three.js asset",
+    "geometryTerms": [
+      "silhouette",
+      "topology",
+      "primitive",
+      "bevel",
+      "chamfer",
+      "taper",
+      "bend",
+      "boolean cut",
+      "edge loop",
+      "surface normal",
+      "displacement"
+    ],
+    "materialTerms": [
+      "albedo",
+      "baseColor",
+      "roughness",
+      "metalness",
+      "normal map",
+      "bump map",
+      "ambient occlusion",
+      "cavity dirt",
+      "edge wear",
+      "clearcoat"
+    ],
+    "lightingTerms": [
+      "key light",
+      "fill light",
+      "rim light",
+      "HDRI/environment reflection",
+      "contact shadow"
+    ],
+    "descriptionRule": "Use measurable 3D graphics terms. Avoid vague words unless they are paired with concrete geometry/material/shader parameters."
+  },
+  "sourceImage": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/refs/base-oak.jpg",
+  "referenceCamera": {
+    "solved": false,
+    "fovDegrees": 40.0,
+    "aspect": 1.0,
+    "orientation": {
+      "yaw": 0.0,
+      "pitch": 0.0,
+      "roll": 0.0
+    },
+    "positionHint": [
+      0.0,
+      0.0,
+      3.0
+    ],
+    "note": "For likeness work, solve the reference camera (forge/stage1_intake/solve_camera_pose.py) so the review render aligns with the photo and the reference can be projected. Confirm by overlay review."
+  },
+  "suitability": "conditional",
+  "scores": {
+    "object_isolation": 0,
+    "silhouette_readability": 0,
+    "depth_inference": 0,
+    "primitive_decomposition": 0,
+    "material_procedurality": 0,
+    "occlusion_risk": 0,
+    "interaction_fit": 0
+  },
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "oak log cross-section (end-grain disc)",
+      "primaryDomain": "object",
+      "formLanguage": [
+        "radial",
+        "planar-disc",
+        "irregular-perimeter"
+      ],
+      "structureKind": [
+        "short cylinder",
+        "concentric band field",
+        "ragged bark ring"
+      ],
+      "motionPotential": [
+        "static prop"
+      ],
+      "materialFamilies": [
+        "rough sawn end-grain wood",
+        "bark"
+      ],
+      "notes": "Radial symmetry is imperfect: the pith is off-centre and the bark thickness varies around the perimeter. Confidence 0.95."
+    },
+    "complexity": {
+      "tier": "moderate",
+      "scores": {
+        "silhouetteComplexity": 1,
+        "componentCount": 1,
+        "hierarchyDepth": 1,
+        "repetitionDensity": 3,
+        "materialLayerCount": 2,
+        "localDetailDensity": 2,
+        "occlusionRisk": 2,
+        "actionReadinessNeed": 0
+      },
+      "estimatedCounts": {
+        "macroComponents": 2,
+        "mesoComponents": 4,
+        "microFeatureGroups": 2,
+        "materialLayers": 2,
+        "repetitionSystems": 1
+      },
+      "reasoning": [
+        "Silhouette is one short cylinder, but its perimeter is not a circle.",
+        "All the information is in a radial band field plus about 17 concentric growth rings — a repetition system, not component mass.",
+        "Renders at roughly 24 px in game; detail must survive that size or not be built."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "moderate",
+      "minimumComponentLevels": [
+        "macro",
+        "meso"
+      ],
+      "needsRepetitionSystems": true,
+      "needsMaterialLocalOverrides": true,
+      "needsMultipleReviewViews": false,
+      "needsActionReadyHierarchy": false,
+      "rationale": "One camera sees this prop and only from above; multi-angle review would score a face the game never shows."
+    },
+    "unknownsToResolveBeforeImplementation": [],
+    "detailInventory": {
+      "scanMethod": "radial luminance profile over the unoccluded upper sector + verified 2x crops",
+      "targetMinDetails": 6,
+      "note": "Each detail maps to a component.localFeatures or material.localOverrides entry.",
+      "details": [
+        {
+          "id": "ragged-bark-rim",
+          "kind": "ridge",
+          "mapsTo": {
+            "ref": "ragged-bark-rim"
+          },
+          "observation": "Dark bark ring whose thickness varies between 0.03R and 0.12R around the perimeter; the outline is lobed, not circular.",
+          "evidence": "radial profile r/R 0.88-1.00 lum 67-87; zones/bark-check.png",
+          "confidence": 0.85,
+          "realization": "unreported"
+        },
+        {
+          "id": "pale-sapwood-band",
+          "kind": "contour",
+          "mapsTo": {
+            "ref": "pale-sapwood-band"
+          },
+          "observation": "A distinctly paler ring at r/R 0.72-0.88 (lum 160-183 against the heartwood's 106-155). Strongest single cue that this is a log slice and not a turned coaster.",
+          "evidence": "radial profile; zones/crop-sap.png (#CF9B66) vs zones/crop-heart.png (#AC7449), luminance ratio heart/sap 0.767",
+          "confidence": 0.9,
+          "realization": "unreported"
+        },
+        {
+          "id": "growth-rings",
+          "kind": "linework",
+          "mapsTo": {
+            "ref": "growth-rings"
+          },
+          "observation": "About 17 concentric rings across the radius, period roughly 0.058R, denser toward the outside.",
+          "evidence": "radial profile oscillation r 100-350",
+          "confidence": 0.8,
+          "realization": "unreported"
+        },
+        {
+          "id": "off-centre-pith",
+          "kind": "contour",
+          "mapsTo": {
+            "ref": "off-centre-pith"
+          },
+          "observation": "The ring centre does not sit at the geometric centre of the disc.",
+          "evidence": "visual, from the ring curvature in zones/crop-heart.png — INFERENCE, offset magnitude not measured",
+          "confidence": 0.6,
+          "realization": "unreported"
+        },
+        {
+          "id": "dark-pith",
+          "kind": "stain",
+          "mapsTo": {
+            "ref": "dark-pith"
+          },
+          "observation": "The centre is markedly darker than the heartwood (lum 45-73 vs 106-155).",
+          "evidence": "radial profile r/R 0.00-0.03",
+          "confidence": 0.85,
+          "realization": "unreported"
+        },
+        {
+          "id": "radial-saw-scoring",
+          "kind": "scratch",
+          "mapsTo": {
+            "ref": "matte-sawn-face"
+          },
+          "observation": "Fine radial saw scoring across the whole face, and no specular highlight anywhere on it.",
+          "evidence": "whole-face inspection; zones/crop-heart.png",
+          "confidence": 0.85,
+          "realization": "unreported"
+        }
+      ]
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0.0,
+      "proportions": {
+        "headUnit": 0.0,
+        "torso": 0.0,
+        "legs": 0.0,
+        "shoulderWidth": 0.0,
+        "hipWidth": 0.0
+      },
+      "pose": {
+        "type": "unassessed",
+        "jointAngles": {}
+      },
+      "faceLandmarks": {
+        "eyeLine": 0.0,
+        "eyeSpacing": 0.0,
+        "noseBase": 0.0,
+        "mouthLine": 0.0,
+        "hairline": 0.0
+      },
+      "features": [],
+      "confidence": 0.0,
+      "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
+    },
+    "sourceImage": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/refs/base-oak.jpg"
+  },
+  "qualityContract": {
+    "qualityBar": "moderate",
+    "definitionOfDone": [
+      "The rendered model matches the reference silhouette, primary proportions, visible component hierarchy, material response, and most recognizable local features for the selected fidelity tier."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 2,
+      "mesoComponents": 3,
+      "microFeatureGroups": 2,
+      "materialLayers": 2,
+      "repetitionSystems": 0,
+      "reviewViewpoints": 3
+    },
+    "featureGroups": [
+      {
+        "id": "overall-silhouette",
+        "name": "Overall silhouette and proportions",
+        "required": true,
+        "qualityCriteria": [
+          "Bounding shape, dominant curves, negative spaces, and scale relationships are explicitly described."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model reads as a generic placeholder instead of the reference object",
+          "major proportions are guessed without evidence"
+        ]
+      },
+      {
+        "id": "primary-structure",
+        "name": "Primary structure and hierarchy",
+        "required": true,
+        "qualityCriteria": [
+          "Major parts, joints, seams, contact points, and parent-child relationships are named before code generation."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "large visible parts are merged into one mesh",
+          "component hierarchy is too shallow for the observed complexity"
+        ]
+      },
+      {
+        "id": "attachment-joint-correctness",
+        "name": "Attachment and joint correctness",
+        "required": true,
+        "qualityCriteria": [
+          "Every visible child appendage, branch, limb, handle, connector, tube, cable, horn, wing, leg, or hinged part has an attachment contract with parent socket, localStart/localEnd, contact type, embed/overlap, and gap tolerance."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "child part root floats away from the parent",
+          "branch/limb/tube is centered in space instead of pivoting from its root",
+          "parent-child transform mixes world and local coordinates"
+        ]
+      },
+      {
+        "id": "surface-material-response",
+        "name": "Surface material response",
+        "required": true,
+        "qualityCriteria": [
+          "Albedo zones, roughness, normal/bump/displacement intent, cavity dirt, edge wear, and local overrides are specified where visible.",
+          "Important materials define independent albedo, roughness, height/normal, and AO responses instead of reusing one texture for unrelated PBR channels.",
+          "Surface response is decomposed into macro, meso, and micro frequency bands with scale and amplitude tied to object scale."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "surface looks like flat plastic",
+          "local material variation is missing or not tied to image evidence"
+        ]
+      },
+      {
+        "id": "reference-lookdev",
+        "name": "Reference color, material, and lighting response",
+        "required": true,
+        "qualityCriteria": [
+          "Material-pass names the reference-derived albedo palette, roughness variation, tactile normal/bump/displacement response, and local masks.",
+          "When a source image is available, run reference PBR extraction and require confidence >= 0.7 before treating maps as implementation-ready.",
+          "Lighting-pass names key/fill/rim or environment light, exposure, tone mapping, background, and contact shadow behavior.",
+          "Neutral, grazing-angle, and reference-matched renders prove that surface relief survives relighting and is not painted into albedo."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model has acceptable shape but reads as flat shaded or plastic",
+          "colors are a generic average instead of reference-observed local color zones",
+          "lighting is evenly ambient and cannot reproduce the source value range"
+        ]
+      }
+    ],
+    "visualDeltaChecks": [
+      "silhouette and negative-space delta",
+      "component hierarchy depth delta",
+      "repetition density and distribution delta",
+      "material albedo/roughness/normal response delta",
+      "local feature placement and scale delta"
+    ],
+    "antiShallowSpecRules": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md).",
+      "Adjacent components must overlap by at least 0.02 world units at shared seams (source: grimoire/build/geometry_patterns.md).",
+      "Raised or recessed relief and fasteners must be geometry, instanced micro-parts, or displacement; a map alone is an approximation (source: grimoire/build/geometry_patterns.md)."
+    ],
+    "mustNotDo": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md).",
+      "Adjacent components must overlap by at least 0.02 world units at shared seams (source: grimoire/build/geometry_patterns.md).",
+      "Raised or recessed relief and fasteners must be geometry, instanced micro-parts, or displacement; a map alone is an approximation (source: grimoire/build/geometry_patterns.md)."
+    ]
+  },
+  "qualityTargets": {
+    "targetFidelity": 0.7,
+    "mustMatch": [
+      "macro silhouette and proportions",
+      "primary material albedo/roughness response",
+      "reference-derived PBR material response at or above 0.7 confidence when source pixels are usable",
+      "most recognizable local features"
+    ],
+    "niceToHave": [
+      "micro scratches, stains, chips, and dirt masks",
+      "secondary lighting match"
+    ],
+    "fpsTarget": 60,
+    "reviewViewpoints": [
+      "front",
+      "three-quarter",
+      "side",
+      "thickness-axis",
+      "long-axis"
+    ]
+  },
+  "selfCorrectLoop": {
+    "enabled": true,
+    "visualAcceptance": {
+      "reviewer": "ai-vision",
+      "threshold": 0.7,
+      "comparisonArtifactRequired": true,
+      "layerScoresRequired": true,
+      "codePixelDiffIsAcceptanceAuthority": false,
+      "scoringRule": "AI vision must inspect a side-by-side reference/render sheet and score the current pass from 0 to 1. Pixel-diff code may assist diagnostics but cannot approve a pass.",
+      "requiredLayerScores": [
+        "silhouetteProportion",
+        "componentStructure",
+        "formDetail",
+        "materialSurface",
+        "lightingCamera"
+      ],
+      "featureReviewPolicy": {
+        "enabled": true,
+        "reviewUnit": "semantic-subsystem",
+        "maxCriticalFeaturesPerPass": 5,
+        "maxImportantFeaturesPerPass": 3,
+        "criticalDefaultThreshold": 0.8,
+        "importantAverageThreshold": 0.65,
+        "adaptiveEscalation": true,
+        "singleImagePairOnly": true,
+        "selectionRule": "Choose only the most visually salient, identity-defining, user-prioritized, or high-risk semantic systems. Group repeated parts instead of reviewing every mesh. AI vision scores every selected feature from the same full reference/render pair."
+      }
+    },
+    "reviewAfterPasses": [
+      "blockout",
+      "structural-pass",
+      "form-refinement",
+      "material-pass",
+      "surface-pass",
+      "lighting-pass",
+      "interaction-pass",
+      "optimization-pass"
+    ],
+    "allowedActions": [
+      "continue",
+      "refine-spec",
+      "refine-code",
+      "request-input",
+      "stop"
+    ],
+    "specRefineTriggers": [
+      "missing component",
+      "wrong primitive family",
+      "wrong proportions",
+      "material layer under-specified",
+      "local feature not traceable to viewEvidence",
+      "reference ambiguity discovered during implementation"
+    ],
+    "codeRefineTriggers": [
+      "spec is adequate but generated geometry/material does not match",
+      "browser render differs from reference",
+      "performance budget exceeded",
+      "lighting hides geometry or material response"
+    ],
+    "stopCriteria": [
+      "target fidelity reached or user accepts current approximation",
+      "remaining gaps require new reference images or manual art"
+    ],
+    "screenshotPolicy": {
+      "requiredForPasses": [
+        "blockout",
+        "structural-pass",
+        "form-refinement",
+        "material-pass",
+        "surface-pass",
+        "lighting-pass",
+        "interaction-pass"
+      ],
+      "preferredCapture": "in-app-browser-screenshot",
+      "fallbackCapture": "user-supplied-screenshot-path",
+      "minimumEvidence": "Each visual pass needs a reference image, rendered screenshot, side-by-side comparison sheet, AI vision score, layer scores, and critique before choosing continue.",
+      "reviewPairRule": "Compare the same camera/viewpoint whenever possible; do not judge a front reference against a random render angle.",
+      "acceptanceAuthority": "AI vision review of the comparison sheet. Code-generated pixel similarity is not sufficient evidence."
+    }
+  },
+  "featureReviewTargets": [
+    {
+      "id": "band-field",
+      "name": "Pith / heartwood / sapwood / bark band field",
+      "tier": "critical",
+      "passIds": [
+        "material-pass"
+      ],
+      "minimumScore": 0.7,
+      "mustPass": true,
+      "componentRefs": [
+        "root"
+      ],
+      "evidenceRefs": [
+        "zones/crop-sap.png",
+        "zones/crop-heart.png"
+      ]
+    },
+    {
+      "id": "lobed-rim",
+      "name": "Lobed, non-circular perimeter with a dark rim",
+      "tier": "critical",
+      "passIds": [
+        "blockout",
+        "form-refinement"
+      ],
+      "minimumScore": 0.7,
+      "mustPass": true,
+      "componentRefs": [
+        "root"
+      ],
+      "evidenceRefs": [
+        "zones/bark-check.png"
+      ]
+    },
+    {
+      "id": "growth-rings",
+      "name": "Concentric rings about an off-centre pith",
+      "tier": "important",
+      "passIds": [
+        "surface-pass"
+      ],
+      "minimumScore": 0.6,
+      "mustPass": false,
+      "componentRefs": [
+        "root"
+      ],
+      "evidenceRefs": [
+        "zones/crop-heart.png"
+      ]
+    },
+    {
+      "id": "team-readability",
+      "name": "Light and dark bases still read as opposite sides at a glance",
+      "tier": "critical",
+      "passIds": [
+        "material-pass"
+      ],
+      "minimumScore": 0.85,
+      "mustPass": true,
+      "componentRefs": [
+        "root"
+      ],
+      "evidenceRefs": [
+        "project constraint, not the reference: DESIGN.md says the side is told by silhouette and the disc underfoot"
+      ]
+    }
+  ],
+  "sculptPipeline": {
+    "passGateMode": "locked-sequential",
+    "passOrder": [
+      "blockout",
+      "structural-pass",
+      "form-refinement",
+      "material-pass",
+      "surface-pass",
+      "lighting-pass",
+      "interaction-pass",
+      "optimization-pass"
+    ],
+    "currentPass": "blockout",
+    "completedPasses": [],
+    "lastCompletedPass": "",
+    "blockedReason": "",
+    "nextRequiredEvidence": [
+      "Silhouette reads correctly without materials.",
+      "Quality contract has named all required macro feature groups before code generation.",
+      "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold.",
+      "browser render screenshot from your agent's browser/screenshot tool",
+      "single side-by-side full reference/render comparison sheet",
+      "all critical semantic feature scores at or above their thresholds",
+      "self-correction review appended with action=continue before the next pass"
+    ]
+  },
+  "lookDevTargets": {
+    "qualityPriority": "real-time-first",
+    "materialPass": {
+      "albedoPaletteRequired": true,
+      "roughnessVariationRequired": true,
+      "normalOrBumpRequired": true,
+      "localOverridesRequired": true,
+      "minimumTextureResolution": 256,
+      "preferredTextureResolution": 2048,
+      "independentMapChannels": [
+        "albedo",
+        "roughness",
+        "height",
+        "normal",
+        "ambient-occlusion"
+      ],
+      "requiredSurfaceFrequencyBands": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "geometryReliefRequiredWhenSilhouetteAffected": true,
+      "referencePbrExtraction": {
+        "requiredWhenSourceImagePresent": true,
+        "targetThreshold": 0.7,
+        "stopOnLowConfidence": true,
+        "script": "forge/stage1_intake/extract_pbr_evidence.py",
+        "acceptedLimitation": "single-image extraction is reference-derived inference, not exact photogrammetry"
+      },
+      "mustAvoid": [
+        "single flat albedo per material",
+        "uniform roughness",
+        "albedo texture reused as roughness/height/normal/AO",
+        "single-frequency random noise",
+        "plastic-looking smooth bark, stone, cloth, foliage, or aged material",
+        "local color/detail described only in prose without material masks",
+        "claiming exact PBR recovery when confidence is below the target threshold"
+      ],
+      "rationale": "The prop renders at about 24 px on screen. A 1024px map for a 24px disc is 1700 times the sampled texel count and costs 4 MB of GPU memory per team."
+    },
+    "lightingPass": {
+      "requiredTerms": [
+        "key light",
+        "fill light",
+        "rim or environment light",
+        "exposure",
+        "tone mapping",
+        "background",
+        "contact shadow"
+      ],
+      "mustAvoid": [
+        "ambient-only lighting",
+        "flat value range",
+        "missing contact shadow",
+        "reference lighting copied without separating material readability"
+      ]
+    },
+    "screenshotReview": [
+      "Compare albedo palette and local color zones.",
+      "Compare roughness/normal/bump response under light.",
+      "Compare cavity dirt, edge wear, stains, moss, scratches, or other local masks.",
+      "Compare key/fill/rim structure, exposure, tone mapping, background, and contact shadows.",
+      "Capture a neutral-light render to verify material readability without reference lighting.",
+      "Capture a grazing-light close-up to expose flat normals, uniform roughness, tiling, and plastic highlights.",
+      "Capture a reference-matched render from the same camera framing as the source."
+    ]
+  },
+  "actionReadiness": {
+    "contract": "Every macro/meso component should be generated as a stable named Object3D pivot node with a mesh child, action metadata, optional sockets, collider proxy, and destruction metadata.",
+    "defaultRigType": "action-ready-static-rig",
+    "rootMotionNode": "root",
+    "requiredComponentFields": [
+      "id",
+      "parent",
+      "transform",
+      "attachment for child appendages, connectors, limbs, tubes, handles, legs, horns, wings, branches, or cables",
+      "actionProfile.animationRole",
+      "actionProfile.pivot",
+      "actionProfile.collider",
+      "actionProfile.destruction"
+    ],
+    "transformChannels": [
+      "translate",
+      "rotate",
+      "scale",
+      "bend",
+      "twist",
+      "detach",
+      "visibility",
+      "material-state"
+    ],
+    "authoringRules": [
+      "Do not collapse independently movable parts into one mesh.",
+      "Put transforms on component pivot groups, not only on raw meshes.",
+      "For attached child parts, put the pivot at the semantic root/socket and build visible geometry from localStart to localEnd.",
+      "Represent hinge, socket, detachable, and breakable intent even when no animation is implemented yet.",
+      "Use simplified collider proxies for runtime physics instead of visual mesh colliders by default."
+    ],
+    "destructionPolicy": {
+      "defaultBreakable": false,
+      "fractureGroupNaming": "Use stable semantic names such as body-shell, left-hinge, glass-panel, branch-segment.",
+      "debrisStrategy": "Prefer detachable component groups and a small number of procedural fragments over random mesh explosion."
+    }
+  },
+  "assumptions": [
+    "The camera only ever sees this prop from above, so the side wall is built but never reviewed.",
+    "Team tokens are not changed by this work."
+  ],
+  "coordinateFrame": {
+    "front": "+z",
+    "up": "+y",
+    "scaleReference": "1 world unit = 1 board square. The disc is R=0.4, H=0.06, and sits at y=0.03 under each piece. It must stay INSIDE the piece base radius so it never overlaps a neighbouring square."
+  },
+  "silhouette": {
+    "boundingShape": "short cylinder with a lobed perimeter",
+    "aspectRatios": [
+      {
+        "id": "height-to-diameter",
+        "value": 0.075,
+        "referenceValue": null,
+        "note": "Not observable: the reference is seen face-on. Set by the game."
+      }
+    ],
+    "symmetry": "radial, imperfect (off-centre pith, varying bark thickness)",
+    "dominantCurves": [
+      "concentric growth rings"
+    ],
+    "negativeSpaces": [],
+    "landmarks": [
+      "bark rim",
+      "sapwood/heartwood boundary",
+      "pith"
+    ]
+  },
+  "viewEvidence": [
+    {
+      "id": "full-object",
+      "view": "primary",
+      "imageRegion": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 1.0,
+        "height": 1.0,
+        "units": "normalized"
+      },
+      "observations": [],
+      "confidence": 0.5
+    }
+  ],
+  "componentTree": [
+    {
+      "level": "macro",
+      "role": "root",
+      "importance": 1.0,
+      "confidence": 0.95,
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A sawn slice is a hard-surface solid: a flat face meeting a side wall at a hard arris. Nothing here is a continuous organic surface.",
+      "geometryDescriptor": {
+        "topologyIntent": "lathe-free custom cylinder: the rim radius is modulated per segment so the outline is lobed, not circular",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [
+          "per-segment radius noise, deterministic seed"
+        ],
+        "uvStrategy": "planar top projection (u,v) = (0.5 + x/2R, 0.5 + z/2R)",
+        "normalStrategy": "flat face normals, per-segment wall normals"
+      },
+      "parent": null,
+      "attachment": null,
+      "localFeatures": [
+        {
+          "id": "ragged-bark-rim",
+          "kind": "ridge",
+          "observation": "bark thickness varies 0.03R-0.12R; the outline is lobed",
+          "implementation": "rim radius per segment = R * (1 - 0.05 * |noise|), 28 segments, deterministic seed; the bark itself is painted, not modelled, because at 24 px a modelled bark ring would be sub-pixel",
+          "evidence": "zones/bark-check.png",
+          "confidence": 0.8
+        },
+        {
+          "id": "matte-sawn-face",
+          "kind": "gloss",
+          "observation": "no specular highlight anywhere; fine radial saw scoring",
+          "implementation": "roughness 0.92, no clearcoat — deliberately the opposite of the board's varnish so the pieces' ground reads as a different material",
+          "evidence": "whole-face inspection",
+          "confidence": 0.85
+        }
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(207, 155, 102, 1.0)",
+        "secondaryAlbedo": "rgba(172, 116, 73, 1.0)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.9,
+        "sourceToken": "var(--team-light) / var(--team-dark)",
+        "note": "Hex here is the REFERENCE-extracted sapwood/heartwood pair, recorded as the relationship the build reproduces. Absolute colour at runtime is the team token; see approximationNotes.",
+        "evidenceRefs": [
+          "pbr/heart/report.json",
+          "pbr/sap/report.json"
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 1.0
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "collider": {
+          "type": "none",
+          "note": "the disc never takes a hit test; squares are picked analytically"
+        },
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "id": "root",
+      "name": "Oak Log Slice Base",
+      "primitive": "cylinder",
+      "dimensions": {
+        "width": 0.8,
+        "height": 0.06,
+        "depth": 0.8,
+        "units": "board squares",
+        "confidence": 0.95
+      }
+    },
+    {
+      "level": "meso",
+      "role": "surface",
+      "importance": 0.7,
+      "confidence": 0.85,
+      "topologyClass": "material-only",
+      "topologyRationale": "A band on a sawn face is a change of material across a flat surface, not a change of form. Modelling it as geometry at 24 px would add vertices that never move a pixel.",
+      "geometryDescriptor": {
+        "topologyIntent": "lathe-free custom cylinder: the rim radius is modulated per segment so the outline is lobed, not circular",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [
+          "per-segment radius noise, deterministic seed"
+        ],
+        "uvStrategy": "planar top projection (u,v) = (0.5 + x/2R, 0.5 + z/2R)",
+        "normalStrategy": "flat face normals, per-segment wall normals"
+      },
+      "parent": "root",
+      "attachment": null,
+      "localFeatures": [
+        {
+          "id": "dark-pith",
+          "kind": "contour",
+          "observation": "the centre is markedly darker than the heartwood (lum 45-73 vs 106-155)",
+          "implementation": "band field stop from r/R 0.0 to 0.05 on the shared disc canvas",
+          "evidence": "radial profile r/R 0.00-0.03",
+          "confidence": 0.85
+        }
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(207, 155, 102, 1.0)",
+        "secondaryAlbedo": "rgba(172, 116, 73, 1.0)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.9,
+        "sourceToken": "var(--team-light) / var(--team-dark)",
+        "note": "Hex here is the REFERENCE-extracted sapwood/heartwood pair, recorded as the relationship the build reproduces. Absolute colour at runtime is the team token; see approximationNotes.",
+        "evidenceRefs": [
+          "pbr/heart/report.json",
+          "pbr/sap/report.json"
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 1.0
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "collider": {
+          "type": "none",
+          "note": "the disc never takes a hit test; squares are picked analytically"
+        },
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "id": "dark-pith",
+      "name": "Pith",
+      "primitive": "plane-card",
+      "dimensions": {
+        "width": 0.04000000000000001,
+        "height": 0.0,
+        "depth": 0.04000000000000001,
+        "units": "board squares",
+        "confidence": 0.85
+      }
+    },
+    {
+      "level": "meso",
+      "role": "surface",
+      "importance": 0.7,
+      "confidence": 0.9,
+      "topologyClass": "material-only",
+      "topologyRationale": "A band on a sawn face is a change of material across a flat surface, not a change of form. Modelling it as geometry at 24 px would add vertices that never move a pixel.",
+      "geometryDescriptor": {
+        "topologyIntent": "lathe-free custom cylinder: the rim radius is modulated per segment so the outline is lobed, not circular",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [
+          "per-segment radius noise, deterministic seed"
+        ],
+        "uvStrategy": "planar top projection (u,v) = (0.5 + x/2R, 0.5 + z/2R)",
+        "normalStrategy": "flat face normals, per-segment wall normals"
+      },
+      "parent": "root",
+      "attachment": null,
+      "localFeatures": [
+        {
+          "id": "heartwood-field",
+          "kind": "contour",
+          "observation": "mid warm tone carrying the growth rings",
+          "implementation": "band field stop from r/R 0.05 to 0.72 on the shared disc canvas",
+          "evidence": "radial profile; zones/crop-heart.png #AC7449",
+          "confidence": 0.9
+        }
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(207, 155, 102, 1.0)",
+        "secondaryAlbedo": "rgba(172, 116, 73, 1.0)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.9,
+        "sourceToken": "var(--team-light) / var(--team-dark)",
+        "note": "Hex here is the REFERENCE-extracted sapwood/heartwood pair, recorded as the relationship the build reproduces. Absolute colour at runtime is the team token; see approximationNotes.",
+        "evidenceRefs": [
+          "pbr/heart/report.json",
+          "pbr/sap/report.json"
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 1.0
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "collider": {
+          "type": "none",
+          "note": "the disc never takes a hit test; squares are picked analytically"
+        },
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "id": "heartwood-field",
+      "name": "Heartwood field",
+      "primitive": "plane-card",
+      "dimensions": {
+        "width": 0.576,
+        "height": 0.0,
+        "depth": 0.576,
+        "units": "board squares",
+        "confidence": 0.9
+      }
+    },
+    {
+      "level": "meso",
+      "role": "surface",
+      "importance": 0.7,
+      "confidence": 0.9,
+      "topologyClass": "material-only",
+      "topologyRationale": "A band on a sawn face is a change of material across a flat surface, not a change of form. Modelling it as geometry at 24 px would add vertices that never move a pixel.",
+      "geometryDescriptor": {
+        "topologyIntent": "lathe-free custom cylinder: the rim radius is modulated per segment so the outline is lobed, not circular",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [
+          "per-segment radius noise, deterministic seed"
+        ],
+        "uvStrategy": "planar top projection (u,v) = (0.5 + x/2R, 0.5 + z/2R)",
+        "normalStrategy": "flat face normals, per-segment wall normals"
+      },
+      "parent": "root",
+      "attachment": null,
+      "localFeatures": [
+        {
+          "id": "pale-sapwood-band",
+          "kind": "contour",
+          "observation": "distinctly paler ring; heart/sap luminance ratio 0.767",
+          "implementation": "band field stop from r/R 0.72 to 0.88 on the shared disc canvas",
+          "evidence": "zones/crop-sap.png #CF9B66",
+          "confidence": 0.9
+        }
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(207, 155, 102, 1.0)",
+        "secondaryAlbedo": "rgba(172, 116, 73, 1.0)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.9,
+        "sourceToken": "var(--team-light) / var(--team-dark)",
+        "note": "Hex here is the REFERENCE-extracted sapwood/heartwood pair, recorded as the relationship the build reproduces. Absolute colour at runtime is the team token; see approximationNotes.",
+        "evidenceRefs": [
+          "pbr/heart/report.json",
+          "pbr/sap/report.json"
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 1.0
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "collider": {
+          "type": "none",
+          "note": "the disc never takes a hit test; squares are picked analytically"
+        },
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "id": "pale-sapwood-band",
+      "name": "Sapwood band",
+      "primitive": "plane-card",
+      "dimensions": {
+        "width": 0.7040000000000001,
+        "height": 0.0,
+        "depth": 0.7040000000000001,
+        "units": "board squares",
+        "confidence": 0.9
+      }
+    },
+    {
+      "level": "macro",
+      "role": "surface",
+      "importance": 0.8,
+      "confidence": 0.8,
+      "topologyClass": "material-only",
+      "topologyRationale": "A band on a sawn face is a change of material across a flat surface, not a change of form. Modelling it as geometry at 24 px would add vertices that never move a pixel.",
+      "geometryDescriptor": {
+        "topologyIntent": "lathe-free custom cylinder: the rim radius is modulated per segment so the outline is lobed, not circular",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [
+          "per-segment radius noise, deterministic seed"
+        ],
+        "uvStrategy": "planar top projection (u,v) = (0.5 + x/2R, 0.5 + z/2R)",
+        "normalStrategy": "flat face normals, per-segment wall normals"
+      },
+      "parent": "root",
+      "attachment": null,
+      "localFeatures": [
+        {
+          "id": "ragged-bark-rim",
+          "kind": "contour",
+          "observation": "dark ring, thickness varying 0.03R-0.12R, lobed outline",
+          "implementation": "band field stop from r/R 0.88 to 1.0 on the shared disc canvas",
+          "evidence": "zones/bark-check.png",
+          "confidence": 0.8
+        }
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(207, 155, 102, 1.0)",
+        "secondaryAlbedo": "rgba(172, 116, 73, 1.0)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.9,
+        "sourceToken": "var(--team-light) / var(--team-dark)",
+        "note": "Hex here is the REFERENCE-extracted sapwood/heartwood pair, recorded as the relationship the build reproduces. Absolute colour at runtime is the team token; see approximationNotes.",
+        "evidenceRefs": [
+          "pbr/heart/report.json",
+          "pbr/sap/report.json"
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 1.0
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "collider": {
+          "type": "none",
+          "note": "the disc never takes a hit test; squares are picked analytically"
+        },
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "id": "ragged-bark-rim",
+      "name": "Bark rim",
+      "primitive": "plane-card",
+      "dimensions": {
+        "width": 0.8,
+        "height": 0.0,
+        "depth": 0.8,
+        "units": "board squares",
+        "confidence": 0.8
+      },
+      "materialId": "bark-ring"
+    }
+  ],
+  "materials": [
+    {
+      "id": "log-slice",
+      "name": "Rough sawn end grain",
+      "type": "standard",
+      "shaderModel": "MeshStandardMaterial",
+      "baseColor": "#cf9b66",
+      "color": "#cf9b66",
+      "albedo": {
+        "dominant": "#cf9b66",
+        "secondary": [
+          "#ac7449",
+          "#6b4a2f"
+        ],
+        "samplingNotes": "Extracted sapwood / heartwood / derived bark. At runtime the band field is generated around the TEAM token instead; these values fix the relationships."
+      },
+      "colorVariation": {
+        "palette": [
+          "#cf9b66",
+          "#ac7449",
+          "#6b4a2f"
+        ],
+        "pattern": "concentric-bands",
+        "amplitude": 0.12,
+        "heightCorrelation": 0.2
+      },
+      "textureResolution": 256,
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          1.0,
+          1.0
+        ],
+        "anisotropy": 2,
+        "texelDensityIntent": "One 256px disc canvas per team colour (two total). The prop renders at about 24 px; 256 already gives ten times the sampled detail."
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 1.0,
+          "amplitude": 0.12,
+          "role": "pith / heartwood / sapwood / bark band field"
+        },
+        {
+          "id": "meso",
+          "frequency": 17.0,
+          "amplitude": 0.06,
+          "role": "growth rings, about 17 across the radius, denser outward"
+        },
+        {
+          "id": "micro",
+          "frequency": 90.0,
+          "amplitude": 0.02,
+          "role": "radial saw scoring"
+        }
+      ],
+      "roughness": {
+        "base": 0.92,
+        "variation": 0.04,
+        "map": "independent-procedural-field",
+        "localResponse": "the bark ring is rougher still; the sawn face has no polished zone anywhere"
+      },
+      "metalness": {
+        "base": 0.0,
+        "variation": 0.0,
+        "note": "dielectric"
+      },
+      "specular": {
+        "f0": 0.04
+      },
+      "ambientOcclusion": {
+        "map": "independent-procedural-cavity-field",
+        "intensity": 0.25,
+        "note": "Derived from the band field's low frequency, never from albedo."
+      },
+      "finishStyle": "rough sawn end grain, fully matte",
+      "localOverrides": [
+        {
+          "id": "pale-sapwood-band",
+          "target": "root",
+          "observation": "paler ring at r/R 0.72-0.88",
+          "implementation": "band field: sapwood is the brightest stop, heartwood 0.767 of its luminance",
+          "evidence": "radial profile"
+        },
+        {
+          "id": "growth-rings",
+          "target": "root",
+          "observation": "about 17 concentric rings, period 0.058R, denser outward",
+          "implementation": "17 arcs drawn on the disc canvas with an outward-increasing density",
+          "evidence": "radial profile oscillation"
+        },
+        {
+          "id": "off-centre-pith",
+          "target": "root",
+          "observation": "the ring centre is not the disc centre",
+          "implementation": "rings are drawn about a point offset by 0.07R from the canvas centre",
+          "evidence": "INFERENCE from ring curvature"
+        },
+        {
+          "id": "dark-pith",
+          "target": "root",
+          "observation": "the centre is markedly darker than the heartwood",
+          "implementation": "innermost stop of the band field, mixed 0.35 toward the wood brown",
+          "evidence": "radial profile r/R 0.00-0.03"
+        }
+      ],
+      "referencePbr": {
+        "usable": true,
+        "confidence": 0.818,
+        "estimatedFidelity": 0.818,
+        "sourceCrop": "zones/crop-heart.png",
+        "palette": [
+          "#AC7449",
+          "#955B32",
+          "#C48E63",
+          "#7A4019",
+          "#E3B085"
+        ],
+        "maps": {
+          "albedo": {
+            "url": "pbr/heart/heart_albedo.png",
+            "path": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/base-recon/pbr/heart/heart_albedo.png",
+            "channel": "albedo",
+            "colorSpace": "srgb",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "url": "pbr/heart/heart_roughness.png",
+            "path": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/base-recon/pbr/heart/heart_roughness.png",
+            "channel": "roughness",
+            "colorSpace": "linear",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "url": "pbr/heart/heart_height.png",
+            "path": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/base-recon/pbr/heart/heart_height.png",
+            "channel": "height",
+            "colorSpace": "linear",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "url": "pbr/heart/heart_normal.png",
+            "path": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/base-recon/pbr/heart/heart_normal.png",
+            "channel": "normal",
+            "colorSpace": "linear",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "url": "pbr/heart/heart_ao.png",
+            "path": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/base-recon/pbr/heart/heart_ao.png",
+            "channel": "ao",
+            "colorSpace": "linear",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "limitation": "single-image estimate. Bark is DERIVED, not extracted: no bark-only region in this photo is clean enough to sample."
+      }
+    },
+    {
+      "id": "bark-ring",
+      "name": "Bark",
+      "type": "standard",
+      "shaderModel": "MeshStandardMaterial",
+      "baseColor": "#6b4a2f",
+      "color": "#6b4a2f",
+      "albedo": {
+        "dominant": "#6b4a2f",
+        "secondary": [],
+        "samplingNotes": "DERIVED. No bark-only region in this photo is large or clean enough to extract from."
+      },
+      "colorVariation": {
+        "palette": [
+          "#6b4a2f"
+        ],
+        "pattern": "irregular",
+        "amplitude": 0.18,
+        "heightCorrelation": 0.5
+      },
+      "textureResolution": 256,
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          1.0,
+          1.0
+        ],
+        "anisotropy": 2,
+        "texelDensityIntent": "shares the same 256px disc canvas as the wood; the bark is its outermost stop"
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 1.0,
+          "amplitude": 0.18,
+          "role": "ring thickness varying around the perimeter"
+        },
+        {
+          "id": "meso",
+          "frequency": 22.0,
+          "amplitude": 0.1,
+          "role": "knobbly plate breakup"
+        },
+        {
+          "id": "micro",
+          "frequency": 80.0,
+          "amplitude": 0.03,
+          "role": "fissure speckle"
+        }
+      ],
+      "roughness": {
+        "base": 0.98,
+        "variation": 0.02,
+        "map": "independent-procedural-field",
+        "localResponse": "the roughest surface in the scene; nothing on it catches a highlight"
+      },
+      "metalness": {
+        "base": 0.0,
+        "variation": 0.0
+      },
+      "specular": {
+        "f0": 0.04
+      },
+      "ambientOcclusion": {
+        "map": "independent-procedural-cavity-field",
+        "intensity": 0.45,
+        "note": "strongest where the bark meets the sapwood, which is a real cavity in the reference"
+      },
+      "finishStyle": "bark, fully matte, high relief",
+      "qualityTier": "utility",
+      "referenceNote": "Utility tier because its PBR is derived rather than extracted. Kept as a separate material because Layer 5 observed it as a genuinely different substance, not just darker wood.",
+      "localOverrides": [
+        {
+          "id": "ragged-bark-rim",
+          "target": "ragged-bark-rim",
+          "observation": "thickness varies 0.03R-0.12R; the outline is lobed",
+          "implementation": "the rim radius is modulated per geometry segment AND the painted ring's inner edge is modulated on the canvas",
+          "evidence": "zones/bark-check.png"
+        }
+      ]
+    }
+  ],
+  "repetitionSystems": [
+    {
+      "id": "growth-rings",
+      "name": "Concentric growth rings",
+      "kind": "radial-series",
+      "componentRef": "slice-body",
+      "count": 17,
+      "layout": {
+        "from": 0.05,
+        "to": 0.9,
+        "spacingModel": "period 0.058R, compressing outward",
+        "centre": "offset 0.07R from the disc centre"
+      },
+      "variation": {
+        "note": "ring darkness and width vary from a deterministic seed"
+      },
+      "instancing": "drawn once into the shared disc canvas, not instanced geometry",
+      "evidence": "radial luminance profile oscillation r 100-350"
+    }
+  ],
+  "buildPasses": [
+    {
+      "id": "blockout",
+      "goal": "Match macro silhouette and proportions.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Silhouette reads correctly without materials.",
+        "Quality contract has named all required macro feature groups before code generation.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "structural-pass",
+      "goal": "Build the component hierarchy implied by the pre-spec complexity assessment.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Macro, meso, and repeated structures meet qualityContract.minimumSpecDepth.",
+        "Parent-child relations, joints, seams, sockets, and contact points are explicit.",
+        "Every attached child appendage/connector has parentSocket, localStart/localEnd, contactType, embedDepth or overlap, and gapTolerance.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "form-refinement",
+      "goal": "Refine shape, deformation, bevels, tapers, curves, asymmetry, and visible local geometry.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Important visible forms are represented in component geometryDescriptor, deformations, localFeatures, or repetitionSystems.",
+        "Endpoint-based child parts are rooted at their attachment sockets and do not visibly float away from parents.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "material-pass",
+      "goal": "Match material color, roughness, bump, and local variation.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Reference-derived albedo palette records dominant, secondary, and accent colors per visible material.",
+        "Each important material defines roughness variation and at least one normal/bump/displacement response.",
+        "Local material overrides, dirt/wear/stains/moss/chips/scratches or equivalent masks are tied to evidenceRefs.",
+        "Thin, transparent, reflective, wet, or fibrous materials document alpha/transmission/clearcoat/metalness/fiber response when relevant.",
+        "Generated preview uses procedural albedo/roughness/bump texture or vertex color variation instead of one flat color.",
+        "Generated preview uses independent PBR maps at 1024px or higher for the quality-first tier.",
+        "If source pixels are available, referencePbr extraction passed at confidence >= 0.7 or the pass is stopped/requesting better references.",
+        "Macro, meso, and micro surface frequency bands are visible at the intended review distance without obvious tiling.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "surface-pass",
+      "goal": "Add procedural surface locality such as normal/bump/displacement, AO, dirt, stains, chips, grain, moss, scratches, and wear.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Every required material feature group has local overrides or surfaceDetail tied to evidenceRefs.",
+        "A grazing-angle close-up proves that normal/height detail breaks highlights naturally and does not read as smooth plastic.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "lighting-pass",
+      "goal": "Make material and form readable under neutral turntable lighting plus optional reference lighting.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "lightingFromPhoto identifies key light direction/color/intensity, fill light, rim or environment light, and ambient color.",
+        "Exposure, tone mapping, background color/gradient, shadow softness, and contact shadow behavior are specified.",
+        "Lighting does not hide geometry/material gaps and screenshots can be compared fairly to the reference.",
+        "Neutral, grazing, and reference-matched lighting checks distinguish material errors from lighting errors.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "interaction-pass",
+      "goal": "Make the model ready for future animation, transformation, physics, or destruction.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Macro and movable meso components have stable pivot nodes.",
+        "Sockets, collider proxies, and destruction metadata are present for future runtime actions.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "optimization-pass",
+      "goal": "Protect runtime performance after visual fidelity is accepted.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Triangle count, draw calls, instancing, LOD strategy, and FPS target are documented or verified.",
+        "Repeated detail is instanced or simplified where possible without breaking silhouette/material believability."
+      ]
+    }
+  ],
+  "visualEvidence": [
+    {
+      "timestamp": "2026-08-18T09:36:13.200573+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.72,
+      "aiVisionScore": 0.72,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouette": 0.7,
+        "structure": 0.78,
+        "form": 0.72,
+        "material": 0.74,
+        "lighting": 0.75
+      },
+      "featureReviews": [
+        {
+          "id": "team-readability",
+          "score": 0.92,
+          "tier": "critical",
+          "threshold": 0.85,
+          "pass": true,
+          "note": "Both bases are unmistakable at a glance and the light base GAINED a defined rim it never had against a light square. The band field is mirrored on the dark team (dl offsets applied upward instead of downward) so the structure survives on a near-black token; the reference's ordering is preserved in magnitude, not in sign."
+        },
+        {
+          "id": "band-field",
+          "score": 0.74,
+          "tier": "critical",
+          "threshold": 0.7,
+          "pass": true,
+          "note": "Band order, radii and the off-centre pith all land after one correction (sapwood 0.78-0.94, bark 0.94-1.00). Still short of the reference: the sapwood/heartwood boundary is a hard edge here and diffuse in the photo."
+        },
+        {
+          "id": "lobed-rim",
+          "score": 0.7,
+          "tier": "critical",
+          "threshold": 0.7,
+          "pass": true,
+          "note": "Outline is non-circular from three summed low-frequency lobes. First attempt used per-vertex noise on 64 vertices and produced a 64-tooth gear that read as a machine part, not a log. Bark thickness was also cut from 0.14R to 0.06R. Still smooth where the reference bark is knobbly and plated."
+        },
+        {
+          "id": "growth-rings",
+          "score": 0.62,
+          "tier": "important",
+          "threshold": 0.6,
+          "pass": true,
+          "note": "MEASUREMENT ERROR CORRECTED: the ring count was first read as 17 from a radial profile sampled every 4 px, which aliased the ring period and halved it. Side by side with the reference the rings are far denser; rebuilt at 34. Contrast is still below the reference, which reads grainy where this reads smooth."
+        }
+      ],
+      "referenceScreenshot": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/refs/base-oak.jpg",
+      "renderScreenshot": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/base-recon/render-disc.png",
+      "comparisonImage": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/base-recon/cmp-disc.png",
+      "cameraView": "",
+      "notes": "",
+      "aiVisionNotes": ""
+    }
+  ],
+  "reviewHistory": [
+    {
+      "timestamp": "2026-08-18T09:36:13.200573+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.72,
+      "aiVisionScore": 0.72,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouette": 0.7,
+        "structure": 0.78,
+        "form": 0.72,
+        "material": 0.74,
+        "lighting": 0.75
+      },
+      "featureReviews": [
+        {
+          "id": "team-readability",
+          "score": 0.92,
+          "tier": "critical",
+          "threshold": 0.85,
+          "pass": true,
+          "note": "Both bases are unmistakable at a glance and the light base GAINED a defined rim it never had against a light square. The band field is mirrored on the dark team (dl offsets applied upward instead of downward) so the structure survives on a near-black token; the reference's ordering is preserved in magnitude, not in sign."
+        },
+        {
+          "id": "band-field",
+          "score": 0.74,
+          "tier": "critical",
+          "threshold": 0.7,
+          "pass": true,
+          "note": "Band order, radii and the off-centre pith all land after one correction (sapwood 0.78-0.94, bark 0.94-1.00). Still short of the reference: the sapwood/heartwood boundary is a hard edge here and diffuse in the photo."
+        },
+        {
+          "id": "lobed-rim",
+          "score": 0.7,
+          "tier": "critical",
+          "threshold": 0.7,
+          "pass": true,
+          "note": "Outline is non-circular from three summed low-frequency lobes. First attempt used per-vertex noise on 64 vertices and produced a 64-tooth gear that read as a machine part, not a log. Bark thickness was also cut from 0.14R to 0.06R. Still smooth where the reference bark is knobbly and plated."
+        },
+        {
+          "id": "growth-rings",
+          "score": 0.62,
+          "tier": "important",
+          "threshold": 0.6,
+          "pass": true,
+          "note": "MEASUREMENT ERROR CORRECTED: the ring count was first read as 17 from a radial profile sampled every 4 px, which aliased the ring period and halved it. Side by side with the reference the rings are far denser; rebuilt at 34. Contrast is still below the reference, which reads grainy where this reads smooth."
+        }
+      ],
+      "action": "refine-spec",
+      "summary": "Base disc rebuilt in board3d.ts from the spec (refine-code route). Three defects were found by looking at the comparison sheet and fixed in one correction round: a 64-tooth gear outline from per-vertex rim noise, a ring count that was half the real one because the radial profile aliased at a 4 px sample step, and a bark ring more than twice too thick. All four feature targets now clear their thresholds on agent vision. NOT CREDITED as a completed blockout pass: the gate requires an unlit map-stripped render as silhouette evidence and I did not capture one, so the pass stays open. Tier 1 silhouette IoU also FAILS at 0.794 and Divine Eye reports 0.40 / probe — both are measuring the CONDITIONAL reference (sky, trees and a hand fall inside the reference mask) and the declared team-token colour deviation, not the geometry.",
+      "matched": [],
+      "mismatches": [],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [],
+      "visualEvidence": {
+        "referenceScreenshot": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/refs/base-oak.jpg",
+        "renderScreenshot": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/base-recon/render-disc.png",
+        "comparisonImage": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/base-recon/cmp-disc.png",
+        "cameraView": "",
+        "notes": "",
+        "aiVisionNotes": ""
+      }
+    }
+  ],
+  "lodPlan": [
+    {
+      "tier": "near",
+      "distance": 0,
+      "strategy": "full component tree and material layers"
+    },
+    {
+      "tier": "far",
+      "distance": 30,
+      "strategy": "merge static components and reduce local feature geometry"
+    }
+  ],
+  "performanceBudget": {
+    "qualityPriority": "real-time-first",
+    "targetTriangles": 2400,
+    "maxDrawCalls": 2,
+    "textureSize": 256,
+    "fpsTarget": 60,
+    "optimizationPolicy": "32 of these render every frame under 32 skinned characters. One shared geometry, two shared materials, two 256px canvases. Nothing scales with piece count."
+  },
+  "lightingFromPhoto": [
+    "Key: direct low winter sun from the front-left, visible as the even bright wash across the face and the hard shadow on the hand. The game's existing DirectionalLight at (-4, 8, 5) is a fair match in direction; no light change is proposed.",
+    "Fill: open sky bounce, strong and blue. The game's HemisphereLight (0xdfe8ff / 0x33302c) already supplies this.",
+    "Rim / environment: none. The face is fully matte with no specular lobe at all, so envMapIntensity stays 0 and the material carries the look with roughness 0.92 alone.",
+    "Exposure and tone mapping: the reference is an outdoor phone frame with a clipped sky; the renderer keeps its current SRGBColorSpace output and no tone mapping, so the band field must not be pushed to match the photo's exposure.",
+    "Contact shadow / ambient occlusion: the disc sits flat on the board and already receives the shadow-mapped key light. Ambient occlusion is an independent low-frequency field from the band structure, strongest under the bark rim."
+  ],
+  "proceduralStrategy": [
+    "Block out macro silhouette first.",
+    "Add component hierarchy and joints.",
+    "Create stable pivot groups, sockets, collider proxies, and destruction metadata before visual polish.",
+    "Refine forms with bevels, tapers, bends, and procedural noise.",
+    "Run reference PBR extraction for important source-image materials and stop when confidence is below the target threshold.",
+    "Add material variation before adding expensive micro-geometry."
+  ],
+  "animationAnchors": [
+    "root pivot node supports whole-object translation, rotation, scale, and visibility changes",
+    "component pivot groups support later local transforms without rebuilding geometry"
+  ],
+  "destructionAnchors": [
+    "actionProfile.destruction.fractureGroup marks detachable or breakable component sets",
+    "component seams and sockets define plausible break points instead of random explosions"
+  ],
+  "risks": [
+    {
+      "id": "slice-thickness",
+      "resolution": "Not observable face-on. Kept at the game's existing 0.06 so nothing about piece placement changes."
+    },
+    {
+      "id": "bark-colour",
+      "resolution": "Derived, not extracted. No clean bark-only region exists in this photo."
+    },
+    {
+      "id": "pith-offset",
+      "resolution": "Direction and magnitude are inference from ring curvature; 0.07R is chosen, not measured."
+    },
+    {
+      "id": "team-readability",
+      "resolution": "Band contrast held to about 12 percent and the rim mixed toward a MID brown so it darkens the light team and lightens the dark team. Readability is a project contract and outranks reference contrast."
+    }
+  ],
+  "localSpecSearch": {
+    "collection": "core_3d",
+    "query": "Oak Log Slice Base growth ring radial gradient procedural bark rough displacement matte end grain roughness",
+    "index": {
+      "status": "hit",
+      "reason": "current",
+      "fingerprint": "6857e5ab528b42ac12f4f411f862610a0bffce8e47aee3610a7603c318072fe8"
+    },
+    "matches": [
+      {
+        "record_id": "core.pbr-roughness",
+        "file_path": "grimoire/glossary/3d_vocabulary.md",
+        "heading": "Material And PBR",
+        "key_path": null,
+        "score": 10.049883676851,
+        "snippets": [
+          "Roughness is microfacet scatter: high roughness reads matte and low roughness reads glossy. Recognition cues: low roughness reads as a sharp, mirror-like, tight specular highlight; high roughness reads as a blurry, wide, dim highlight and matte ..."
+        ],
+        "source_refs": [
+          {
+            "path": "grimoire/glossary/3d_vocabulary.md",
+            "heading": "Material And PBR",
+            "key_path": null
+          },
+          {
+            "path": "grimoire/intake/image_analysis.md",
+            "heading": "Layer 5 — Materials & surface (PBR)",
+            "key_path": null
+          },
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[1]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "grimoire/glossary/3d_vocabulary.md"
+          },
+          {
+            "kind": "notebooklm-research",
+            "ref": "notebooklm:4b03c2f9-8393-411f-b5b4-039ab9532843",
+            "note": "Validated generic schema vocabulary; numeric claims remain backed by local source_refs."
+          },
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation — merged recognition cues + Three.js target instead of duplicating this entity."
+          }
+        ]
+      },
+      {
+        "record_id": "core.shader-mapping-customshadermaterial-csm-weathering-hooks",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.rendering_shader_mapping[1]",
+        "score": 5.49612311075,
+        "snippets": [
+          "Extension library exposing csm_* output variables to inject procedural noise/masks into an otherwise-standard lit material, used for dynamic tarnish/patina effects. Thư viện mở rộng cung cấp các biến đầu ra csm_* để chèn nhiễu/mặt nạ thủ tục vào ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.rendering_shader_mapping[1]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.pbr-color-space-srgb-vs-linearnocolorspace",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.material_pbr[11]",
+        "score": 5.360246164784,
+        "snippets": [
+          "... để người xem (cần gamma/sRGB) và các bản đồ dữ liệu toán học (phải giữ tuyến tính/không hiệu chỉnh). Recognition cues: Base color/albedo and emissive textures are the only ones that should look like natural photographic color; Normal, ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[11]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      }
+    ]
+  },
+  "approximationNotes": [
+    "STYLIZED, not matched. The reference is admitted CONDITIONAL: sky and trees behind it, a hand occluding the lower-left rim. Only the FACE is reconstructed; the slice's thickness is not observable in this view and is set by the game (0.06 units), not by the reference.",
+    "DECLARED DEVIATION: absolute colour comes from the project's team tokens (--team-light / --team-dark), which exist to say which side a piece belongs to. The reference contributes STRUCTURE (band radii, ring count, lobed perimeter) and RELATIONSHIPS (heart/sap luminance ratio 0.767) only.",
+    "Band contrast is deliberately held to about 12 percent around the team colour so a near-white base still reads white and a near-black base still reads black. Reference contrast is far higher.",
+    "The bark rim is mixed toward a MID brown, not toward black. Mixing toward a mid tone darkens the light team's rim and lightens the dark team's rim, so the rim reads on both. Mixing toward black would make it invisible on the dark team.",
+    "Bark PBR is DERIVED, not extracted: this photo has no bark-only region large enough or clean enough to sample. Heartwood (confidence 0.818) and sapwood (0.808) are extracted.",
+    "Detail 'matte-sawn-face' was first filed as kind 'gloss'. That was wrong: it describes the ABSENCE of gloss. Refiled as 'scratch' (the radial saw scoring); the matte claim is carried by roughness 0.92 and finishStyle.",
+    "componentTree was flattened during authoring: 'slice-body' was a duplicate of 'root' and the band components were filed as cylinders. A cylinder child is read as an appendage and demanded a positive embedDepth/overlap that does not exist here — the bands are painted regions on a flat face, not parts. Refiled as plane-card under root."
+  ]
+}
