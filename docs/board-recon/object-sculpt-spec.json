@@ -1,0 +1,2407 @@
+{
+  "targetName": "Wooden Chessboard",
+  "targetId": "wooden-chessboard",
+  "schemaVersion": "2.1",
+  "terminologyProfile": {
+    "domain": "real-time procedural Three.js asset",
+    "geometryTerms": [
+      "silhouette",
+      "topology",
+      "primitive",
+      "bevel",
+      "chamfer",
+      "taper",
+      "bend",
+      "boolean cut",
+      "edge loop",
+      "surface normal",
+      "displacement"
+    ],
+    "materialTerms": [
+      "albedo",
+      "baseColor",
+      "roughness",
+      "metalness",
+      "normal map",
+      "bump map",
+      "ambient occlusion",
+      "cavity dirt",
+      "edge wear",
+      "clearcoat"
+    ],
+    "lightingTerms": [
+      "key light",
+      "fill light",
+      "rim light",
+      "HDRI/environment reflection",
+      "contact shadow"
+    ],
+    "descriptionRule": "Use measurable 3D graphics terms. Avoid vague words unless they are paired with concrete geometry/material/shader parameters."
+  },
+  "sourceImage": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/board-recon/../refs/board.jpg",
+  "referenceCamera": {
+    "solved": false,
+    "fovDegrees": 40.0,
+    "aspect": 1.0,
+    "orientation": {
+      "yaw": 0.0,
+      "pitch": 0.0,
+      "roll": 0.0
+    },
+    "positionHint": [
+      0.0,
+      0.0,
+      3.0
+    ],
+    "note": "For likeness work, solve the reference camera (forge/stage1_intake/solve_camera_pose.py) so the review render aligns with the photo and the reference can be projected. Confirm by overlay review."
+  },
+  "suitability": "conditional",
+  "scores": {
+    "object_isolation": 0,
+    "silhouette_readability": 0,
+    "depth_inference": 0,
+    "primitive_decomposition": 0,
+    "material_procedurality": 0,
+    "occlusion_risk": 0,
+    "interaction_fit": 0
+  },
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "folding wooden chessboard (two-leaf board-box, veneered playing field)",
+      "primaryDomain": "object",
+      "formLanguage": [
+        "geometric",
+        "orthogonal",
+        "planar-slab"
+      ],
+      "structureKind": [
+        "cuboid shell",
+        "inlaid grid field",
+        "mitred surround frame"
+      ],
+      "motionPotential": [
+        "static prop"
+      ],
+      "materialFamilies": [
+        "varnished hardwood (dielectric)"
+      ],
+      "notes": "Counted 8x8 squares. Two wood tones, not black/white. Frame rails mitred 45 deg at each corner. Confidence 0.95."
+    },
+    "complexity": {
+      "tier": "moderate",
+      "scores": {
+        "silhouetteComplexity": 1,
+        "componentCount": 2,
+        "hierarchyDepth": 2,
+        "repetitionDensity": 3,
+        "materialLayerCount": 2,
+        "localDetailDensity": 2,
+        "occlusionRisk": 1,
+        "actionReadinessNeed": 1
+      },
+      "estimatedCounts": {
+        "macroComponents": 3,
+        "mesoComponents": 4,
+        "microFeatureGroups": 3,
+        "materialLayers": 3,
+        "repetitionSystems": 2
+      },
+      "reasoning": [
+        "Silhouette is one cuboid: low.",
+        "Repetition is the dominant structure: 64 square inlays plus 8 spline-kerf clusters -> 2 repetition systems.",
+        "Detail density is carried by micro features (mitre diagonals, kerfs, chamfer band, grain direction) rather than by mass.",
+        "Action readiness is needed because gambit_chess picks squares by raycast and must keep per-square addressability."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "moderate",
+      "minimumComponentLevels": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "needsRepetitionSystems": true,
+      "needsMaterialLocalOverrides": true,
+      "needsMultipleReviewViews": true,
+      "needsActionReadyHierarchy": true,
+      "rationale": "Observed 64-tile repetition and per-rail grain rotation force repetition systems and material local overrides even though the macro silhouette is a single cuboid."
+    },
+    "unknownsToResolveBeforeImplementation": [],
+    "detailInventory": {
+      "scanMethod": "component-zones + 2x reference crops (zones/kerf-near.png, zones/mitre-near.png, zones/field.png)",
+      "targetMinDetails": 6,
+      "note": "Every detail below maps to a component.localFeatures or material.localOverrides entry in the spec.",
+      "details": [
+        {
+          "id": "mitre-diagonals",
+          "zone": "frame corners",
+          "observation": "A 45 deg seam runs from each outer corner inward; grain direction flips across it.",
+          "mapsTo": {
+            "ref": "mitre-diagonals"
+          },
+          "evidence": "zones/mitre-near.png",
+          "confidence": 0.95,
+          "realization": "unreported",
+          "kind": "seam"
+        },
+        {
+          "id": "corner-spline-kerfs",
+          "zone": "side faces near corners",
+          "observation": "Three thin dark grooves cut vertically down the side face, unevenly spaced, spanning the full face height and breaking the top arris.",
+          "mapsTo": {
+            "ref": "corner-spline-kerfs"
+          },
+          "evidence": "zones/kerf-near.png",
+          "confidence": 0.9,
+          "realization": "unreported",
+          "kind": "groove"
+        },
+        {
+          "id": "eased-outer-arris",
+          "zone": "frame outer top edge",
+          "observation": "A narrow lighter chamfer band runs along the outer top edge, roughly one sixth of the rail width.",
+          "mapsTo": {
+            "ref": "eased-outer-arris"
+          },
+          "evidence": "zones/mitre-near.png",
+          "confidence": 0.85,
+          "realization": "unreported",
+          "kind": "bevel"
+        },
+        {
+          "id": "field-flush-butt",
+          "zone": "playing field",
+          "observation": "Squares butt flush; no grout line, gap, or bevel between them.",
+          "mapsTo": {
+            "ref": "field-flush-butt"
+          },
+          "evidence": "zones/field.png",
+          "confidence": 0.95,
+          "realization": "unreported",
+          "kind": "seam"
+        },
+        {
+          "id": "rail-length-grain",
+          "zone": "frame rails",
+          "observation": "Grain lines run along each rail's length, so adjacent rails read 90 deg apart.",
+          "mapsTo": {
+            "ref": "rail-length-grain"
+          },
+          "evidence": "zones/mitre-near.png",
+          "confidence": 0.9,
+          "realization": "unreported",
+          "kind": "linework"
+        },
+        {
+          "id": "square-figure-variation",
+          "zone": "playing field",
+          "observation": "Each square carries its own fine directional figure and slight tonal drift; no two squares are a flat identical fill.",
+          "mapsTo": {
+            "ref": "square-figure-variation"
+          },
+          "evidence": "zones/field.png",
+          "confidence": 0.85,
+          "realization": "unreported",
+          "kind": "linework"
+        },
+        {
+          "id": "low-contrast-two-tone",
+          "zone": "playing field",
+          "observation": "Measured on verified single-square crops: light lum 179.5, dark lum 124.6 -> ratio 0.694. De-lit palettes #F5AC3E (light) vs #C37128 (dark).",
+          "mapsTo": {
+            "ref": "low-contrast-two-tone"
+          },
+          "evidence": "zones/crop-light.png, zones/crop-dark.png, zones/tone-check.png",
+          "confidence": 0.88,
+          "realization": "unreported",
+          "kind": "decal"
+        },
+        {
+          "id": "side-face-sheen",
+          "zone": "slab side faces",
+          "observation": "The vertical faces carry a broader, brighter specular sweep than the top face.",
+          "mapsTo": {
+            "ref": "side-face-sheen"
+          },
+          "evidence": "zones/kerf-near.png",
+          "confidence": 0.75,
+          "realization": "unreported",
+          "kind": "gloss"
+        }
+      ]
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0.0,
+      "proportions": {
+        "headUnit": 0.0,
+        "torso": 0.0,
+        "legs": 0.0,
+        "shoulderWidth": 0.0,
+        "hipWidth": 0.0
+      },
+      "pose": {
+        "type": "unassessed",
+        "jointAngles": {}
+      },
+      "faceLandmarks": {
+        "eyeLine": 0.0,
+        "eyeSpacing": 0.0,
+        "noseBase": 0.0,
+        "mouthLine": 0.0,
+        "hairline": 0.0
+      },
+      "features": [],
+      "confidence": 0.0,
+      "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
+    },
+    "sourceImage": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/board-recon/../refs/board.jpg"
+  },
+  "qualityContract": {
+    "qualityBar": "moderate",
+    "definitionOfDone": [
+      "The rendered model matches the reference silhouette, primary proportions, visible component hierarchy, material response, and most recognizable local features for the selected fidelity tier."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 2,
+      "mesoComponents": 3,
+      "microFeatureGroups": 2,
+      "materialLayers": 2,
+      "repetitionSystems": 0,
+      "reviewViewpoints": 3
+    },
+    "featureGroups": [
+      {
+        "id": "overall-silhouette",
+        "name": "Overall silhouette and proportions",
+        "required": true,
+        "qualityCriteria": [
+          "Bounding shape, dominant curves, negative spaces, and scale relationships are explicitly described."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model reads as a generic placeholder instead of the reference object",
+          "major proportions are guessed without evidence"
+        ]
+      },
+      {
+        "id": "primary-structure",
+        "name": "Primary structure and hierarchy",
+        "required": true,
+        "qualityCriteria": [
+          "Major parts, joints, seams, contact points, and parent-child relationships are named before code generation."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "large visible parts are merged into one mesh",
+          "component hierarchy is too shallow for the observed complexity"
+        ]
+      },
+      {
+        "id": "attachment-joint-correctness",
+        "name": "Attachment and joint correctness",
+        "required": true,
+        "qualityCriteria": [
+          "Every visible child appendage, branch, limb, handle, connector, tube, cable, horn, wing, leg, or hinged part has an attachment contract with parent socket, localStart/localEnd, contact type, embed/overlap, and gap tolerance."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "child part root floats away from the parent",
+          "branch/limb/tube is centered in space instead of pivoting from its root",
+          "parent-child transform mixes world and local coordinates"
+        ]
+      },
+      {
+        "id": "surface-material-response",
+        "name": "Surface material response",
+        "required": true,
+        "qualityCriteria": [
+          "Albedo zones, roughness, normal/bump/displacement intent, cavity dirt, edge wear, and local overrides are specified where visible.",
+          "Important materials define independent albedo, roughness, height/normal, and AO responses instead of reusing one texture for unrelated PBR channels.",
+          "Surface response is decomposed into macro, meso, and micro frequency bands with scale and amplitude tied to object scale."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "surface looks like flat plastic",
+          "local material variation is missing or not tied to image evidence"
+        ]
+      },
+      {
+        "id": "reference-lookdev",
+        "name": "Reference color, material, and lighting response",
+        "required": true,
+        "qualityCriteria": [
+          "Material-pass names the reference-derived albedo palette, roughness variation, tactile normal/bump/displacement response, and local masks.",
+          "When a source image is available, run reference PBR extraction and require confidence >= 0.7 before treating maps as implementation-ready.",
+          "Lighting-pass names key/fill/rim or environment light, exposure, tone mapping, background, and contact shadow behavior.",
+          "Neutral, grazing-angle, and reference-matched renders prove that surface relief survives relighting and is not painted into albedo."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model has acceptable shape but reads as flat shaded or plastic",
+          "colors are a generic average instead of reference-observed local color zones",
+          "lighting is evenly ambient and cannot reproduce the source value range"
+        ]
+      }
+    ],
+    "visualDeltaChecks": [
+      "silhouette and negative-space delta",
+      "component hierarchy depth delta",
+      "repetition density and distribution delta",
+      "material albedo/roughness/normal response delta",
+      "local feature placement and scale delta"
+    ],
+    "antiShallowSpecRules": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md).",
+      "Adjacent components must overlap by at least 0.02 world units at shared seams (source: grimoire/build/geometry_patterns.md).",
+      "Raised or recessed relief and fasteners must be geometry, instanced micro-parts, or displacement; a map alone is an approximation (source: grimoire/build/geometry_patterns.md)."
+    ],
+    "mustNotDo": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md).",
+      "Adjacent components must overlap by at least 0.02 world units at shared seams (source: grimoire/build/geometry_patterns.md).",
+      "Raised or recessed relief and fasteners must be geometry, instanced micro-parts, or displacement; a map alone is an approximation (source: grimoire/build/geometry_patterns.md)."
+    ]
+  },
+  "qualityTargets": {
+    "targetFidelity": 0.7,
+    "mustMatch": [
+      "macro silhouette and proportions",
+      "primary material albedo/roughness response",
+      "reference-derived PBR material response at or above 0.7 confidence when source pixels are usable",
+      "most recognizable local features"
+    ],
+    "niceToHave": [
+      "micro scratches, stains, chips, and dirt masks",
+      "secondary lighting match"
+    ],
+    "fpsTarget": 60,
+    "reviewViewpoints": [
+      "front",
+      "three-quarter",
+      "side",
+      "thickness-axis",
+      "long-axis"
+    ]
+  },
+  "selfCorrectLoop": {
+    "enabled": true,
+    "visualAcceptance": {
+      "reviewer": "ai-vision",
+      "threshold": 0.7,
+      "comparisonArtifactRequired": true,
+      "layerScoresRequired": true,
+      "codePixelDiffIsAcceptanceAuthority": false,
+      "scoringRule": "AI vision must inspect a side-by-side reference/render sheet and score the current pass from 0 to 1. Pixel-diff code may assist diagnostics but cannot approve a pass.",
+      "requiredLayerScores": [
+        "silhouetteProportion",
+        "componentStructure",
+        "formDetail",
+        "materialSurface",
+        "lightingCamera"
+      ],
+      "featureReviewPolicy": {
+        "enabled": true,
+        "reviewUnit": "semantic-subsystem",
+        "maxCriticalFeaturesPerPass": 5,
+        "maxImportantFeaturesPerPass": 3,
+        "criticalDefaultThreshold": 0.8,
+        "importantAverageThreshold": 0.65,
+        "adaptiveEscalation": true,
+        "singleImagePairOnly": true,
+        "selectionRule": "Choose only the most visually salient, identity-defining, user-prioritized, or high-risk semantic systems. Group repeated parts instead of reviewing every mesh. AI vision scores every selected feature from the same full reference/render pair."
+      }
+    },
+    "reviewAfterPasses": [
+      "blockout",
+      "structural-pass",
+      "form-refinement",
+      "material-pass",
+      "surface-pass",
+      "lighting-pass",
+      "interaction-pass",
+      "optimization-pass"
+    ],
+    "allowedActions": [
+      "continue",
+      "refine-spec",
+      "refine-code",
+      "request-input",
+      "stop"
+    ],
+    "specRefineTriggers": [
+      "missing component",
+      "wrong primitive family",
+      "wrong proportions",
+      "material layer under-specified",
+      "local feature not traceable to viewEvidence",
+      "reference ambiguity discovered during implementation"
+    ],
+    "codeRefineTriggers": [
+      "spec is adequate but generated geometry/material does not match",
+      "browser render differs from reference",
+      "performance budget exceeded",
+      "lighting hides geometry or material response"
+    ],
+    "stopCriteria": [
+      "target fidelity reached or user accepts current approximation",
+      "remaining gaps require new reference images or manual art"
+    ],
+    "screenshotPolicy": {
+      "requiredForPasses": [
+        "blockout",
+        "structural-pass",
+        "form-refinement",
+        "material-pass",
+        "surface-pass",
+        "lighting-pass",
+        "interaction-pass"
+      ],
+      "preferredCapture": "in-app-browser-screenshot",
+      "fallbackCapture": "user-supplied-screenshot-path",
+      "minimumEvidence": "Each visual pass needs a reference image, rendered screenshot, side-by-side comparison sheet, AI vision score, layer scores, and critique before choosing continue.",
+      "reviewPairRule": "Compare the same camera/viewpoint whenever possible; do not judge a front reference against a random render angle.",
+      "acceptanceAuthority": "AI vision review of the comparison sheet. Code-generated pixel similarity is not sufficient evidence."
+    }
+  },
+  "featureReviewTargets": [
+    {
+      "id": "overall-silhouette",
+      "name": "Flat cuboid, square footprint, thick side face",
+      "tier": "critical",
+      "passIds": [
+        "blockout"
+      ],
+      "minimumScore": 0.8,
+      "mustPass": true,
+      "componentRefs": [
+        "root",
+        "slab-body"
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "mitred-frame",
+      "name": "Wide border frame with 45 degree corner mitres",
+      "tier": "critical",
+      "passIds": [
+        "structural-pass",
+        "form-refinement"
+      ],
+      "minimumScore": 0.8,
+      "mustPass": true,
+      "componentRefs": [
+        "frame-rail"
+      ],
+      "evidenceRefs": [
+        "zones/mitre-near.png"
+      ]
+    },
+    {
+      "id": "low-contrast-field",
+      "name": "Wood-on-wood two-tone field, flush butt joints",
+      "tier": "critical",
+      "passIds": [
+        "material-pass"
+      ],
+      "minimumScore": 0.75,
+      "mustPass": true,
+      "componentRefs": [
+        "field-tile"
+      ],
+      "evidenceRefs": [
+        "zones/field.png"
+      ]
+    },
+    {
+      "id": "spline-kerfs",
+      "name": "Corner spline kerf clusters on the side faces",
+      "tier": "important",
+      "passIds": [
+        "form-refinement",
+        "surface-pass"
+      ],
+      "minimumScore": 0.6,
+      "mustPass": false,
+      "componentRefs": [
+        "spline-kerf"
+      ],
+      "evidenceRefs": [
+        "zones/kerf-near.png"
+      ]
+    },
+    {
+      "id": "grain-direction",
+      "name": "Per-rail grain running along the rail length",
+      "tier": "important",
+      "passIds": [
+        "material-pass",
+        "surface-pass"
+      ],
+      "minimumScore": 0.6,
+      "mustPass": false,
+      "componentRefs": [
+        "frame-rail",
+        "field-tile"
+      ],
+      "evidenceRefs": [
+        "zones/mitre-near.png"
+      ]
+    }
+  ],
+  "sculptPipeline": {
+    "passGateMode": "locked-sequential",
+    "passOrder": [
+      "blockout",
+      "structural-pass",
+      "form-refinement",
+      "material-pass",
+      "surface-pass",
+      "lighting-pass",
+      "interaction-pass",
+      "optimization-pass"
+    ],
+    "currentPass": "blockout",
+    "completedPasses": [],
+    "lastCompletedPass": "",
+    "blockedReason": "",
+    "nextRequiredEvidence": [
+      "Silhouette reads correctly without materials.",
+      "Quality contract has named all required macro feature groups before code generation.",
+      "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold.",
+      "browser render screenshot from your agent's browser/screenshot tool",
+      "side-by-side reference/render comparison sheet for AI vision review",
+      "AI vision score at or above the visual acceptance threshold",
+      "all critical semantic feature scores from the shared image pair at or above their thresholds",
+      "self-correction review appended with action=continue before the next pass"
+    ]
+  },
+  "lookDevTargets": {
+    "qualityPriority": "reference-fidelity",
+    "materialPass": {
+      "albedoPaletteRequired": true,
+      "roughnessVariationRequired": true,
+      "normalOrBumpRequired": true,
+      "localOverridesRequired": true,
+      "minimumTextureResolution": 1024,
+      "preferredTextureResolution": 2048,
+      "independentMapChannels": [
+        "albedo",
+        "roughness",
+        "height",
+        "normal",
+        "ambient-occlusion"
+      ],
+      "requiredSurfaceFrequencyBands": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "geometryReliefRequiredWhenSilhouetteAffected": true,
+      "referencePbrExtraction": {
+        "requiredWhenSourceImagePresent": true,
+        "targetThreshold": 0.7,
+        "stopOnLowConfidence": true,
+        "script": "forge/stage1_intake/extract_pbr_evidence.py",
+        "acceptedLimitation": "single-image extraction is reference-derived inference, not exact photogrammetry"
+      },
+      "mustAvoid": [
+        "single flat albedo per material",
+        "uniform roughness",
+        "albedo texture reused as roughness/height/normal/AO",
+        "single-frequency random noise",
+        "plastic-looking smooth bark, stone, cloth, foliage, or aged material",
+        "local color/detail described only in prose without material masks",
+        "claiming exact PBR recovery when confidence is below the target threshold"
+      ]
+    },
+    "lightingPass": {
+      "requiredTerms": [
+        "key light",
+        "fill light",
+        "rim or environment light",
+        "exposure",
+        "tone mapping",
+        "background",
+        "contact shadow"
+      ],
+      "mustAvoid": [
+        "ambient-only lighting",
+        "flat value range",
+        "missing contact shadow",
+        "reference lighting copied without separating material readability"
+      ]
+    },
+    "screenshotReview": [
+      "Compare albedo palette and local color zones.",
+      "Compare roughness/normal/bump response under light.",
+      "Compare cavity dirt, edge wear, stains, moss, scratches, or other local masks.",
+      "Compare key/fill/rim structure, exposure, tone mapping, background, and contact shadows.",
+      "Capture a neutral-light render to verify material readability without reference lighting.",
+      "Capture a grazing-light close-up to expose flat normals, uniform roughness, tiling, and plastic highlights.",
+      "Capture a reference-matched render from the same camera framing as the source."
+    ]
+  },
+  "actionReadiness": {
+    "contract": "Every macro/meso component should be generated as a stable named Object3D pivot node with a mesh child, action metadata, optional sockets, collider proxy, and destruction metadata.",
+    "defaultRigType": "action-ready-static-rig",
+    "rootMotionNode": "root",
+    "requiredComponentFields": [
+      "id",
+      "parent",
+      "transform",
+      "attachment for child appendages, connectors, limbs, tubes, handles, legs, horns, wings, branches, or cables",
+      "actionProfile.animationRole",
+      "actionProfile.pivot",
+      "actionProfile.collider",
+      "actionProfile.destruction"
+    ],
+    "transformChannels": [
+      "translate",
+      "rotate",
+      "scale",
+      "bend",
+      "twist",
+      "detach",
+      "visibility",
+      "material-state"
+    ],
+    "authoringRules": [
+      "Do not collapse independently movable parts into one mesh.",
+      "Put transforms on component pivot groups, not only on raw meshes.",
+      "For attached child parts, put the pivot at the semantic root/socket and build visible geometry from localStart to localEnd.",
+      "Represent hinge, socket, detachable, and breakable intent even when no animation is implemented yet.",
+      "Use simplified collider proxies for runtime physics instead of visual mesh colliders by default."
+    ],
+    "destructionPolicy": {
+      "defaultBreakable": false,
+      "fractureGroupNaming": "Use stable semantic names such as body-shell, left-hinge, glass-panel, branch-segment.",
+      "debrisStrategy": "Prefer detachable component groups and a small number of procedural fragments over random mesh explosion."
+    }
+  },
+  "assumptions": [
+    "The game camera never goes below the board, so the underside is closed but untextured.",
+    "Square addressing stays analytic (worldToSquare); tiles carry no colliders."
+  ],
+  "coordinateFrame": {
+    "front": "+z (the side the white army starts on in gambit_chess)",
+    "up": "+y",
+    "scaleReference": "1 world unit = 1 board square. HARD CONSTRAINT: the playing surface top plane is y=0 because board3d.pick() raycasts against THREE.Plane(0,1,0) at 0 to resolve squares. Nothing may raise or lower it."
+  },
+  "silhouette": {
+    "boundingShape": "single flat cuboid, square footprint",
+    "aspectRatios": [
+      {
+        "id": "thickness-to-width",
+        "value": 0.0671,
+        "referenceValue": 0.075,
+        "note": "reference measured 0.075W; built at 0.067W"
+      },
+      {
+        "id": "rail-to-width",
+        "value": 0.0671,
+        "referenceValue": 0.11,
+        "note": "reference measured 0.11W; built at 0.067W — see approximationNotes"
+      }
+    ],
+    "symmetry": "bilateral on both horizontal axes; 4-fold about +y",
+    "dominantCurves": [],
+    "negativeSpaces": [
+      "none — the form is solid; the reference's middle folding kerf is deliberately excluded"
+    ],
+    "landmarks": [
+      "frame outer arris (chamfered)",
+      "mitre diagonal at each of 4 corners",
+      "field/frame boundary",
+      "spline kerf clusters on each side face"
+    ]
+  },
+  "viewEvidence": [
+    {
+      "id": "full-object",
+      "view": "primary",
+      "imageRegion": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 1.0,
+        "height": 1.0,
+        "units": "normalized"
+      },
+      "observations": [],
+      "confidence": 0.5
+    }
+  ],
+  "componentTree": [
+    {
+      "level": "macro",
+      "role": "root",
+      "importance": 1.0,
+      "confidence": 0.95,
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Assembly root; holds no geometry of its own.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly hard-surface",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": null,
+      "attachment": null,
+      "localFeatures": [],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "root",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 1.0
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "collider": {
+          "type": "none"
+        },
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "id": "root",
+      "name": "Wooden Chessboard",
+      "primitive": "box",
+      "dimensions": {
+        "width": 9.24,
+        "height": 0.62,
+        "depth": 9.24,
+        "units": "board squares",
+        "confidence": 0.9
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(221, 196, 164, 1.0)",
+        "secondaryAlbedo": "rgba(201, 174, 139, 1.0)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.9,
+        "sourceToken": "var(--board-frame)",
+        "note": "Hex here is the CURRENT value of the project's CSS custom property, recorded so the spec validates. At runtime board3d.token() reads the live property; DESIGN.md keeps index.html :root the single source of color truth.",
+        "evidenceRefs": [
+          "pbr/frame/report.json",
+          "pbr/light/report.json",
+          "pbr/dark/report.json"
+        ]
+      }
+    },
+    {
+      "level": "macro",
+      "role": "body",
+      "importance": 0.9,
+      "confidence": 0.9,
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Flat machined woodwork: every surface is planar and meets its neighbour at a hard arris. A box/extruded profile is the correct primitive class; no continuous organic surface is present.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly hard-surface",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "root",
+      "attachment": null,
+      "localFeatures": [
+        {
+          "id": "closed-underside",
+          "kind": "surface",
+          "note": "The underside is hidden in the reference and never rendered by the game camera, but the box is kept closed so a low camera angle cannot see through the board."
+        }
+      ],
+      "transform": {
+        "position": [
+          0,
+          -0.39,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.9
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "collider": {
+          "type": "none",
+          "note": "gambit_chess picks squares by raycasting a math plane, not by mesh colliders."
+        },
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "id": "slab-body",
+      "name": "Slab body",
+      "primitive": "box",
+      "materialId": "wood-frame",
+      "dimensions": {
+        "width": 9.24,
+        "height": 0.45999999999999996,
+        "depth": 9.24,
+        "units": "board squares",
+        "confidence": 0.85
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(221, 196, 164, 1.0)",
+        "secondaryAlbedo": "rgba(201, 174, 139, 1.0)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.9,
+        "sourceToken": "var(--board-frame)",
+        "note": "Hex here is the CURRENT value of the project's CSS custom property, recorded so the spec validates. At runtime board3d.token() reads the live property; DESIGN.md keeps index.html :root the single source of color truth.",
+        "evidenceRefs": [
+          "pbr/frame/report.json",
+          "pbr/light/report.json",
+          "pbr/dark/report.json"
+        ]
+      }
+    },
+    {
+      "level": "meso",
+      "role": "trim",
+      "importance": 0.9,
+      "confidence": 0.9,
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Flat machined woodwork: every surface is planar and meets its neighbour at a hard arris. A box/extruded profile is the correct primitive class; no continuous organic surface is present.",
+      "geometryDescriptor": {
+        "topologyIntent": "four trapezoidal rails meeting at 45 degrees, extruded down from y=0",
+        "edgeTreatment": {
+          "type": "chamfer",
+          "bevelRadius": 0.1,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "per-rail planar projection aligned to the rail's own length axis",
+        "normalStrategy": "flat normals per face so the mitre seam stays a hard edge"
+      },
+      "parent": "root",
+      "attachment": null,
+      "localFeatures": [
+        {
+          "id": "mitre-diagonals",
+          "kind": "seam",
+          "observation": "45 degree seam from each outer corner inward; grain flips across it",
+          "implementation": "each rail is a trapezoid whose short edge is the field boundary and whose long edge is the outer boundary; the grain texture is rotated 90 degrees between adjacent rails so the seam reads without extra geometry",
+          "evidence": "zones/mitre-near.png",
+          "confidence": 0.9
+        },
+        {
+          "id": "eased-outer-arris",
+          "kind": "chamfer",
+          "observation": "narrow lighter chamfer band along the outer top edge, about one sixth of the rail width",
+          "implementation": "chamfer band width 0.1, drop 0.06, built as an extra ring face so it catches light separately from the rail top",
+          "evidence": "zones/mitre-near.png",
+          "confidence": 0.85
+        }
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.9
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "collider": {
+          "type": "none",
+          "note": "gambit_chess picks squares by raycasting a math plane, not by mesh colliders."
+        },
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "id": "frame-rail",
+      "name": "Mitred border rail (x4)",
+      "primitive": "extrude",
+      "materialId": "wood-frame",
+      "dimensions": {
+        "width": 0.62,
+        "height": 0.16,
+        "depth": 9.24,
+        "units": "board squares",
+        "confidence": 0.8
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(221, 196, 164, 1.0)",
+        "secondaryAlbedo": "rgba(201, 174, 139, 1.0)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.9,
+        "sourceToken": "var(--board-frame)",
+        "note": "Hex here is the CURRENT value of the project's CSS custom property, recorded so the spec validates. At runtime board3d.token() reads the live property; DESIGN.md keeps index.html :root the single source of color truth.",
+        "evidenceRefs": [
+          "pbr/frame/report.json",
+          "pbr/light/report.json",
+          "pbr/dark/report.json"
+        ]
+      }
+    },
+    {
+      "level": "meso",
+      "role": "surface",
+      "importance": 1.0,
+      "confidence": 0.95,
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Flat machined woodwork: every surface is planar and meets its neighbour at a hard arris. A box/extruded profile is the correct primitive class; no continuous organic surface is present.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly hard-surface",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "root",
+      "attachment": null,
+      "localFeatures": [
+        {
+          "id": "field-flush-butt",
+          "kind": "joint",
+          "observation": "squares butt flush; no grout line, gap, or bevel",
+          "implementation": "tiles are exactly 1.0 pitch with no inset and no edge treatment; the checker reads from albedo alone",
+          "evidence": "zones/field.png",
+          "confidence": 0.95
+        }
+      ],
+      "transform": {
+        "position": [
+          0,
+          -0.08,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 1.0
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "collider": {
+          "type": "none",
+          "note": "square addressing is analytic (worldToSquare), not collider-based"
+        },
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "id": "field-tile",
+      "name": "Playing field square (x64)",
+      "primitive": "box",
+      "materialId": "field-light",
+      "dimensions": {
+        "width": 1.0,
+        "height": 0.16,
+        "depth": 1.0,
+        "units": "board squares",
+        "confidence": 0.98
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(238, 221, 192, 1.0)",
+        "secondaryAlbedo": "rgba(227, 207, 174, 1.0)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.9,
+        "sourceToken": "var(--light)",
+        "note": "Hex here is the CURRENT value of the project's CSS custom property, recorded so the spec validates. At runtime board3d.token() reads the live property; DESIGN.md keeps index.html :root the single source of color truth.",
+        "evidenceRefs": [
+          "pbr/frame/report.json",
+          "pbr/light/report.json",
+          "pbr/dark/report.json"
+        ]
+      }
+    },
+    {
+      "level": "meso",
+      "role": "surface",
+      "importance": 0.7,
+      "confidence": 0.85,
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Flat machined woodwork: every surface is planar and meets its neighbour at a hard arris. A box/extruded profile is the correct primitive class; no continuous organic surface is present.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly hard-surface",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "slab-body",
+      "attachment": null,
+      "localFeatures": [
+        {
+          "id": "side-face-sheen",
+          "kind": "material",
+          "observation": "the vertical faces carry a broader, brighter specular sweep than the top face",
+          "implementation": "roughness local override 0.32 on the side faces vs 0.40 on the top faces",
+          "evidence": "zones/kerf-near.png",
+          "confidence": 0.75
+        }
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.9
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "collider": {
+          "type": "none",
+          "note": "gambit_chess picks squares by raycasting a math plane, not by mesh colliders."
+        },
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "id": "slab-side",
+      "name": "Slab side face (x4)",
+      "primitive": "plane-card",
+      "materialId": "wood-frame",
+      "dimensions": {
+        "width": 9.24,
+        "height": 0.62,
+        "depth": 0.0,
+        "units": "board squares",
+        "confidence": 0.85
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(221, 196, 164, 1.0)",
+        "secondaryAlbedo": "rgba(201, 174, 139, 1.0)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.9,
+        "sourceToken": "var(--board-frame)",
+        "note": "Hex here is the CURRENT value of the project's CSS custom property, recorded so the spec validates. At runtime board3d.token() reads the live property; DESIGN.md keeps index.html :root the single source of color truth.",
+        "evidenceRefs": [
+          "pbr/frame/report.json",
+          "pbr/light/report.json",
+          "pbr/dark/report.json"
+        ]
+      }
+    },
+    {
+      "level": "micro",
+      "role": "detail",
+      "importance": 0.6,
+      "confidence": 0.85,
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Flat machined woodwork: every surface is planar and meets its neighbour at a hard arris. A box/extruded profile is the correct primitive class; no continuous organic surface is present.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly hard-surface",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "slab-body",
+      "attachment": {
+        "parentSocket": "slab-side",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          -0.62,
+          0
+        ],
+        "contactType": "embed",
+        "embedDepth": 0.008,
+        "gapTolerance": 0.001
+      },
+      "localFeatures": [
+        {
+          "id": "corner-spline-kerfs",
+          "kind": "groove",
+          "observation": "three thin dark grooves cut vertically down the side face near each corner, unevenly spaced, spanning the full face height",
+          "implementation": "three inset boxes per cluster at local offsets 0.00 / 0.055 / 0.075 from the cluster origin, matching the uneven spacing measured in the crop",
+          "evidence": "zones/kerf-near.png",
+          "confidence": 0.85
+        }
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.9
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "collider": {
+          "type": "none",
+          "note": "gambit_chess picks squares by raycasting a math plane, not by mesh colliders."
+        },
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "id": "spline-kerf",
+      "name": "Corner spline kerf (3 per cluster, 8 clusters)",
+      "primitive": "box",
+      "materialId": "kerf-shadow",
+      "dimensions": {
+        "width": 0.014,
+        "height": 0.62,
+        "depth": 0.008,
+        "units": "board squares",
+        "confidence": 0.7
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(100, 75, 54, 1.0)",
+        "secondaryAlbedo": "rgba(78, 59, 40, 1.0)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.9,
+        "sourceToken": "var(--board-kerf)",
+        "note": "Hex here is the CURRENT value of the project's CSS custom property, recorded so the spec validates. At runtime board3d.token() reads the live property; DESIGN.md keeps index.html :root the single source of color truth.",
+        "evidenceRefs": [
+          "pbr/frame/report.json",
+          "pbr/light/report.json",
+          "pbr/dark/report.json"
+        ]
+      }
+    }
+  ],
+  "materials": [
+    {
+      "id": "wood-frame",
+      "name": "Frame and slab wood",
+      "type": "physical",
+      "shaderModel": "MeshPhysicalMaterial",
+      "baseColor": "#ddc4a4",
+      "color": "#ddc4a4",
+      "albedo": {
+        "dominant": "#ddc4a4",
+        "secondary": [],
+        "samplingNotes": "Absolute color comes from the project's CSS custom property, read at runtime by board3d.token(). The reference photo supplies RELATIONSHIPS only (see approximationNotes)."
+      },
+      "colorVariation": {
+        "palette": [
+          "var(--board-frame)"
+        ],
+        "pattern": "directional-grain",
+        "amplitude": 0.1,
+        "heightCorrelation": 0.0
+      },
+      "textureResolution": 1024,
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          1.0,
+          1.0
+        ],
+        "anisotropy": 4,
+        "texelDensityIntent": "ONE 1024px grain canvas is generated once and shared by all three wood materials; they differ only by color, UV rotation and repeat. Total GPU cost is one texture, not three.",
+        "rotationDegrees": 0
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 1.5,
+          "amplitude": 0.06,
+          "role": "broad board-to-board tonal drift"
+        },
+        {
+          "id": "meso",
+          "frequency": 18.0,
+          "amplitude": 0.1,
+          "role": "open-pore grain lines running along the rail/tile axis"
+        },
+        {
+          "id": "micro",
+          "frequency": 70.0,
+          "amplitude": 0.03,
+          "role": "fine pore speckle that breaks the specular under grazing light"
+        }
+      ],
+      "roughness": {
+        "base": 0.4,
+        "variation": 0.06,
+        "map": "independent-procedural-field",
+        "localResponse": "grain valleys read slightly rougher than the surrounding varnish"
+      },
+      "metalness": {
+        "base": 0.0,
+        "variation": 0.0,
+        "note": "dielectric — varnished wood"
+      },
+      "specular": {
+        "f0": 0.04
+      },
+      "finishStyle": "satin varnish, wide gloss lobe",
+      "localOverrides": [
+        {
+          "id": "rail-length-grain",
+          "target": "frame-rail",
+          "observation": "grain lines run along each rail's length so adjacent rails read 90 degrees apart",
+          "implementation": "the shared grain map is sampled with a per-rail 90 degree UV rotation",
+          "evidence": "zones/mitre-near.png"
+        },
+        {
+          "id": "side-face-sheen",
+          "target": "slab-side",
+          "observation": "vertical faces are glossier than the top",
+          "implementation": "roughness 0.32 on side faces",
+          "evidence": "zones/kerf-near.png",
+          "roughness": 0.3,
+          "clearcoat": 0.45
+        }
+      ],
+      "ambientOcclusion": {
+        "map": "independent-procedural-cavity-field",
+        "intensity": 0.35,
+        "note": "AO is generated from the grain height field's low band, never sampled from albedo."
+      },
+      "referencePbr": {
+        "usable": true,
+        "confidence": 0.763,
+        "estimatedFidelity": 0.763,
+        "sourceCrop": "zones/crop-frame.png",
+        "palette": [
+          "#FAA939",
+          "#ED982B",
+          "#DB8521",
+          "#8D3902",
+          "#FEBD5D"
+        ],
+        "maps": {
+          "albedo": {
+            "url": "pbr/frame/frame_albedo.png",
+            "path": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/board-recon/pbr/frame/frame_albedo.png",
+            "channel": "albedo",
+            "colorSpace": "srgb",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "url": "pbr/frame/frame_roughness.png",
+            "path": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/board-recon/pbr/frame/frame_roughness.png",
+            "channel": "roughness",
+            "colorSpace": "linear",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "url": "pbr/frame/frame_height.png",
+            "path": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/board-recon/pbr/frame/frame_height.png",
+            "channel": "height",
+            "colorSpace": "linear",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "url": "pbr/frame/frame_normal.png",
+            "path": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/board-recon/pbr/frame/frame_normal.png",
+            "channel": "normal",
+            "colorSpace": "linear",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "url": "pbr/frame/frame_ao.png",
+            "path": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/board-recon/pbr/frame/frame_ao.png",
+            "channel": "ao",
+            "colorSpace": "linear",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "limitation": "single-image estimate, not inverse rendering; used to set scalar targets and grain frequency, not as shipped textures"
+      },
+      "clearcoat": {
+        "base": 0.35,
+        "roughness": 0.22,
+        "note": "The varnish is a real clearcoat layer: it is what makes the vertical faces sweep brighter than the top face while the wood underneath stays matte. Only this material pays for MeshPhysicalMaterial (5 meshes); the 64 tiles stay MeshStandardMaterial."
+      }
+    },
+    {
+      "id": "field-light",
+      "name": "Light square wood",
+      "type": "standard",
+      "shaderModel": "MeshStandardMaterial",
+      "baseColor": "#eeddc0",
+      "color": "#eeddc0",
+      "albedo": {
+        "dominant": "#eeddc0",
+        "secondary": [],
+        "samplingNotes": "Absolute color comes from the project's CSS custom property, read at runtime by board3d.token(). The reference photo supplies RELATIONSHIPS only (see approximationNotes)."
+      },
+      "colorVariation": {
+        "palette": [
+          "var(--light)"
+        ],
+        "pattern": "directional-grain",
+        "amplitude": 0.1,
+        "heightCorrelation": 0.0
+      },
+      "textureResolution": 1024,
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          1.0,
+          1.0
+        ],
+        "anisotropy": 4,
+        "texelDensityIntent": "ONE 1024px grain canvas is generated once and shared by all three wood materials; they differ only by color, UV rotation and repeat. Total GPU cost is one texture, not three.",
+        "rotationDegrees": 0
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 1.5,
+          "amplitude": 0.06,
+          "role": "broad board-to-board tonal drift"
+        },
+        {
+          "id": "meso",
+          "frequency": 18.0,
+          "amplitude": 0.1,
+          "role": "open-pore grain lines running along the rail/tile axis"
+        },
+        {
+          "id": "micro",
+          "frequency": 70.0,
+          "amplitude": 0.03,
+          "role": "fine pore speckle that breaks the specular under grazing light"
+        }
+      ],
+      "roughness": {
+        "base": 0.38,
+        "variation": 0.06,
+        "map": "independent-procedural-field",
+        "localResponse": "grain valleys read slightly rougher than the surrounding varnish"
+      },
+      "metalness": {
+        "base": 0.0,
+        "variation": 0.0,
+        "note": "dielectric — varnished wood"
+      },
+      "specular": {
+        "f0": 0.04
+      },
+      "finishStyle": "satin varnish, wide gloss lobe",
+      "localOverrides": [
+        {
+          "id": "square-figure-variation",
+          "target": "field-tile",
+          "observation": "each square carries its own fine directional figure and slight tonal drift",
+          "implementation": "per-tile UV offset from a deterministic seed so no two tiles repeat the same grain window",
+          "evidence": "zones/field.png"
+        }
+      ],
+      "ambientOcclusion": {
+        "map": "independent-procedural-cavity-field",
+        "intensity": 0.35,
+        "note": "AO is generated from the grain height field's low band, never sampled from albedo."
+      },
+      "referencePbr": {
+        "usable": true,
+        "confidence": 0.751,
+        "estimatedFidelity": 0.751,
+        "sourceCrop": "zones/crop-light.png",
+        "palette": [
+          "#F5AC3E",
+          "#F8AF41",
+          "#F2A83A",
+          "#FDB544",
+          "#EEA234"
+        ],
+        "maps": {
+          "albedo": {
+            "url": "pbr/light/light_albedo.png",
+            "path": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/board-recon/pbr/light/light_albedo.png",
+            "channel": "albedo",
+            "colorSpace": "srgb",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "url": "pbr/light/light_roughness.png",
+            "path": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/board-recon/pbr/light/light_roughness.png",
+            "channel": "roughness",
+            "colorSpace": "linear",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "url": "pbr/light/light_height.png",
+            "path": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/board-recon/pbr/light/light_height.png",
+            "channel": "height",
+            "colorSpace": "linear",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "url": "pbr/light/light_normal.png",
+            "path": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/board-recon/pbr/light/light_normal.png",
+            "channel": "normal",
+            "colorSpace": "linear",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "url": "pbr/light/light_ao.png",
+            "path": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/board-recon/pbr/light/light_ao.png",
+            "channel": "ao",
+            "colorSpace": "linear",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "limitation": "single-image estimate, not inverse rendering; used to set scalar targets and grain frequency, not as shipped textures"
+      }
+    },
+    {
+      "id": "field-dark",
+      "name": "Dark square wood",
+      "type": "standard",
+      "shaderModel": "MeshStandardMaterial",
+      "baseColor": "#b58863",
+      "color": "#b58863",
+      "albedo": {
+        "dominant": "#b58863",
+        "secondary": [],
+        "samplingNotes": "Absolute color comes from the project's CSS custom property, read at runtime by board3d.token(). The reference photo supplies RELATIONSHIPS only (see approximationNotes)."
+      },
+      "colorVariation": {
+        "palette": [
+          "var(--dark)"
+        ],
+        "pattern": "directional-grain",
+        "amplitude": 0.1,
+        "heightCorrelation": 0.0
+      },
+      "textureResolution": 1024,
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          1.0,
+          1.0
+        ],
+        "anisotropy": 4,
+        "texelDensityIntent": "ONE 1024px grain canvas is generated once and shared by all three wood materials; they differ only by color, UV rotation and repeat. Total GPU cost is one texture, not three.",
+        "rotationDegrees": 90
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 1.5,
+          "amplitude": 0.06,
+          "role": "broad board-to-board tonal drift"
+        },
+        {
+          "id": "meso",
+          "frequency": 18.0,
+          "amplitude": 0.1,
+          "role": "open-pore grain lines running along the rail/tile axis"
+        },
+        {
+          "id": "micro",
+          "frequency": 70.0,
+          "amplitude": 0.03,
+          "role": "fine pore speckle that breaks the specular under grazing light"
+        }
+      ],
+      "roughness": {
+        "base": 0.38,
+        "variation": 0.06,
+        "map": "independent-procedural-field",
+        "localResponse": "grain valleys read slightly rougher than the surrounding varnish"
+      },
+      "metalness": {
+        "base": 0.0,
+        "variation": 0.0,
+        "note": "dielectric — varnished wood"
+      },
+      "specular": {
+        "f0": 0.04
+      },
+      "finishStyle": "satin varnish, wide gloss lobe",
+      "localOverrides": [
+        {
+          "id": "low-contrast-two-tone",
+          "target": "field-tile",
+          "observation": "measured dark/light luminance ratio 0.705, dark hue about 7 degrees redder",
+          "implementation": "project tokens --dark/--light give a ratio of about 0.61; the difference is accepted, see approximationNotes",
+          "evidence": "2-cluster median over crop (760,520)-(1180,760)"
+        },
+        {
+          "id": "square-figure-variation",
+          "target": "field-tile",
+          "observation": "same as field-light",
+          "implementation": "per-tile UV offset, different seed stream",
+          "evidence": "zones/field.png"
+        }
+      ],
+      "ambientOcclusion": {
+        "map": "independent-procedural-cavity-field",
+        "intensity": 0.35,
+        "note": "AO is generated from the grain height field's low band, never sampled from albedo."
+      },
+      "referencePbr": {
+        "usable": true,
+        "confidence": 0.764,
+        "estimatedFidelity": 0.764,
+        "sourceCrop": "zones/crop-dark.png",
+        "palette": [
+          "#C37128",
+          "#BC6926",
+          "#CB782D",
+          "#B3611E",
+          "#E49635"
+        ],
+        "maps": {
+          "albedo": {
+            "url": "pbr/dark/dark_albedo.png",
+            "path": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/board-recon/pbr/dark/dark_albedo.png",
+            "channel": "albedo",
+            "colorSpace": "srgb",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "url": "pbr/dark/dark_roughness.png",
+            "path": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/board-recon/pbr/dark/dark_roughness.png",
+            "channel": "roughness",
+            "colorSpace": "linear",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "url": "pbr/dark/dark_height.png",
+            "path": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/board-recon/pbr/dark/dark_height.png",
+            "channel": "height",
+            "colorSpace": "linear",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "url": "pbr/dark/dark_normal.png",
+            "path": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/board-recon/pbr/dark/dark_normal.png",
+            "channel": "normal",
+            "colorSpace": "linear",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "url": "pbr/dark/dark_ao.png",
+            "path": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/board-recon/pbr/dark/dark_ao.png",
+            "channel": "ao",
+            "colorSpace": "linear",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "limitation": "single-image estimate, not inverse rendering; used to set scalar targets and grain frequency, not as shipped textures"
+      }
+    },
+    {
+      "id": "kerf-shadow",
+      "name": "Spline kerf groove",
+      "type": "standard",
+      "shaderModel": "MeshStandardMaterial",
+      "baseColor": "#644b36",
+      "color": "#644b36",
+      "albedo": {
+        "dominant": "#644b36",
+        "secondary": [],
+        "samplingNotes": "the grooves read as a dark line, not as a separate wood species"
+      },
+      "colorVariation": {
+        "palette": [
+          "var(--board-kerf)"
+        ],
+        "pattern": "flat",
+        "amplitude": 0.0,
+        "heightCorrelation": 0.0
+      },
+      "textureResolution": 64,
+      "textureProjection": {
+        "mode": "none"
+      },
+      "surfaceFrequencyBands": [],
+      "roughness": {
+        "base": 0.62,
+        "variation": 0.0,
+        "map": "independent-constant-field",
+        "localResponse": "a cut groove is rougher than the varnished face around it"
+      },
+      "metalness": {
+        "base": 0.0,
+        "variation": 0.0
+      },
+      "specular": {
+        "f0": 0.04
+      },
+      "finishStyle": "bare cut wood inside a saw kerf",
+      "localOverrides": [],
+      "ambientOcclusion": {
+        "map": "independent-procedural-cavity-field",
+        "intensity": 0.8,
+        "note": "AO is generated from the grain height field's low band, never sampled from albedo."
+      },
+      "qualityTier": "utility",
+      "referenceNote": "Utility material: the kerf is a 1-2 px dark line in the reference. Extracting PBR from it would be measuring JPEG ringing, not a surface. It ships as a flat dark fill with a strong AO response."
+    }
+  ],
+  "repetitionSystems": [
+    {
+      "id": "field-grid",
+      "name": "8x8 playing field",
+      "kind": "grid",
+      "componentRef": "field-tile",
+      "count": 64,
+      "layout": {
+        "rows": 8,
+        "cols": 8,
+        "pitch": [
+          1.0,
+          1.0
+        ],
+        "origin": [
+          -3.5,
+          0,
+          -3.5
+        ]
+      },
+      "variation": {
+        "materialByParity": [
+          "field-light",
+          "field-dark"
+        ],
+        "uvOffsetSeed": "deterministic per (row,col)"
+      },
+      "instancing": "single BoxGeometry shared by all 64 meshes; two materials",
+      "evidence": "counted 8x8 in the reference"
+    },
+    {
+      "id": "corner-splines",
+      "name": "Corner spline kerf clusters",
+      "kind": "mirrored-cluster",
+      "componentRef": "spline-kerf",
+      "count": 24,
+      "layout": {
+        "clusters": 8,
+        "perCluster": 3,
+        "clusterPositions": "two per side face, one near each corner, inset 0.30 from the corner",
+        "withinCluster": [
+          0.0,
+          0.055,
+          0.075
+        ]
+      },
+      "variation": {
+        "note": "spacing within a cluster is uneven, measured from zones/kerf-near.png"
+      },
+      "instancing": "one shared thin BoxGeometry",
+      "evidence": "observed on the two visible side faces; 4-fold symmetry assumed for the occluded faces"
+    }
+  ],
+  "buildPasses": [
+    {
+      "id": "blockout",
+      "goal": "Match macro silhouette and proportions.",
+      "componentRefs": [
+        "root",
+        "slab-body"
+      ],
+      "acceptance": [
+        "Silhouette reads correctly without materials.",
+        "Quality contract has named all required macro feature groups before code generation.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "structural-pass",
+      "goal": "Build the component hierarchy implied by the pre-spec complexity assessment.",
+      "componentRefs": [
+        "frame-rail",
+        "field-tile",
+        "slab-side"
+      ],
+      "acceptance": [
+        "Macro, meso, and repeated structures meet qualityContract.minimumSpecDepth.",
+        "Parent-child relations, joints, seams, sockets, and contact points are explicit.",
+        "Every attached child appendage/connector has parentSocket, localStart/localEnd, contactType, embedDepth or overlap, and gapTolerance.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "form-refinement",
+      "goal": "Refine shape, deformation, bevels, tapers, curves, asymmetry, and visible local geometry.",
+      "componentRefs": [
+        "frame-rail",
+        "spline-kerf"
+      ],
+      "acceptance": [
+        "Important visible forms are represented in component geometryDescriptor, deformations, localFeatures, or repetitionSystems.",
+        "Endpoint-based child parts are rooted at their attachment sockets and do not visibly float away from parents.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "material-pass",
+      "goal": "Match material color, roughness, bump, and local variation.",
+      "componentRefs": [
+        "field-tile",
+        "frame-rail"
+      ],
+      "acceptance": [
+        "Reference-derived albedo palette records dominant, secondary, and accent colors per visible material.",
+        "Each important material defines roughness variation and at least one normal/bump/displacement response.",
+        "Local material overrides, dirt/wear/stains/moss/chips/scratches or equivalent masks are tied to evidenceRefs.",
+        "Thin, transparent, reflective, wet, or fibrous materials document alpha/transmission/clearcoat/metalness/fiber response when relevant.",
+        "Generated preview uses procedural albedo/roughness/bump texture or vertex color variation instead of one flat color.",
+        "Generated preview uses independent PBR maps at 1024px or higher for the quality-first tier.",
+        "If source pixels are available, referencePbr extraction passed at confidence >= 0.7 or the pass is stopped/requesting better references.",
+        "Macro, meso, and micro surface frequency bands are visible at the intended review distance without obvious tiling.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "surface-pass",
+      "goal": "Add procedural surface locality such as normal/bump/displacement, AO, dirt, stains, chips, grain, moss, scratches, and wear.",
+      "componentRefs": [
+        "frame-rail",
+        "slab-side",
+        "field-tile"
+      ],
+      "acceptance": [
+        "Every required material feature group has local overrides or surfaceDetail tied to evidenceRefs.",
+        "A grazing-angle close-up proves that normal/height detail breaks highlights naturally and does not read as smooth plastic.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "lighting-pass",
+      "goal": "Make material and form readable under neutral turntable lighting plus optional reference lighting.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "lightingFromPhoto identifies key light direction/color/intensity, fill light, rim or environment light, and ambient color.",
+        "Exposure, tone mapping, background color/gradient, shadow softness, and contact shadow behavior are specified.",
+        "Lighting does not hide geometry/material gaps and screenshots can be compared fairly to the reference.",
+        "Neutral, grazing, and reference-matched lighting checks distinguish material errors from lighting errors.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "interaction-pass",
+      "goal": "Make the model ready for future animation, transformation, physics, or destruction.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Macro and movable meso components have stable pivot nodes.",
+        "Sockets, collider proxies, and destruction metadata are present for future runtime actions.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "optimization-pass",
+      "goal": "Protect runtime performance after visual fidelity is accepted.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Triangle count, draw calls, instancing, LOD strategy, and FPS target are documented or verified.",
+        "Repeated detail is instanced or simplified where possible without breaking silhouette/material believability."
+      ]
+    }
+  ],
+  "visualEvidence": [
+    {
+      "timestamp": "2026-08-18T08:53:17.739042+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.67,
+      "aiVisionScore": 0.67,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouette": 0.72,
+        "structure": 0.82,
+        "form": 0.74,
+        "material": 0.62,
+        "lighting": 0.7
+      },
+      "featureReviews": [
+        {
+          "id": "overall-silhouette",
+          "score": 0.72,
+          "tier": "critical",
+          "threshold": 0.8,
+          "pass": false,
+          "note": "Flat cuboid and square footprint are correct. The reference's identity as a THICK BOX does not deliver at the shipping camera: the near side face measures about 4 px on a 1512 px screenshot because board3d looks down from y=11.2, z=9.4. Improved, not done."
+        },
+        {
+          "id": "mitred-frame",
+          "score": 0.75,
+          "tier": "critical",
+          "threshold": 0.8,
+          "pass": false,
+          "note": "Corner chevrons now read and the grain runs along each rail's length (fixed twice: a rectangular UV on a trapezoid produced a false second mitre mid-rail, and the first UV assignment ran the grain across the rail instead of along it). Below threshold because the rail is 0.067W against the reference's 0.11W — a declared framing deviation, not a modelling error."
+        },
+        {
+          "id": "low-contrast-field",
+          "score": 0.62,
+          "tier": "critical",
+          "threshold": 0.75,
+          "pass": false,
+          "note": "Flush butt joints, per-square figure variation and two-tone wood all match. Hue and contrast do not: the reference is saturated orange oak (hue 32 deg, sat 0.78) and the render is desaturated cream/taupe from the project tokens (--light sat 0.19, --dark sat 0.45). Measured luminance ratio 0.694 reference vs about 0.61 in the tokens, so the render's checker is HIGHER contrast than the reference. Divine Eye hueZoneParity 0.0 is measuring exactly this declared deviation."
+        },
+        {
+          "id": "grain-direction",
+          "score": 0.72,
+          "tier": "important",
+          "threshold": 0.6,
+          "pass": true,
+          "note": "Light and dark squares alternate grain direction as in the reference, achieved by swapping u/v per parity so no second texture is uploaded. The render's grain is finer and more evenly spaced than the reference's, which has wider irregular figure and occasional dark streaks; the noise is effectively single-frequency."
+        },
+        {
+          "id": "spline-kerfs",
+          "score": 0.0,
+          "tier": "important",
+          "threshold": 0.6,
+          "pass": false,
+          "note": "NOT BUILT. Implemented, rendered, measured, then deleted: at 0.014 units wide on a side face that is about 4 px tall, all 24 meshes were sub-pixel and never appeared in a single frame. Kept as a spec feature with this evidence rather than shipping invisible geometry."
+        }
+      ],
+      "referenceScreenshot": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/board-recon/../refs/board.jpg",
+      "renderScreenshot": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/board-recon/render-field.png",
+      "comparisonImage": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/board-recon/cmp-field.png",
+      "cameraView": "",
+      "notes": "",
+      "aiVisionNotes": ""
+    }
+  ],
+  "reviewHistory": [
+    {
+      "timestamp": "2026-08-18T08:53:17.739042+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.67,
+      "aiVisionScore": 0.67,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouette": 0.72,
+        "structure": 0.82,
+        "form": 0.74,
+        "material": 0.62,
+        "lighting": 0.7
+      },
+      "featureReviews": [
+        {
+          "id": "overall-silhouette",
+          "score": 0.72,
+          "tier": "critical",
+          "threshold": 0.8,
+          "pass": false,
+          "note": "Flat cuboid and square footprint are correct. The reference's identity as a THICK BOX does not deliver at the shipping camera: the near side face measures about 4 px on a 1512 px screenshot because board3d looks down from y=11.2, z=9.4. Improved, not done."
+        },
+        {
+          "id": "mitred-frame",
+          "score": 0.75,
+          "tier": "critical",
+          "threshold": 0.8,
+          "pass": false,
+          "note": "Corner chevrons now read and the grain runs along each rail's length (fixed twice: a rectangular UV on a trapezoid produced a false second mitre mid-rail, and the first UV assignment ran the grain across the rail instead of along it). Below threshold because the rail is 0.067W against the reference's 0.11W — a declared framing deviation, not a modelling error."
+        },
+        {
+          "id": "low-contrast-field",
+          "score": 0.62,
+          "tier": "critical",
+          "threshold": 0.75,
+          "pass": false,
+          "note": "Flush butt joints, per-square figure variation and two-tone wood all match. Hue and contrast do not: the reference is saturated orange oak (hue 32 deg, sat 0.78) and the render is desaturated cream/taupe from the project tokens (--light sat 0.19, --dark sat 0.45). Measured luminance ratio 0.694 reference vs about 0.61 in the tokens, so the render's checker is HIGHER contrast than the reference. Divine Eye hueZoneParity 0.0 is measuring exactly this declared deviation."
+        },
+        {
+          "id": "grain-direction",
+          "score": 0.72,
+          "tier": "important",
+          "threshold": 0.6,
+          "pass": true,
+          "note": "Light and dark squares alternate grain direction as in the reference, achieved by swapping u/v per parity so no second texture is uploaded. The render's grain is finer and more evenly spaced than the reference's, which has wider irregular figure and occasional dark streaks; the noise is effectively single-frequency."
+        },
+        {
+          "id": "spline-kerfs",
+          "score": 0.0,
+          "tier": "important",
+          "threshold": 0.6,
+          "pass": false,
+          "note": "NOT BUILT. Implemented, rendered, measured, then deleted: at 0.014 units wide on a side face that is about 4 px tall, all 24 meshes were sub-pixel and never appeared in a single frame. Kept as a spec feature with this evidence rather than shipping invisible geometry."
+        }
+      ],
+      "action": "refine-spec",
+      "summary": "Board rebuilt in board3d.ts from the spec (refine-code route: the generated factory was blockout-only and pulled EffectComposer/Bloom/Bokeh/OrbitControls plus the whole spec JSON into every mesh userData, which cannot ship in a 4.4 MB PWA). Structure lands: mitred frame with corner chevrons, per-rail grain, chamfered outer arris, thick slab, flush two-tone field with per-square figure. Color does not land, and that is the declared token deviation. Three of five feature targets are below threshold; two of those three are constraints (palette tokens, camera framing), one is a real remaining gap (thickness does not read from above). Next action is refine-spec, not refine-code: the open question is whether the project palette should move toward the reference, and that is the user's call.",
+      "matched": [],
+      "mismatches": [],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [],
+      "visualEvidence": {
+        "referenceScreenshot": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/board-recon/../refs/board.jpg",
+        "renderScreenshot": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/board-recon/render-field.png",
+        "comparisonImage": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/board-recon/cmp-field.png",
+        "cameraView": "",
+        "notes": "",
+        "aiVisionNotes": ""
+      }
+    }
+  ],
+  "lodPlan": [
+    {
+      "tier": "near",
+      "distance": 0,
+      "strategy": "full component tree and material layers"
+    },
+    {
+      "tier": "far",
+      "distance": 30,
+      "strategy": "merge static components and reduce local feature geometry"
+    }
+  ],
+  "performanceBudget": {
+    "qualityPriority": "real-time-first",
+    "targetTriangles": 9000,
+    "maxDrawCalls": 14,
+    "textureSize": 1024,
+    "fpsTarget": 60,
+    "optimizationPolicy": "This board renders every frame on phones inside an existing 3D scene that already carries 32 skinned characters. Geometry stays flat-shaded hard-surface; all surface detail is carried by two shared 512px canvas textures, never by tessellation. One shared 1024px grain canvas serves all wood materials; nothing is downloaded."
+  },
+  "lightingFromPhoto": [
+    "Key: single broad directional source from the back-left and above; it produces the top-face brightness gradient and the wide soft specular sweep across the near side face. In gambit_chess this is the existing DirectionalLight at (-4, 8, 5), intensity 2.3 — the reference is consistent with it, so no light change is proposed.",
+    "Fill: high ambient bounce from the white sweep, visible as the near side face never going below about 0.45 relative luminance. Matches the existing HemisphereLight (0xdfe8ff / 0x33302c, 1.7).",
+    "Rim / environment: no rim light and no visible environment reflection; the varnish shows a wide gloss lobe, not a mirror. Keep envMapIntensity at 0 and carry the sheen with roughness alone.",
+    "Exposure and tone mapping: reference is a high-key studio frame with clipped white background. The renderer keeps its current linear output with no tone mapping (renderer.outputColorSpace = SRGBColorSpace, no ACES/filmic), so board albedo must not be raised to chase the photo's exposure.",
+    "Contact shadow / ambient occlusion: the reference's ground shadow was removed in post, so it carries no contact-shadow evidence. The board already receives shadows from the existing shadow-mapped key light; ambient occlusion is supplied per material as an independent cavity field (grain valleys, kerf grooves, the field/frame step)."
+  ],
+  "proceduralStrategy": [
+    "Block out macro silhouette first.",
+    "Add component hierarchy and joints.",
+    "Create stable pivot groups, sockets, collider proxies, and destruction metadata before visual polish.",
+    "Refine forms with bevels, tapers, bends, and procedural noise.",
+    "Run reference PBR extraction for important source-image materials and stop when confidence is below the target threshold.",
+    "Add material variation before adding expensive micro-geometry."
+  ],
+  "animationAnchors": [
+    "root pivot node supports whole-object translation, rotation, scale, and visibility changes",
+    "component pivot groups support later local transforms without rebuilding geometry"
+  ],
+  "destructionAnchors": [
+    "actionProfile.destruction.fractureGroup marks detachable or breakable component sets",
+    "component seams and sockets define plausible break points instead of random explosions"
+  ],
+  "risks": [
+    {
+      "id": "underside-unseen",
+      "resolution": "Box kept closed; never rendered (camera stays above y=0). No further evidence needed."
+    },
+    {
+      "id": "frame-construction",
+      "resolution": "Modelled as four mitred rails because the mitre diagonals are directly observable. If it is actually a veneer band, the rendered result is identical from above."
+    },
+    {
+      "id": "kerf-symmetry",
+      "resolution": "4-fold symmetry assumed for the two occluded side faces. Flagged as inference, not measurement."
+    },
+    {
+      "id": "absolute-albedo",
+      "resolution": "Not resolvable from a white-sweep studio frame. Absolute color is taken from the project's CSS tokens; the reference contributes the measured light/dark luminance ratio 0.694 only."
+    },
+    {
+      "id": "frame-vs-light-tone",
+      "resolution": "Cannot be separated in this view: the near frame samples LIGHTER than the light squares (#FAA939 vs #F5AC3E) purely because it faces the key light. A frame token between the two square tones (30% toward dark) is a stated choice, not a measurement."
+    }
+  ],
+  "localSpecSearch": {
+    "collection": "core_3d",
+    "query": "Wooden Chessboard wood grain procedural texture mitre joint frame rail satin varnish roughness dielectric instancing repeated tiles grid",
+    "index": {
+      "status": "rebuilt",
+      "reason": "missing",
+      "fingerprint": "6857e5ab528b42ac12f4f411f862610a0bffce8e47aee3610a7603c318072fe8"
+    },
+    "matches": [
+      {
+        "record_id": "core.pbr-orm-channel-packing",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.material_pbr[10]",
+        "score": 5.681174520077,
+        "snippets": [
+          "Convention of packing AO, Roughness, and Metalness grayscale maps into the R, G, B channels of a single texture to cut texture-fetch and VRAM cost. Quy ước đóng gói ba bản đồ grayscale AO, Roughness, Metalness vào các kênh R, G, B của một ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[10]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.pbr-roughness",
+        "file_path": "grimoire/glossary/3d_vocabulary.md",
+        "heading": "Material And PBR",
+        "key_path": null,
+        "score": 5.311819330661,
+        "snippets": [
+          "Roughness is microfacet scatter: high roughness reads matte and low roughness reads glossy. Recognition cues: low roughness reads as a sharp, mirror-like, tight specular highlight; high roughness reads as a blurry, wide, dim highlight and matte ..."
+        ],
+        "source_refs": [
+          {
+            "path": "grimoire/glossary/3d_vocabulary.md",
+            "heading": "Material And PBR",
+            "key_path": null
+          },
+          {
+            "path": "grimoire/intake/image_analysis.md",
+            "heading": "Layer 5 — Materials & surface (PBR)",
+            "key_path": null
+          },
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[1]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "grimoire/glossary/3d_vocabulary.md"
+          },
+          {
+            "kind": "notebooklm-research",
+            "ref": "notebooklm:4b03c2f9-8393-411f-b5b4-039ab9532843",
+            "note": "Validated generic schema vocabulary; numeric claims remain backed by local source_refs."
+          },
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation — merged recognition cues + Three.js target instead of duplicating this entity."
+          }
+        ]
+      },
+      {
+        "record_id": "core.shader-mapping-orm-packed-texture-assignment",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.rendering_shader_mapping[13]",
+        "score": 5.161960528551,
+        "snippets": [
+          "Assigning one R/G/B-packed texture file to three separate MeshPhysicalMaterial slots simultaneously, per the glTF ORM convention. Gán một file texture đóng gói R/G/B vào ba khe riêng biệt của MeshPhysicalMaterial cùng lúc, theo quy ước ORM của ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.rendering_shader_mapping[13]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      }
+    ]
+  },
+  "approximationNotes": [
+    "DECLARED EXCLUSION: the reference's middle folding kerf is not reproduced. gambit_chess renders one fixed slab and a seam across the field would cut the a-h files and read as a rendering artifact.",
+    "DECLARED DEVIATION: absolute colors come from the project's existing CSS tokens (--light / --dark / --panel), not from the photo. DESIGN.md makes index.html :root the single source of color truth. The reference contributes structure and RELATIONSHIPS (measured dark/light luminance ratio 0.705, dark hue about 7 deg redder) rather than absolute RGB.",
+    "The photo's sampled saturation (0.74-0.81) includes a warm studio cast and baked lighting; it is not albedo.",
+    "Rail width built at 0.62 units = 0.067W against a measured reference of 0.11W. Reason: the reference proportion would push the board to 10.26 units wide, and board3d's camera fit constant HALF would have to grow from 4.6 to about 5.4, shrinking the playing field on screen by roughly 18 percent. DESIGN.md states the board dominates the screen; a faithful rail width would contradict it.",
+    "Slab thickness built at 0.62 units = 0.067W against a measured 0.075W. Close, not exact, for the same framing reason."
+  ],
+  "tier1Results": [
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.9769,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.0459,
+        "colorDelta": {
+          "checked": 6,
+          "maxDeltaE": 24.35,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 4.72
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.72
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.72
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.83
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.72
+            },
+            {
+              "componentId": null,
+              "deltaE": 24.35
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [
+        "blockout requires --map-stripped-render evidence"
+      ],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "c9387cc5a4194d68",
+      "passId": "blockout"
+    }
+  ]
+}

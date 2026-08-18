@@ -148,27 +148,190 @@ export function init(canvas: HTMLCanvasElement, onPick: (sq: Square) => void) {
   renderer.setAnimationLoop(tick)
 }
 
+/**
+ * 반상 — 나무 체스판 사진 한 장을 img2threejs 로 재구성한 것.
+ * 스펙: scratchpad/board-recon/object-sculpt-spec.json (strict-quality PASS)
+ *
+ * 레퍼런스에서 가져온 정체성 넷:
+ *  1. 나무-대-나무 저대비 칸 (흑백이 아니다)
+ *  2. 45도로 맞물린 넓은 연귀 테두리 — 결이 각 변을 따라 흐른다
+ *  3. 두꺼운 슬랩. 판이 얇은 종이가 아니라 상자로 읽힌다
+ *  4. 모서리 스플라인 홈 — 옆면 구석마다 가는 줄 셋
+ *
+ * 일부러 뺀 것: 접이식 경첩 이음매. 우리 반상은 한 장이고, 그 줄이 a~h 파일을 가로지르면
+ * 판이 갈라진 렌더링 사고로 보인다.
+ *
+ * 색은 여기서 정하지 않는다 — index.html 의 :root 가 색의 단일 원천이다 (DESIGN.md).
+ */
+const BOARD = {
+  rail: 0.62,      // 테두리 폭. 레퍼런스는 0.11W 였지만 그대로 두면 판이 10.26 칸이 되어
+                   // 카메라가 물러나고 반상이 화면에서 18% 작아진다 — 0.067W 로 줄였다.
+  thick: 0.62,     // 슬랩 두께 (레퍼런스 0.075W → 0.067W)
+  tile: 0.16,      // 칸 두께. 윗면은 반드시 y=0 이다 (pick 이 그 평면에서 칸을 집는다)
+  chamferW: 0.10,  // 바깥 윗모서리 모따기 폭
+  chamferD: 0.06,  // 모따기 낙차
+}
+/** 반상 바깥 반폭. 카메라 시야 계산(HALF)이 이 값을 따라간다. */
+const BOARD_HALF = 4 + BOARD.rail
+
+/** 씨 고정 난수. 결 무늬가 새로고침마다 달라지면 같은 판이 아니다. */
+function seeded(seed: number) {
+  return () => {
+    seed = (seed + 0x6d2b79f5) | 0
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+/**
+ * 결 판재 한 장. 세 나무 재질이 같은 캔버스를 나눠 쓴다 — 색과 UV 회전만 다르다.
+ * 내려받는 것이 없고 GPU 에는 텍스처 하나만 올라간다.
+ */
+function grainCanvas(size: number, seed: number, base: string, ink: string, lines: number) {
+  const c = document.createElement('canvas')
+  c.width = c.height = size
+  const g = c.getContext('2d')!
+  g.fillStyle = base
+  g.fillRect(0, 0, size, size)
+  const r = seeded(seed)
+  g.lineCap = 'round'
+  for (let i = 0; i < lines; i++) {
+    const x = r() * size
+    const w = 0.4 + r() * 2.2
+    g.strokeStyle = ink
+    g.globalAlpha = 0.02 + r() * 0.05
+    g.lineWidth = w
+    g.beginPath()
+    g.moveTo(x, -8)
+    // 결은 곧지 않다 — 세 마디로 흔들어야 자국이 아니라 나무로 읽힌다.
+    for (let y = 0; y <= size; y += size / 3) g.lineTo(x + (r() - 0.5) * 9, y)
+    g.stroke()
+  }
+  g.globalAlpha = 1
+  return c
+}
+
+/** 네 변이 45도로 맞물린 띠 한 겹. 안쪽 반폭에서 바깥 반폭으로, y0 에서 y1 로 내려간다. */
+function mitredRing(inner: number, outer: number, y0: number, y1: number, uScale: number) {
+  const pos: number[] = []
+  const uv: number[] = []
+  // +z, +x, -z, -x 순서. 각 변의 u 는 그 변의 길이 방향이라, 이웃한 변끼리 결이 90도 엇갈린다.
+  const sides: [number, number][] = [[0, 1], [1, 0], [0, -1], [-1, 0]]
+  for (const [sx, sz] of sides) {
+    // 변의 법선 방향이 (sx,sz). 길이 방향은 그것을 90도 돌린 것.
+    const tx = -sz
+    const tz = sx
+    const p = (h: number, t: number, y: number) => [sx * h + tx * t, y, sz * h + tz * t]
+    const a = p(inner, -inner, y0)
+    const b = p(inner, inner, y0)
+    const c = p(outer, outer, y1)
+    const d = p(outer, -outer, y1)
+    pos.push(...a, ...b, ...c, ...a, ...c, ...d)
+    // u 는 길이 방향, v 는 띠를 가로지르는 쪽. u 를 실제 좌표에 비례시켜야 한다 —
+    // 직사각형 UV 를 사다리꼴에 씌우면 두 삼각형이 만나는 대각선에서 결이 꺾여
+    // 모서리도 아닌 자리에 가짜 연귀가 하나 더 생긴다.
+    // u/v 를 바꿔 넣는다: 결 캔버스가 선을 v 방향으로 긋기 때문에, 길이 방향을 v 에 실어야
+    // 결이 레일을 따라 흐르고 이웃한 변에서 90도 꺾여 연귀가 눈에 보인다.
+    const k = uScale / (2 * outer)
+    uv.push(0, -inner * k, 0, inner * k, 1, outer * k, 0, -inner * k, 1, outer * k, 1, -outer * k)
+  }
+  const geo = new THREE.BufferGeometry()
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2))
+  geo.computeVertexNormals()
+  return geo
+}
+
 function buildBoard() {
-  const lightMat = new THREE.MeshStandardMaterial({ color: token('--light'), roughness: 0.8 })
-  const darkMat = new THREE.MeshStandardMaterial({ color: token('--dark'), roughness: 0.8 })
-  const tileGeo = new THREE.BoxGeometry(1, 0.16, 1)
+  const grain = new THREE.CanvasTexture(grainCanvas(1024, 20260818, '#ffffff', '#7a5a34', 900))
+  grain.colorSpace = THREE.SRGBColorSpace
+  grain.wrapS = grain.wrapT = THREE.RepeatWrapping
+  grain.anisotropy = 4
+  // 거칠기는 색과 다른 씨앗으로 따로 만든다 — 한 장을 두 채널에 돌려 쓰면 결 골이
+  // 어두워지는 곳과 거칠어지는 곳이 정확히 겹쳐 플라스틱처럼 보인다.
+  const rough = new THREE.CanvasTexture(grainCanvas(512, 77712, '#9a9a9a', '#e8e8e8', 420))
+  rough.wrapS = rough.wrapT = THREE.RepeatWrapping
 
-  for (let row = 0; row < 8; row++)
-    for (let file = 0; file < 8; file++) {
-      const tile = new THREE.Mesh(tileGeo, (file + row) % 2 === 0 ? lightMat : darkMat)
-      tile.position.set(file - 3.5, -0.08, row - 3.5)
-      tile.receiveShadow = true
-      scene.add(tile)
-    }
+  const woodFrame = new THREE.MeshPhysicalMaterial({
+    color: token('--board-frame'), roughness: 0.4, metalness: 0,
+    // 니스는 진짜 클리어코트다. 옆면이 윗면보다 환하게 쓸리는 것이 이 층 때문이다.
+    clearcoat: 0.35, clearcoatRoughness: 0.22,
+    map: grain, roughnessMap: rough,
+  })
+  const tileMat = (name: string) => new THREE.MeshStandardMaterial({
+    color: token(name), roughness: 0.38, metalness: 0, map: grain, roughnessMap: rough,
+  })
+  const lightMat = tileMat('--light')
+  const darkMat = tileMat('--dark')
 
-  // 테두리 — 판이 공중에 뜬 조각이 아니라 하나의 물건으로 보이게.
-  const frame = new THREE.Mesh(
-    new THREE.BoxGeometry(8.7, 0.3, 8.7),
-    new THREE.MeshStandardMaterial({ color: token('--panel'), roughness: 0.6 }),
-  )
-  frame.position.y = -0.2
-  frame.receiveShadow = true
+  // ---- 칸 64개. 두 덩어리로 합쳐 그린다 (밝은 것 한 번, 어두운 것 한 번).
+  const build = (parity: number) => {
+    const pos: number[] = []
+    const uv: number[] = []
+    const r = seeded(9137 + parity)
+    for (let row = 0; row < 8; row++)
+      for (let file = 0; file < 8; file++) {
+        if ((file + row) % 2 !== parity) continue
+        const x = file - 3.5
+        const z = row - 3.5
+        // 결 창을 칸마다 다른 자리에서 뜬다 — 64칸이 똑같은 무늬면 무늬가 아니라 격자다.
+        const ou = r()
+        const ov = r()
+        const s = 0.22
+        const quad = (
+          p0: number[], p1: number[], p2: number[], p3: number[],
+        ) => {
+          // 반시계로 감아야 법선이 위를 본다. 시계로 감으면 칸이 통째로 뒷면이 되어 사라진다.
+          pos.push(...p0, ...p3, ...p2, ...p0, ...p2, ...p1)
+          const q: [number, number][] = [[ou, ov], [ou, ov + s], [ou + s, ov + s], [ou, ov], [ou + s, ov + s], [ou + s, ov]]
+          for (const [u, v] of q) uv.push(parity ? v : u, parity ? u : v)
+        }
+        // 윗면 (y=0) — 실제로 보이는 면
+        quad([x - 0.5, 0, z - 0.5], [x + 0.5, 0, z - 0.5], [x + 0.5, 0, z + 0.5], [x - 0.5, 0, z + 0.5])
+      }
+    const geo = new THREE.BufferGeometry()
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2))
+    geo.computeVertexNormals()
+    return geo
+  }
+  for (const [parity, mat] of [[0, lightMat], [1, darkMat]] as const) {
+    const m = new THREE.Mesh(build(parity), mat)
+    m.name = parity === 0 ? 'field-light' : 'field-dark'
+    m.receiveShadow = true
+    scene.add(m)
+  }
+
+  // ---- 테두리. 윗면 띠 + 모따기 띠 + 안쪽 벽으로 테를 닫는다.
+  const outerTop = BOARD_HALF - BOARD.chamferW
+  const frame = new THREE.Group()
+  frame.name = 'frame-rail'
+  for (const geo of [
+    mitredRing(4, outerTop, 0, 0, 3),                                   // 윗면
+    mitredRing(outerTop, BOARD_HALF, 0, -BOARD.chamferD, 3),            // 바깥 윗모서리 모따기
+    mitredRing(4, 4, 0, -BOARD.tile, 3),                                // 안쪽 벽 (칸 옆면을 막는다)
+  ]) {
+    const m = new THREE.Mesh(geo, woodFrame)
+    m.receiveShadow = true
+    frame.add(m)
+  }
   scene.add(frame)
+
+  // ---- 슬랩. 모따기 아래부터 바닥까지. 옆면이 두께를 만든다.
+  const bodyTop = -BOARD.chamferD
+  const body = new THREE.Mesh(
+    new THREE.BoxGeometry(BOARD_HALF * 2, BOARD.thick - BOARD.chamferD, BOARD_HALF * 2),
+    woodFrame,
+  )
+  body.name = 'slab-body'
+  body.position.y = bodyTop - (BOARD.thick - BOARD.chamferD) / 2
+  body.receiveShadow = true
+  scene.add(body)
+
+  // 레퍼런스의 모서리 스플라인 홈(옆면 구석의 가는 줄 셋)은 넣지 않는다.
+  // 이 카메라에서 옆면은 4px 남짓이라 0.014 폭의 홈은 서브픽셀이다 — 한 번도 보이지 않을
+  // 메시 24개를 매 프레임 그리게 된다. 시점이 낮아지면 그때 되살릴 것.
 }
 
 // ---------------------------------------------------------------- 클릭
@@ -598,8 +761,8 @@ export function showBuffed(squares: Square[]) {
 const BOARD_VIEW = { y: 11.2, z: 9.4 }
 /** 이 비율에서 비스듬한 시점이 딱 맞는다. 반상은 이보다 좁은 화면을 가로로 못 채운다. */
 const WIDE = 1.32
-/** 반상 테두리 반폭(4.35) + 여유. 이만큼은 가로 시야에 들어와야 양옆이 안 잘린다. */
-const HALF = 4.6
+/** 반상 바깥 반폭 + 여유. 이만큼은 가로 시야에 들어와야 양옆이 안 잘린다. */
+const HALF = BOARD_HALF + 0.13
 
 /**
  * 화면이 세로로 길수록 위에서 내려다본다.
