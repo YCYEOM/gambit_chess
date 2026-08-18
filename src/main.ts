@@ -27,6 +27,14 @@ let dueling = false
 /** 건너뛰기를 받을 준비가 됐는가. 이 수를 두게 한 누름이 지나간 뒤에 켠다 (아래 리스너). */
 let skipArmed = false
 /**
+ * 전투가 시작되고 이만큼은 건너뛰기를 받지 않는다.
+ *
+ * 다음 태스크까지만 미루면 같은 이벤트 하나는 걸러지지만, 터치에서 브라우저가 뒤늦게
+ * 흘리는 호환 마우스 이벤트나 손이 두 번 닿은 탭까지는 못 막는다. 어차피 이 구간은
+ * 카메라가 두 기물로 밀고 들어가는 시간이라 건너뛸 것도 없다.
+ */
+const SKIP_ARM_MS = 400
+/**
  * 기보는 우리가 직접 쌓는다. game.history() 는 수를 재생하면서 반상을 덮어써
  * 전투로 무산된 공격을 되살려 버린다 (duel.ts 주석 참고).
  */
@@ -286,7 +294,7 @@ async function apply(from: Square, to: Square, promotion: PieceSymbol = 'q'): Pr
 
   if (outcome.fight) {
     dueling = true
-    setTimeout(() => { skipArmed = dueling })
+    setTimeout(() => { skipArmed = dueling }, SKIP_ARM_MS)
     render()
     // 전투는 반상이 갱신되기 전, 두 기물이 원래 서 있던 자리에서 벌어진다.
     // 앙파상은 잡힌 폰이 도착 칸이 아니라 그 뒤에 서 있다.
