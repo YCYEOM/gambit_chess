@@ -16,8 +16,14 @@ export interface ItemSpec {
   what: string
   /** 반상 위 표식 색 토큰. 값은 index.html 의 :root 한 곳에만 있다. */
   token: string
-  /** 반상 위·안내줄에 그리는 기호. 색만으로는 뭘 주웠는지 기억나지 않는다.
-      \uFE0E 는 "그림 말고 글자로" — 없으면 애플에서 이모지로 칠해져 색 구분이 사라진다. */
+  /**
+   * 반상 위·안내줄에 그리는 기호. 색만으로는 뭘 주웠는지 기억나지 않는다.
+   *
+   * `\uFE0E` 는 "그림 말고 글자로" — 없으면 애플에서 이모지로 칠해져 색 구분이 사라진다.
+   * 분노만 예외로 이모지 단검을 쓴다. 칼을 뜻하는 글자 기호는 `⚔` 뿐인데 반상 크기(약
+   * 30px)로 줄면 두 칼이 뭉쳐 그냥 `✗` 로 보이고, 이 게임에서 `✗` 는 이미 "무산된 공격"이라
+   * 뜻까지 어긋난다. 색은 발밑 고리가 대신 말한다.
+   */
   glyph: string
   /** 기물에 붙일 효과. mend 는 체력이라 주울 때 계산한다. */
   effect?: State
@@ -28,7 +34,7 @@ export interface ItemSpec {
 export const ITEMS: Record<ItemKind, ItemSpec> = {
   again: { name: '재행동', what: '즉시 한 번 더 둔다', token: '--item-again', glyph: '\u21BB\uFE0E', extraTurn: true },
   sharp: { name: '예리함', what: '치명타 확률 +15%p', token: '--item-sharp', glyph: '\u2726\uFE0E', effect: { crit: 0.15 } },
-  rage: { name: '분노', what: '공격력 +3', token: '--item-rage', glyph: '\u2694\uFE0E', effect: { atk: 3 } },
+  rage: { name: '분노', what: '공격력 +3', token: '--item-rage', glyph: '\uD83D\uDDE1', effect: { atk: 3 } },
   mend: { name: '응급처치', what: '체력을 만피로', token: '--item-mend', glyph: '\u271A\uFE0E' },
 }
 

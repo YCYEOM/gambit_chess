@@ -24,6 +24,8 @@ let human: Color = 'w'
 let selected: Square | null = null
 let thinking = false
 let dueling = false
+/** 건너뛰기를 받을 준비가 됐는가. 이 수를 두게 한 누름이 지나간 뒤에 켠다 (아래 리스너). */
+let skipArmed = false
 /**
  * 기보는 우리가 직접 쌓는다. game.history() 는 수를 재생하면서 반상을 덮어써
  * 전투로 무산된 공격을 되살려 버린다 (duel.ts 주석 참고).
@@ -284,6 +286,7 @@ async function apply(from: Square, to: Square, promotion: PieceSymbol = 'q'): Pr
 
   if (outcome.fight) {
     dueling = true
+    setTimeout(() => { skipArmed = dueling })
     render()
     // 전투는 반상이 갱신되기 전, 두 기물이 원래 서 있던 자리에서 벌어진다.
     // 앙파상은 잡힌 폰이 도착 칸이 아니라 그 뒤에 서 있다.
@@ -309,6 +312,7 @@ async function apply(from: Square, to: Square, promotion: PieceSymbol = 'q'): Pr
     )
     duelEl.hidden = true
     dueling = false
+    skipArmed = false
   } else {
     await board3d.slide(from, to)
   }
@@ -514,8 +518,13 @@ document.getElementById('undo')!.onclick = async () => {
 /**
  * 전투가 길어지면 보고 싶은 것은 결과뿐이다. 아무 데나 누르면 남은 재생을 빨리 감는다 —
  * 승패는 이미 정해져 있으므로 건너뛰어도 결과가 달라지지 않는다.
+ *
+ * 전투를 시작시킨 그 누름은 세지 않는다. 칸을 집는 것도 pointerdown 이라, 반상이 그 자리에서
+ * 수를 두고 전투를 켜 놓은 뒤 **같은 이벤트가** window 까지 올라온다 — 그대로 두면 내가 두는
+ * 전투는 시작하자마자 전부 건너뛴다. 그 이벤트가 다 지나간 다음 태스크에서 준비를 켜면
+ * 다음 누름부터 걸린다.
  */
-addEventListener('pointerdown', () => { if (dueling) board3d.skipDuel() })
+addEventListener('pointerdown', () => { if (skipArmed) board3d.skipDuel() })
 
 // 눕힌 폰에서는 컨트롤을 접어 둔다. 이 버튼은 가로에서만 보인다 (CSS 가 정한다).
 const menuEl = document.getElementById('menu') as HTMLButtonElement
