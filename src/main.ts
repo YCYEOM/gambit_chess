@@ -1,6 +1,6 @@
 import { Chess, type PieceSymbol, type Square, type Color } from 'chess.js'
 import { bestMove, LEVELS } from './ai'
-import { STATS } from './combat'
+import { STATS, winChance } from './combat'
 import * as state from './pieceState'
 import * as items from './items'
 import * as run from './run'
@@ -156,7 +156,11 @@ function render() {
   movesEl.scrollTop = movesEl.scrollHeight
   board3d.showHealth(isDuel() ? state.wounded(game) : [])
   board3d.showItems(
-    isDuel() ? items.items().map(([square, kind]) => ({ square, token: items.ITEMS[kind].token })) : [],
+    isDuel()
+      ? items.items().map(([square, kind]) => ({
+        square, token: items.ITEMS[kind].token, glyph: items.ITEMS[kind].glyph,
+      }))
+      : [],
   )
   if (isDuel()) board3d.showBuffed(state.buffed())
   itemLegend()
@@ -174,7 +178,9 @@ function itemLegend() {
       const el = document.createElement('span')
       el.className = 'item'
       el.innerHTML = '<i></i>'
-      ;(el.querySelector('i') as HTMLElement).style.background = `var(${spec.token})`
+      const mark = el.querySelector('i') as HTMLElement
+      mark.textContent = spec.glyph
+      mark.style.color = `var(${spec.token})`
       el.append(`${square} ${spec.name} · ${spec.what}`)
       return el
     }),
@@ -185,24 +191,46 @@ function itemLegend() {
 
 const duelSide = (side: 'atk' | 'def') => duelEl.querySelector(`.${side}`)!
 
-function openDuelGauge(
-  attacker: { type: PieceSymbol; color: Color; hp: number },
-  defender: { type: PieceSymbol; color: Color; hp: number },
-) {
+interface Fighter { type: PieceSymbol; color: Color; hp: number; crit: number; atk: number }
+
+/**
+ * 붙기 전에 판을 먼저 보여 준다 — 누가 내 편인지(색·표), 무엇으로 싸우는지(체력·공격력),
+ * 이길 것 같은지(승산). 이게 없으면 "왜 졌는지" 를 결과에서 거꾸로 짐작하는 수밖에 없다.
+ */
+function openDuelGauge(attacker: Fighter, defender: Fighter) {
   for (const [side, who] of [['atk', attacker], ['def', defender]] as const) {
     const el = duelSide(side)
     const max = STATS[who.type].hp
+    const mine = who.color === human
+    el.classList.toggle('mine', mine)
+    el.querySelector('.tag')!.textContent = mine ? '나' : '적'
     el.querySelector('.name')!.textContent =
-      `${board3d.roleName(who.color, who.type)} · HP ${who.hp}/${max}`
+      `${board3d.roleName(who.color, who.type)} · 공격력 ${STATS[who.type].atk + who.atk}`
+    // 체력은 타격마다 갱신된다 — 바 길이만으로는 몇 대 더 버티는지 셀 수 없다.
+    el.querySelector('.hp')!.textContent = `HP ${who.hp}/${max}`
     const bar = el.querySelector('.bar i') as HTMLElement
     bar.style.width = `${(who.hp / max) * 100}%`
-    bar.classList.toggle('hurt', who.hp / max <= 0.3)
     el.querySelector('.dmg')!.textContent = ''
   }
+
+  // 표본 추정이라 정확한 값은 아니다. 승패가 확률이라는 것만 읽히면 된다.
+  const chance = winChance(attacker.type, defender.type, attacker.hp, defender.hp, {
+    attacker: { crit: attacker.crit, atk: attacker.atk },
+    defender: { crit: defender.crit, atk: defender.atk },
+  })
+  const mine = attacker.color === human ? chance : 1 - chance
+  const odds = duelEl.querySelector('.odds') as HTMLElement
+  odds.textContent = `내 승산 ${Math.round(mine * 100)}%`
+  odds.style.color = mine >= 0.5 ? 'var(--accent)' : 'var(--danger)'
   duelEl.hidden = false
 }
 
-function showStrike(struck: 'atk' | 'def', s: { damage: number; crit: boolean; ambush: boolean }, ratio: number) {
+function showStrike(
+  struck: 'atk' | 'def',
+  s: { damage: number; crit: boolean; ambush: boolean },
+  hp: number,
+  max: number,
+) {
   const el = duelSide(struck)
   const dmg = el.querySelector('.dmg')!
   const label = s.crit ? ' 치명타!' : s.ambush ? ' 기습!' : ''
@@ -211,9 +239,9 @@ function showStrike(struck: 'atk' | 'def', s: { damage: number; crit: boolean; a
   // 클래스를 뗐다 붙여야 같은 애니메이션이 다시 재생된다.
   void (dmg as HTMLElement).offsetWidth
   dmg.classList.add('show')
+  el.querySelector('.hp')!.textContent = `HP ${hp}/${max}`
   const bar = el.querySelector('.bar i') as HTMLElement
-  bar.style.width = `${Math.max(0, ratio) * 100}%`
-  bar.classList.toggle('hurt', ratio <= 0.3)
+  bar.style.width = `${Math.max(0, hp / max) * 100}%`
 }
 
 // ---------------------------------------------------------------- 수 적용
@@ -267,8 +295,8 @@ async function apply(from: Square, to: Square, promotion: PieceSymbol = 'q'): Pr
 
     const enemy: Color = outcome.move.color === 'w' ? 'b' : 'w'
     openDuelGauge(
-      { type: attackerType, color: outcome.move.color, hp: outcome.fight.startHp.attacker },
-      { type: defenderType, color: enemy, hp: outcome.fight.startHp.defender },
+      { type: attackerType, color: outcome.move.color, hp: outcome.fight.startHp.attacker, ...state.bonus(from) },
+      { type: defenderType, color: enemy, hp: outcome.fight.startHp.defender, ...state.bonus(defenderSquare) },
     )
     await board3d.playDuel(
       from, defenderSquare, outcome.fight.strikes, !outcome.repelled,
@@ -276,7 +304,7 @@ async function apply(from: Square, to: Square, promotion: PieceSymbol = 'q'): Pr
         const s = outcome.fight!.strikes[i]
         const struck = s.by === 'attacker' ? 'def' : 'atk'
         const max = STATS[struck === 'def' ? defenderType : attackerType].hp
-        showStrike(struck, s, (struck === 'def' ? s.defenderHp : s.attackerHp) / max)
+        showStrike(struck, s, struck === 'def' ? s.defenderHp : s.attackerHp, max)
       },
     )
     duelEl.hidden = true
@@ -482,6 +510,12 @@ document.getElementById('undo')!.onclick = async () => {
   await board3d.sync(game)
   render()
 }
+
+/**
+ * 전투가 길어지면 보고 싶은 것은 결과뿐이다. 아무 데나 누르면 남은 재생을 빨리 감는다 —
+ * 승패는 이미 정해져 있으므로 건너뛰어도 결과가 달라지지 않는다.
+ */
+addEventListener('pointerdown', () => { if (dueling) board3d.skipDuel() })
 
 // 눕힌 폰에서는 컨트롤을 접어 둔다. 이 버튼은 가로에서만 보인다 (CSS 가 정한다).
 const menuEl = document.getElementById('menu') as HTMLButtonElement

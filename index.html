@@ -75,18 +75,26 @@
   }
   #duel .side { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
   #duel .side.def { align-items: flex-end; }
-  #duel .who { display: flex; gap: 8px; align-items: baseline; font-size: 13px; }
+  /* 좁은 폰에서는 이름·체력이 한 줄에 안 들어간다. 넘치면 접는다 — 잘리는 것보다 낫다. */
+  #duel .who { display: flex; gap: 4px 8px; align-items: baseline; flex-wrap: wrap; font-size: 13px; }
   #duel .side.def .who { flex-direction: row-reverse; }
   #duel .name { font-weight: 600; white-space: nowrap; }
+  #duel .hp { white-space: nowrap; color: #b6b2ae; }
   #duel .dmg { font-weight: 700; color: var(--danger); opacity: 0; }
   #duel .dmg.show { animation: pop .45s ease-out; }
   #duel .dmg.crit { color: var(--crit); }
   @keyframes pop { from { opacity: 1; transform: translateY(0) } to { opacity: 0; transform: translateY(-9px) } }
   #duel .bar { width: 100%; height: 8px; border-radius: 6px; background: #0006; overflow: hidden; }
-  #duel .bar i { display: block; height: 100%; width: 100%; background: var(--accent); transition: width .2s ease-out; }
-  #duel .bar i.hurt { background: var(--danger); }
+  /* 색이 곧 누구인가다 — 내 기물은 초록, 상대는 빨강. 남은 체력은 길이가 말한다.
+     예전에는 피가 깎이면 초록이 빨강으로 변해서, 색을 보고는 편을 알 수 없었다. */
+  #duel .bar i { display: block; height: 100%; width: 100%; background: var(--danger); transition: width .2s ease-out; }
+  #duel .side.mine .bar i { background: var(--accent); }
   #duel .side.def .bar i { margin-left: auto; }
-  #duel .vs { font-size: 12px; letter-spacing: .18em; color: #b6b2ae; }
+  #duel .side .tag { font-size: 11px; padding: 1px 5px; border-radius: 4px; background: var(--danger); color: #fff; }
+  #duel .side.mine .tag { background: var(--accent); }
+  #duel .vs { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+  #duel .odds { font-size: 14px; font-weight: 700; }
+  #duel .tip { font-size: 11px; letter-spacing: .04em; color: #b6b2ae; white-space: nowrap; }
   #panel { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; }
   button, select {
     background: var(--panel); color: var(--text); border: 1px solid #4a4643;
@@ -124,7 +132,7 @@
     font-size: 13px; color: #b6b2ae;
   }
   #legend .item { display: inline-flex; align-items: center; gap: 6px; }
-  #legend .item i { width: 10px; height: 10px; border-radius: 2px; transform: rotate(45deg); }
+  #legend .item i { font-style: normal; font-size: 15px; line-height: 1; }
 
   /* ---- 연승 런 ----
      상태줄이 "지금 이 판", 여기가 "지금 이 런". 얻은 강화는 다음 판에도 남으므로
@@ -234,12 +242,12 @@
   </div>
   <div id="duel" hidden>
     <div class="side atk">
-      <div class="who"><span class="name"></span><span class="dmg"></span></div>
+      <div class="who"><span class="tag"></span><span class="name"></span><span class="hp"></span><span class="dmg"></span></div>
       <div class="bar"><i></i></div>
     </div>
-    <div class="vs">VS</div>
+    <div class="vs"><span class="odds"></span><span class="tip">눌러서 건너뛰기</span></div>
     <div class="side def">
-      <div class="who"><span class="name"></span><span class="dmg"></span></div>
+      <div class="who"><span class="tag"></span><span class="name"></span><span class="hp"></span><span class="dmg"></span></div>
       <div class="bar"><i></i></div>
     </div>
   </div>

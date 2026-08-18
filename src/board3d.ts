@@ -524,32 +524,53 @@ export function showHealth(list: { square: Square; ratio: number }[]) {
 
 // ---------------------------------------------------------------- 아이템
 
-const itemGeo = new THREE.OctahedronGeometry(0.2)
 const itemBaseGeo = new THREE.RingGeometry(0.3, 0.38, 32)
-const itemMaterials = new Map<string, { gem: THREE.Material; ring: THREE.Material }>()
+const itemMaterials = new Map<string, { gem: THREE.SpriteMaterial; ring: THREE.Material }>()
 
-const itemMaterial = (name: string) => {
-  let m = itemMaterials.get(name)
+/**
+ * 아이템은 기호로 그린다. 색만으로는 초록이 회복인지 공격력인지 매번 안내줄을 봐야 했다.
+ * 3D 로 기호를 세우면 시점에 따라 찌그러지므로 늘 카메라를 마주 보는 스프라이트를 쓴다 —
+ * 캔버스에 글자 하나 그린 텍스처가 전부다.
+ */
+function glyphTexture(glyph: string, color: THREE.Color) {
+  const c = document.createElement('canvas')
+  c.width = c.height = 128
+  const g = c.getContext('2d')!
+  g.font = '96px system-ui, "Apple SD Gothic Neo", sans-serif'
+  g.textAlign = 'center'
+  g.textBaseline = 'middle'
+  g.shadowColor = '#000'
+  g.shadowBlur = 10
+  g.fillStyle = `#${color.getHexString()}`
+  g.fillText(glyph, 64, 68)
+  const tex = new THREE.CanvasTexture(c)
+  tex.colorSpace = THREE.SRGBColorSpace
+  return tex
+}
+
+const itemMaterial = (name: string, glyph: string) => {
+  const key = `${name}${glyph}`
+  let m = itemMaterials.get(key)
   if (!m) {
     const color = token(name)
     m = {
-      gem: new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.5, roughness: 0.3 }),
+      gem: new THREE.SpriteMaterial({ map: glyphTexture(glyph, color), transparent: true }),
       ring: tint(color, 0.55),
     }
-    itemMaterials.set(name, m)
+    itemMaterials.set(key, m)
   }
   return m
 }
 
-/** 반상 위 아이템. 칸 위에 떠서 돌고, 바닥에 같은 색 고리를 둔다. */
-export function showItems(list: { square: Square; token: string }[]) {
+/** 반상 위 아이템. 칸 위에 떠서 흔들리고, 바닥에 같은 색 고리를 둔다. */
+export function showItems(list: { square: Square; token: string; glyph: string }[]) {
   itemGroup.clear()
-  for (const { square, token: name } of list) {
+  for (const { square, token: name, glyph } of list) {
     const { x, z } = squareToWorld(square)
-    const mat = itemMaterial(name)
-    const gem = new THREE.Mesh(itemGeo, mat.gem)
-    gem.position.set(x, 0.45, z)
-    gem.castShadow = true
+    const mat = itemMaterial(name, glyph)
+    const gem = new THREE.Sprite(mat.gem)
+    gem.scale.setScalar(0.68)
+    gem.position.set(x, 0.5, z)
     const ring = new THREE.Mesh(itemBaseGeo, mat.ring)
     ring.position.set(x, 0.012, z)
     ring.rotation.x = -Math.PI / 2
@@ -716,7 +737,14 @@ function stepEffects(dt: number) {
 
 // ---------------------------------------------------------------- 전투
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+/**
+ * 전투 재생을 빨리 감는다. 판정은 이미 끝나 있으므로 건너뛰어도 결과가 달라지지 않는다 —
+ * 기다리는 것들(sleep·카메라·활강)만 그 자리에서 끝난다.
+ */
+let skipping = false
+export const skipDuel = () => { skipping = true }
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, skipping ? 0 : ms))
 const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2)
 
 /** 카메라를 목표 위치로 부드럽게 옮긴다. */
@@ -724,7 +752,7 @@ async function flyCamera(to: THREE.Vector3, look: THREE.Vector3, ms: number) {
   const from = camera.position.clone()
   const start = performance.now()
   for (;;) {
-    const t = Math.min(1, (performance.now() - start) / ms)
+    const t = skipping ? 1 : Math.min(1, (performance.now() - start) / ms)
     camera.position.lerpVectors(from, to, easeInOut(t))
     camera.lookAt(look)
     if (t >= 1) return
@@ -746,7 +774,7 @@ async function glide(piece: Piece, to: THREE.Vector3, ms: number) {
   const from = piece.root.position.clone()
   const start = performance.now()
   for (;;) {
-    const t = Math.min(1, (performance.now() - start) / ms)
+    const t = skipping ? 1 : Math.min(1, (performance.now() - start) / ms)
     piece.root.position.lerpVectors(from, to, easeInOut(t))
     piece.base.position.set(piece.root.position.x, 0.03, piece.root.position.z)
     if (t >= 1) return
@@ -777,6 +805,7 @@ export async function playDuel(
   const defender = pieces.get(defenderSquare)
   if (!attacker || !defender) return
 
+  skipping = false
   cameraLocked = true
 
   // 공격자를 수비 기물 바로 앞까지 데려온다. 원래 자리에 세워 두면 룩이 반상 끝에서
@@ -816,6 +845,7 @@ export async function playDuel(
 
   cameraLocked = false
   const back = viewFor(camera.aspect || WIDE)
+  skipping = false
   await flyCamera(
     new THREE.Vector3(0, back.y, back.z * sign),
     new THREE.Vector3(0, 0.15, 0),
@@ -834,9 +864,8 @@ function tick() {
   stepEffects(dt)
   spin += dt
   for (const obj of itemGroup.children) {
-    if ((obj as THREE.Mesh).geometry !== itemGeo) continue
-    obj.rotation.y = spin * 1.6
-    obj.position.y = 0.45 + Math.sin(spin * 2) * 0.06
+    if (!(obj as THREE.Sprite).isSprite) continue
+    obj.position.y = 0.5 + Math.sin(spin * 2) * 0.06
   }
   renderer.render(scene, camera)
 }
