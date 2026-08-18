@@ -24,16 +24,6 @@ let human: Color = 'w'
 let selected: Square | null = null
 let thinking = false
 let dueling = false
-/** 건너뛰기를 받을 준비가 됐는가. 이 수를 두게 한 누름이 지나간 뒤에 켠다 (아래 리스너). */
-let skipArmed = false
-/**
- * 전투가 시작되고 이만큼은 건너뛰기를 받지 않는다.
- *
- * 다음 태스크까지만 미루면 같은 이벤트 하나는 걸러지지만, 터치에서 브라우저가 뒤늦게
- * 흘리는 호환 마우스 이벤트나 손이 두 번 닿은 탭까지는 못 막는다. 어차피 이 구간은
- * 카메라가 두 기물로 밀고 들어가는 시간이라 건너뛸 것도 없다.
- */
-const SKIP_ARM_MS = 400
 /**
  * 기보는 우리가 직접 쌓는다. game.history() 는 수를 재생하면서 반상을 덮어써
  * 전투로 무산된 공격을 되살려 버린다 (duel.ts 주석 참고).
@@ -201,6 +191,16 @@ function itemLegend() {
 
 const duelSide = (side: 'atk' | 'def') => duelEl.querySelector(`.${side}`)!
 
+/**
+ * 건너뛰기는 계기판의 버튼으로만 받는다.
+ *
+ * "아무 데나 누르면 건너뛴다" 로 뒀더니 의도한 건너뛰기와 AI 차례에 무심코 누른 탭을
+ * 구분할 방법이 없었다 — 칸을 집는 것도 pointerdown 이라, 수를 두게 한 그 누름까지
+ * 같은 이벤트로 올라온다. 시각을 견주거나 준비를 늦춰 막아 봐도 터치의 호환 이벤트가
+ * 남는다. 누를 자리를 따로 두면 그 구분이 애초에 필요 없다.
+ */
+;(duelEl.querySelector('.skip') as HTMLButtonElement).onclick = () => board3d.skipDuel()
+
 interface Fighter { type: PieceSymbol; color: Color; hp: number; crit: number; atk: number }
 
 /**
@@ -294,7 +294,6 @@ async function apply(from: Square, to: Square, promotion: PieceSymbol = 'q'): Pr
 
   if (outcome.fight) {
     dueling = true
-    setTimeout(() => { skipArmed = dueling }, SKIP_ARM_MS)
     render()
     // 전투는 반상이 갱신되기 전, 두 기물이 원래 서 있던 자리에서 벌어진다.
     // 앙파상은 잡힌 폰이 도착 칸이 아니라 그 뒤에 서 있다.
@@ -320,7 +319,6 @@ async function apply(from: Square, to: Square, promotion: PieceSymbol = 'q'): Pr
     )
     duelEl.hidden = true
     dueling = false
-    skipArmed = false
   } else {
     await board3d.slide(from, to)
   }
@@ -522,17 +520,6 @@ document.getElementById('undo')!.onclick = async () => {
   await board3d.sync(game)
   render()
 }
-
-/**
- * 전투가 길어지면 보고 싶은 것은 결과뿐이다. 아무 데나 누르면 남은 재생을 빨리 감는다 —
- * 승패는 이미 정해져 있으므로 건너뛰어도 결과가 달라지지 않는다.
- *
- * 전투를 시작시킨 그 누름은 세지 않는다. 칸을 집는 것도 pointerdown 이라, 반상이 그 자리에서
- * 수를 두고 전투를 켜 놓은 뒤 **같은 이벤트가** window 까지 올라온다 — 그대로 두면 내가 두는
- * 전투는 시작하자마자 전부 건너뛴다. 그 이벤트가 다 지나간 다음 태스크에서 준비를 켜면
- * 다음 누름부터 걸린다.
- */
-addEventListener('pointerdown', () => { if (skipArmed) board3d.skipDuel() })
 
 // 눕힌 폰에서는 컨트롤을 접어 둔다. 이 버튼은 가로에서만 보인다 (CSS 가 정한다).
 const menuEl = document.getElementById('menu') as HTMLButtonElement

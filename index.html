@@ -96,7 +96,8 @@
   #duel .side.mine .tag { background: var(--accent); }
   #duel .vs { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
   #duel .odds { font-size: 14px; font-weight: 700; }
-  #duel .tip { font-size: 11px; letter-spacing: .04em; color: #b6b2ae; white-space: nowrap; }
+  /* 건너뛰기는 이 버튼으로만 받는다 — 반상 아무 데나 누르는 것과 섞이면 안 된다. */
+  #duel .skip { padding: 3px 9px; font-size: 11px; line-height: 1.5; white-space: nowrap; color: #b6b2ae; }
   #panel { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; }
   button, select {
     background: var(--panel); color: var(--text); border: 1px solid #4a4643;
@@ -247,7 +248,7 @@
       <div class="who"><span class="tag"></span><span class="name"></span><span class="hp"></span><span class="dmg"></span></div>
       <div class="bar"><i></i></div>
     </div>
-    <div class="vs"><span class="odds"></span><span class="tip">눌러서 건너뛰기</span></div>
+    <div class="vs"><span class="odds"></span><button class="skip">건너뛰기</button></div>
     <div class="side def">
       <div class="who"><span class="tag"></span><span class="name"></span><span class="hp"></span><span class="dmg"></span></div>
       <div class="bar"><i></i></div>

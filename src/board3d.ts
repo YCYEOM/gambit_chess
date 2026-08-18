@@ -903,9 +903,14 @@ function stepEffects(dt: number) {
 /**
  * 전투 재생을 빨리 감는다. 판정은 이미 끝나 있으므로 건너뛰어도 결과가 달라지지 않는다 —
  * 기다리는 것들(sleep·카메라·활강)만 그 자리에서 끝난다.
+ *
+ * 전투가 도는 동안에만 받는다. 끝난 뒤에 들어온 요청까지 켜 두면 그 상태가 남아, 다음
+ * 수의 활강과 그 다음 전투까지 통째로 순간이동한다 — "한 번 건너뛰면 그 뒤로 전부
+ * 건너뛴다" 가 이것이었다.
  */
 let skipping = false
-export const skipDuel = () => { skipping = true }
+let duelActive = false
+export const skipDuel = () => { if (duelActive) skipping = true }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, skipping ? 0 : ms))
 const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2)
@@ -969,6 +974,7 @@ export async function playDuel(
   if (!attacker || !defender) return
 
   skipping = false
+  duelActive = true
   cameraLocked = true
 
   // 공격자를 수비 기물 바로 앞까지 데려온다. 원래 자리에 세워 두면 룩이 반상 끝에서
@@ -1009,6 +1015,7 @@ export async function playDuel(
   cameraLocked = false
   const back = viewFor(camera.aspect || WIDE)
   skipping = false
+  duelActive = false
   await flyCamera(
     new THREE.Vector3(0, back.y, back.z * sign),
     new THREE.Vector3(0, 0.15, 0),
