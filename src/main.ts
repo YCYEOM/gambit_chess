@@ -4,7 +4,7 @@ import { STATS, winChance } from './combat'
 import * as state from './pieceState'
 import * as items from './items'
 import * as run from './run'
-import { playMove, plainMove, findKing, blockedSquares } from './duel'
+import { playMove, plainMove, findKing, blockedSquares, defenderSquareOf } from './duel'
 import * as board3d from './board3d'
 
 const statusEl = document.getElementById('status')!
@@ -128,10 +128,26 @@ function runBar() {
 function render() {
   const legal = selected ? game.moves({ square: selected, verbose: true }) : []
   const last = log.at(-1)
+  // 잡기가 확률이라 고르기 전에 승산을 알아야 고르는 것이 된다. winChance 는 체력 2단위로
+  // 캐시되므로 같은 국면에서 기물을 다시 골라도 다시 굴리지 않는다.
+  const odds = isDuel() && selected
+    ? legal.filter((m) => m.captured).map((m) => {
+      const attacker = state.stateOf(selected!, m.piece)
+      const defender = state.stateOf(defenderSquareOf(m), m.captured!)
+      return {
+        square: m.to,
+        chance: winChance(m.piece, m.captured!, attacker.hp, defender.hp, {
+          attacker: { crit: attacker.crit, atk: attacker.atk },
+          defender: { crit: defender.crit, atk: defender.atk },
+        }),
+      }
+    })
+    : []
   board3d.highlight({
     selected,
     moves: legal.filter((m) => !m.captured).map((m) => m.to),
     captures: legal.filter((m) => m.captured).map((m) => m.to),
+    odds,
     blocked: selected ? blockedSquares(game, selected) : [],
     last: last ? { from: last.from, to: last.to, repelled: last.repelled, rook: last.rook } : null,
     check: game.inCheck() ? findKing(game, game.turn()) ?? null : null,

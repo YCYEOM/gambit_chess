@@ -850,6 +850,8 @@ export interface Highlights {
   selected?: Square | null
   moves?: Square[]
   captures?: Square[]
+  /** 잡을 수 있는 칸마다의 내 승산(0~1). 결투 모드에서만 온다. */
+  odds?: { square: Square; chance: number }[]
   blocked?: Square[]
   last?: { from: Square; to: Square; repelled: boolean; rook?: [Square, Square] | null } | null
   check?: Square | null
@@ -877,6 +879,54 @@ export function highlight(h: Highlights) {
     addMarker(sq, ringGeo, MARKER.capture, 0.012)
   }
   for (const sq of h.blocked ?? []) addCross(sq)
+  for (const o of h.odds ?? []) addOdds(o.square, o.chance)
+}
+
+/**
+ * 잡을 수 있는 칸 위에 승산을 띄운다.
+ *
+ * 잡기가 확률인데 그 확률을 붙기 전에는 볼 수 없었다 — 계기판은 이미 칼을 뽑은 뒤에야
+ * 열린다. 고를 때 알아야 고르는 것이 된다.
+ *
+ * 숫자는 그 칸에 선 기물 머리 위로 올린다. 발밑에 두면 기물이 가린다.
+ */
+const oddsTextures = new Map<string, THREE.SpriteMaterial>()
+function oddsMaterial(chance: number) {
+  const pct = Math.round(chance * 100)
+  // 계기판과 같은 뜻: 유리하면 --accent, 불리하면 --danger.
+  const color = pct >= 50 ? token('--accent') : token('--danger')
+  const key = `${pct}`
+  let mat = oddsTextures.get(key)
+  if (!mat) {
+    const c = document.createElement('canvas')
+    c.width = 128
+    c.height = 64
+    const g = c.getContext('2d')!
+    g.font = 'bold 44px system-ui, "Apple SD Gothic Neo", sans-serif'
+    g.textAlign = 'center'
+    g.textBaseline = 'middle'
+    // 반상 위 어디에 떠도 읽히게 글자 뒤를 깐다.
+    g.fillStyle = 'rgba(0,0,0,0.55)'
+    g.beginPath()
+    g.roundRect(6, 8, 116, 48, 10)
+    g.fill()
+    g.fillStyle = `#${color.getHexString()}`
+    g.fillText(`${pct}%`, 64, 34)
+    const tex = new THREE.CanvasTexture(c)
+    tex.colorSpace = THREE.SRGBColorSpace
+    mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false })
+    oddsTextures.set(key, mat)
+  }
+  return mat
+}
+
+function addOdds(square: Square, chance: number) {
+  const { x, z } = squareToWorld(square)
+  const s = new THREE.Sprite(oddsMaterial(chance))
+  s.scale.set(0.86, 0.43, 1)
+  s.position.set(x, 1.62, z)
+  s.renderOrder = 10
+  markers.add(s)
 }
 
 // ---------------------------------------------------------------- 체력 표시
