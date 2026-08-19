@@ -260,95 +260,61 @@ function mitredRing(inner: number, outer: number, y0: number, y1: number, uScale
 }
 
 /**
- * 반상을 받치는 바닥 — 풍화된 널판 사진을 img2threejs 로 재구성한 것.
- * 스펙: docs/table-recon/object-sculpt-spec.json (strict-quality PASS)
+ * 반상을 받치는 바닥 — 게임 테이블의 초록 펠트.
  *
- * 반상이 검은 허공에 떠 있던 것이 장면에서 제일 큰 구멍이었다. 그림자가 떨어질 자리가
- * 생기면 판이 놓인 물건이 된다.
+ * 처음에는 풍화된 널판 사진을 재구성해 깔았다 (docs/table-recon/). 구조는 맞았지만 화면에서
+ * 틀렸다: 차가운 회색이 따뜻한 반상과 색으로 싸우고, 이음매와 결이 구석에서 시선을 끌어
+ * 게임판이 놓인 자리가 아니라 야외 데크로 읽혔다.
  *
- * 레퍼런스에서 잰 것:
- *  - 널 median #838386, **채도 0.022** — 풍화가 나무색을 완전히 걷어 갔다
- *  - 이음매/널 밝기비 0.211 (선이 아니라 어두운 틈이다)
- *  - 결 하이라이트/널 밝기비 1.404 (무른 부분이 깎여 단단한 결만 도드라졌다)
- *
- * 바탕색은 사진에서 잰 #838386 이 아니라 **탈조명 알베도 #4A494C** 다. 사진의 밝기는
- * 직사광이지 색이 아니라, 그대로 쓰면 게임 조명 아래에서 바닥이 허옇게 뜬다.
+ * 펠트는 반대로 간다. 구조가 없고 무광이라 뒤로 물러난다 — 바닥의 일은 그림자를 받는 것
+ * 하나뿐이고, 그 외에는 눈에 띄지 않는 것이 잘하는 것이다.
  */
-const PLANK = { width: 2.2, tile: 4, size: 60 }
+const FELT_SIZE = 60
 
-function plankTexture() {
+/** 펠트 결 — 아주 잔 섬유 얼룩. 무늬가 보이기 시작하면 이미 과한 것이다. */
+function feltTexture() {
   const px = 512
   const c = document.createElement('canvas')
   c.width = c.height = px
   const g = c.getContext('2d')!
-  const r = seeded(88231)
-  const table = srgbOf(token('--table'))
-  const hex = (m: number) => {
+  const felt = srgbOf(token('--table'))
+  const tone = (m: number) => {
     const v = (x: number) => Math.round(Math.min(1, Math.max(0, x)) * 255)
-    return `rgb(${v(table.r * m)},${v(table.g * m)},${v(table.b * m)})`
+    return `rgb(${v(felt.r * m)},${v(felt.g * m)},${v(felt.b * m)})`
   }
-  g.fillStyle = hex(1); g.fillRect(0, 0, px, px)
-
-  // 널 경계는 고르지 않다. ±18% 로 걸어가게 둔다.
-  const edges: number[] = [0]
-  for (let i = 1; i < PLANK.tile; i++) {
-    edges.push(Math.round((px / PLANK.tile) * (i + (r() - 0.5) * 0.36)))
+  g.fillStyle = tone(1); g.fillRect(0, 0, px, px)
+  const r = seeded(3391)
+  // 섬유. 아주 짧은 선을 아무 방향으로 흩는다 — 짜인 천이 아니라 눌러 붙인 펠트다.
+  for (let i = 0; i < 26000; i++) {
+    const x = r() * px
+    const y = r() * px
+    const a = r() * Math.PI * 2
+    const len = 1 + r() * 2.5
+    g.strokeStyle = tone(r() < 0.5 ? 1.16 : 0.86)
+    g.globalAlpha = 0.05 + r() * 0.07
+    g.lineWidth = 0.8
+    g.beginPath()
+    g.moveTo(x, y)
+    g.lineTo(x + Math.cos(a) * len, y + Math.sin(a) * len)
+    g.stroke()
   }
-  edges.push(px)
-
-  for (let i = 0; i < PLANK.tile; i++) {
-    const y0 = edges[i]
-    const y1 = edges[i + 1]
-    const h = y1 - y0
-    // 널마다 바탕 톤이 조금씩 다르다.
-    g.fillStyle = hex(0.86 + r() * 0.28)
-    g.fillRect(0, y0, px, h)
-    // 도드라진 결 — 널 길이 방향으로 흐르고, 밝은 쪽과 어두운 쪽이 모두 있다.
-    // 결은 굵고 세게 긋는다. 가늘게 그으면 밉맵에서 통째로 뭉개져 결 없는 판때기가 된다 —
-    // 실제로 그렇게 만들었다가 고쳤다. 바닥은 스치는 각도로 보여서 더 심하다.
-    for (let k = 0; k < 130; k++) {
-      const y = y0 + r() * h
-      const light = r() < 0.5
-      g.strokeStyle = hex(light ? 1.45 : 0.55)
-      g.globalAlpha = 0.10 + r() * 0.22
-      g.lineWidth = 1.0 + r() * 2.6
-      g.beginPath()
-      g.moveTo(-4, y)
-      for (let x = 0; x <= px; x += px / 4) g.lineTo(x, y + (r() - 0.5) * 3)
-      g.stroke()
-    }
-    g.globalAlpha = 1
-    // 옹이 — 어두운 타원에 밝은 테. 널마다 있을 수도 없을 수도 있다.
-    if (r() < 0.7) {
-      const kx = r() * px
-      const ky = y0 + h * (0.25 + r() * 0.5)
-      const kr = 3 + r() * 5
-      g.save(); g.translate(kx, ky); g.scale(1, 0.55)
-      g.fillStyle = hex(1.18); g.beginPath(); g.arc(0, 0, kr * 1.7, 0, Math.PI * 2); g.fill()
-      g.fillStyle = hex(0.42); g.beginPath(); g.arc(0, 0, kr, 0, Math.PI * 2); g.fill()
-      g.restore()
-    }
-    // 이음매 — 널 사이의 어두운 틈. 0.211 배는 선이 아니라 그늘이다.
-    g.fillStyle = hex(0.211)
-    g.fillRect(0, y1 - 2, px, 3)
-  }
+  g.globalAlpha = 1
   const tex = new THREE.CanvasTexture(c)
   tex.colorSpace = THREE.SRGBColorSpace
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping
-  const rep = PLANK.size / (PLANK.width * PLANK.tile)
-  tex.repeat.set(rep, rep)
-  tex.anisotropy = 8
+  tex.repeat.set(10, 10)
+  tex.anisotropy = 4
   return tex
 }
 
 function buildGround() {
   const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(PLANK.size, PLANK.size),
-    new THREE.MeshStandardMaterial({ map: plankTexture(), roughness: 0.85, metalness: 0 }),
+    new THREE.PlaneGeometry(FELT_SIZE, FELT_SIZE),
+    // 펠트는 하이라이트가 없다. roughness 를 끝까지 올려야 천으로 읽힌다.
+    new THREE.MeshStandardMaterial({ map: feltTexture(), roughness: 1, metalness: 0 }),
   )
-  ground.name = 'plank-ground'
+  ground.name = 'felt-ground'
   ground.rotation.x = -Math.PI / 2
-  // 반상 밑면과 같은 높이. 판이 바닥에 놓인 것으로 읽혀야 한다.
   ground.position.y = -BOARD.thick
   ground.receiveShadow = true
   scene.add(ground)
