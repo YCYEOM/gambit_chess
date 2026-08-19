@@ -965,8 +965,7 @@ export function showHealth(list: { square: Square; ratio: number }[]) {
 
 // ---------------------------------------------------------------- 아이템
 
-/** 낙인 자국은 평평한 판에 그린다 — 테두리가 고르지 않아야 눌러 지진 자국으로 읽힌다. */
-const itemBaseGeo = new THREE.PlaneGeometry(0.94, 0.94)
+const itemBaseGeo = new THREE.RingGeometry(0.3, 0.38, 32)
 const itemMaterials = new Map<string, { gem: THREE.SpriteMaterial; ring: THREE.Material }>()
 
 /**
@@ -990,70 +989,6 @@ function glyphTexture(glyph: string, color: THREE.Color) {
   return tex
 }
 
-/**
- * 발밑 표식 — 반상에 지진 낙인 자국.
- *
- * 예전에는 매끈한 `RingGeometry` 였다. 반상이 나무가 된 뒤로 그 평평한 색 테가 장면에서
- * 유일하게 표면이 없는 물건이 됐다. 낙인은 판 위에 얹힌 것이 아니라 판에 새겨진 것이라,
- * 나무 위에 있어야 할 이유가 생긴다.
- *
- *  - 테두리가 고르지 않다. 쇠는 고르게 눌리지 않는다 (낮은 주파수 셋).
- *  - 그을음이 바깥으로 번진다.
- *  - 탄 자국 안쪽에 아이템 색이 남는다 — 색 구분은 그대로 살아야 한다.
- */
-function brandTexture(color: THREE.Color) {
-  const px = 256
-  const c = document.createElement('canvas')
-  c.width = c.height = px
-  const g = c.getContext('2d')!
-  const mid = px / 2
-  const r = seeded(60317)
-  const ph = [r() * 6.28, r() * 6.28, r() * 6.28]
-  const lobe = (a: number) =>
-    1 + 0.055 * (Math.sin(a * 3 + ph[0]) * 0.5 + Math.sin(a * 5 + ph[1]) * 0.3 + Math.sin(a * 8 + ph[2]) * 0.2)
-  const ring = (radius: number, width: number, style: string, alpha: number, blur: number) => {
-    g.strokeStyle = style
-    g.globalAlpha = alpha
-    g.lineWidth = width
-    g.shadowColor = style
-    g.shadowBlur = blur
-    g.beginPath()
-    for (let i = 0; i <= 96; i++) {
-      const a = (i / 96) * Math.PI * 2
-      const rr = radius * lobe(a)
-      const x = mid + Math.cos(a) * rr
-      const y = mid + Math.sin(a) * rr
-      i ? g.lineTo(x, y) : g.moveTo(x, y)
-    }
-    g.closePath()
-    g.stroke()
-  }
-  // 그을음이 먼저, 그 위에 탄 테, 마지막에 아이템 색. 순서를 바꾸면 색이 그을음에 묻힌다.
-  //
-  // 색 선은 굵고 밝게 간다. 낙인은 매끈한 색 테보다 어두워서 그대로 두면 "여기 뭔가 있다"
-  // 는 표식 본래의 일이 깎인다 — 장면에 어울리게 만들다가 안 보이게 만들면 진 것이다.
-  ring(mid * 0.70, 26, '#1a0f06', 0.34, 14)
-  ring(mid * 0.70, 14, '#2b1c10', 0.92, 4)
-  ring(mid * 0.70, 7, `#${color.getHexString()}`, 1, 7)
-  // 지질 때 삐져나온 자국 몇 개.
-  g.shadowBlur = 0
-  g.globalAlpha = 0.5
-  g.strokeStyle = '#2b1c10'
-  g.lineWidth = 2.5
-  for (let i = 0; i < 7; i++) {
-    const a = r() * Math.PI * 2
-    const r0 = mid * 0.70 * lobe(a)
-    g.beginPath()
-    g.moveTo(mid + Math.cos(a) * r0, mid + Math.sin(a) * r0)
-    g.lineTo(mid + Math.cos(a) * (r0 + 6 + r() * 12), mid + Math.sin(a) * (r0 + 6 + r() * 12))
-    g.stroke()
-  }
-  g.globalAlpha = 1
-  const tex = new THREE.CanvasTexture(c)
-  tex.colorSpace = THREE.SRGBColorSpace
-  return tex
-}
-
 const itemMaterial = (name: string, glyph: string) => {
   const key = `${name}${glyph}`
   let m = itemMaterials.get(key)
@@ -1061,9 +996,7 @@ const itemMaterial = (name: string, glyph: string) => {
     const color = token(name)
     m = {
       gem: new THREE.SpriteMaterial({ map: glyphTexture(glyph, color), transparent: true }),
-      ring: new THREE.MeshBasicMaterial({
-        map: brandTexture(color), transparent: true, depthWrite: false,
-      }),
+      ring: tint(color, 0.55),
     }
     itemMaterials.set(key, m)
   }
