@@ -1,0 +1,1827 @@
+{
+  "targetName": "Weathered Plank Ground",
+  "targetId": "weathered-plank-ground",
+  "schemaVersion": "2.1",
+  "terminologyProfile": {
+    "domain": "real-time procedural Three.js asset",
+    "geometryTerms": [
+      "silhouette",
+      "topology",
+      "primitive",
+      "bevel",
+      "chamfer",
+      "taper",
+      "bend",
+      "boolean cut",
+      "edge loop",
+      "surface normal",
+      "displacement"
+    ],
+    "materialTerms": [
+      "albedo",
+      "baseColor",
+      "roughness",
+      "metalness",
+      "normal map",
+      "bump map",
+      "ambient occlusion",
+      "cavity dirt",
+      "edge wear",
+      "clearcoat"
+    ],
+    "lightingTerms": [
+      "key light",
+      "fill light",
+      "rim light",
+      "HDRI/environment reflection",
+      "contact shadow"
+    ],
+    "descriptionRule": "Use measurable 3D graphics terms. Avoid vague words unless they are paired with concrete geometry/material/shader parameters."
+  },
+  "sourceImage": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/refs/table.jpg",
+  "referenceCamera": {
+    "solved": false,
+    "fovDegrees": 40.0,
+    "aspect": 1.0,
+    "orientation": {
+      "yaw": 0.0,
+      "pitch": 0.0,
+      "roll": 0.0
+    },
+    "positionHint": [
+      0.0,
+      0.0,
+      3.0
+    ],
+    "note": "For likeness work, solve the reference camera (forge/stage1_intake/solve_camera_pose.py) so the review render aligns with the photo and the reference can be projected. Confirm by overlay review."
+  },
+  "suitability": "conditional",
+  "scores": {
+    "object_isolation": 0,
+    "silhouette_readability": 0,
+    "depth_inference": 0,
+    "primitive_decomposition": 0,
+    "material_procedurality": 0,
+    "occlusion_risk": 0,
+    "interaction_fit": 0
+  },
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "weathered softwood plank deck (surface)",
+      "primaryDomain": "object",
+      "formLanguage": [
+        "planar",
+        "linear-repetition"
+      ],
+      "structureKind": [
+        "plank field",
+        "seam slots"
+      ],
+      "motionPotential": [
+        "static ground"
+      ],
+      "materialFamilies": [
+        "weathered softwood"
+      ],
+      "notes": "MATERIAL reference, not an object reference. The admission gate independently reported 'foreground coverage 1.000 (no background to segment against - silhouette not isolable)'."
+    },
+    "complexity": {
+      "tier": "moderate",
+      "scores": {
+        "silhouetteComplexity": 0,
+        "componentCount": 1,
+        "hierarchyDepth": 1,
+        "repetitionDensity": 3,
+        "materialLayerCount": 2,
+        "localDetailDensity": 2,
+        "occlusionRisk": 0,
+        "actionReadinessNeed": 0
+      },
+      "estimatedCounts": {
+        "macroComponents": 2,
+        "mesoComponents": 3,
+        "microFeatureGroups": 2,
+        "materialLayers": 2,
+        "repetitionSystems": 1
+      },
+      "reasoning": [
+        "There is no silhouette: the subject is a plane.",
+        "All information is a linear repetition (planks and seams) plus surface relief.",
+        "This ground fills most of the frame every frame, so its cost must stay at one draw call."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "moderate",
+      "minimumComponentLevels": [
+        "macro",
+        "meso"
+      ],
+      "needsRepetitionSystems": true,
+      "needsMaterialLocalOverrides": true,
+      "needsMultipleReviewViews": false,
+      "needsActionReadyHierarchy": false,
+      "rationale": "A ground plane seen from one fixed camera angle."
+    },
+    "unknownsToResolveBeforeImplementation": [],
+    "detailInventory": {
+      "scanMethod": "whole-frame percentile tone analysis + verified plank crop",
+      "targetMinDetails": 6,
+      "note": "Each detail maps to a component.localFeatures or material.localOverrides entry.",
+      "details": [
+        {
+          "id": "desaturated-silver",
+          "kind": "stain",
+          "mapsTo": {
+            "ref": "desaturated-silver"
+          },
+          "observation": "Plank median #838386, hue 240 deg, SATURATION 0.022 — weathering has removed the wood colour entirely. Fresh-wood colour would read as a different material.",
+          "evidence": "whole-frame median",
+          "confidence": 0.95
+        },
+        {
+          "id": "seam-slots",
+          "kind": "groove",
+          "mapsTo": {
+            "ref": "seam-slots"
+          },
+          "observation": "Seam/plank luminance ratio 0.211. These are dark slots, not drawn lines.",
+          "evidence": "2nd vs 50th percentile over the whole frame",
+          "confidence": 0.9
+        },
+        {
+          "id": "unequal-plank-widths",
+          "kind": "contour",
+          "mapsTo": {
+            "ref": "unequal-plank-widths"
+          },
+          "observation": "Planks are visibly not the same width.",
+          "evidence": "whole-frame inspection",
+          "confidence": 0.85
+        },
+        {
+          "id": "raised-grain",
+          "kind": "ridge",
+          "mapsTo": {
+            "ref": "raised-grain"
+          },
+          "observation": "Soft summer wood has eroded and left the hard grain proud; grain highlight/plank luminance ratio 1.404.",
+          "evidence": "90th vs 50th percentile",
+          "confidence": 0.9
+        },
+        {
+          "id": "knots",
+          "kind": "contour",
+          "mapsTo": {
+            "ref": "knots"
+          },
+          "observation": "Dark oval knots with radial cracking; the grain deflects around them.",
+          "evidence": "zones/crop-plank.png and whole-frame inspection",
+          "confidence": 0.85
+        },
+        {
+          "id": "delit-albedo-is-dark",
+          "kind": "stain",
+          "mapsTo": {
+            "ref": "delit-albedo-is-dark"
+          },
+          "observation": "De-lit extraction returns #2B2628 / #4A494C / #363134 — far darker than the photo's #838386 median. The photo's brightness is direct sun, not albedo.",
+          "evidence": "pbr/plank/report.json, confidence 0.86",
+          "confidence": 0.86
+        }
+      ]
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0.0,
+      "proportions": {
+        "headUnit": 0.0,
+        "torso": 0.0,
+        "legs": 0.0,
+        "shoulderWidth": 0.0,
+        "hipWidth": 0.0
+      },
+      "pose": {
+        "type": "unassessed",
+        "jointAngles": {}
+      },
+      "faceLandmarks": {
+        "eyeLine": 0.0,
+        "eyeSpacing": 0.0,
+        "noseBase": 0.0,
+        "mouthLine": 0.0,
+        "hairline": 0.0
+      },
+      "features": [],
+      "confidence": 0.0,
+      "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
+    },
+    "sourceImage": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/refs/table.jpg"
+  },
+  "qualityContract": {
+    "qualityBar": "moderate",
+    "definitionOfDone": [
+      "The rendered model matches the reference silhouette, primary proportions, visible component hierarchy, material response, and most recognizable local features for the selected fidelity tier."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 2,
+      "mesoComponents": 3,
+      "microFeatureGroups": 2,
+      "materialLayers": 2,
+      "repetitionSystems": 0,
+      "reviewViewpoints": 3
+    },
+    "featureGroups": [
+      {
+        "id": "overall-silhouette",
+        "name": "Overall silhouette and proportions",
+        "required": true,
+        "qualityCriteria": [
+          "Bounding shape, dominant curves, negative spaces, and scale relationships are explicitly described."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model reads as a generic placeholder instead of the reference object",
+          "major proportions are guessed without evidence"
+        ]
+      },
+      {
+        "id": "primary-structure",
+        "name": "Primary structure and hierarchy",
+        "required": true,
+        "qualityCriteria": [
+          "Major parts, joints, seams, contact points, and parent-child relationships are named before code generation."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "large visible parts are merged into one mesh",
+          "component hierarchy is too shallow for the observed complexity"
+        ]
+      },
+      {
+        "id": "attachment-joint-correctness",
+        "name": "Attachment and joint correctness",
+        "required": true,
+        "qualityCriteria": [
+          "Every visible child appendage, branch, limb, handle, connector, tube, cable, horn, wing, leg, or hinged part has an attachment contract with parent socket, localStart/localEnd, contact type, embed/overlap, and gap tolerance."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "child part root floats away from the parent",
+          "branch/limb/tube is centered in space instead of pivoting from its root",
+          "parent-child transform mixes world and local coordinates"
+        ]
+      },
+      {
+        "id": "surface-material-response",
+        "name": "Surface material response",
+        "required": true,
+        "qualityCriteria": [
+          "Albedo zones, roughness, normal/bump/displacement intent, cavity dirt, edge wear, and local overrides are specified where visible.",
+          "Important materials define independent albedo, roughness, height/normal, and AO responses instead of reusing one texture for unrelated PBR channels.",
+          "Surface response is decomposed into macro, meso, and micro frequency bands with scale and amplitude tied to object scale."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "surface looks like flat plastic",
+          "local material variation is missing or not tied to image evidence"
+        ]
+      },
+      {
+        "id": "reference-lookdev",
+        "name": "Reference color, material, and lighting response",
+        "required": true,
+        "qualityCriteria": [
+          "Material-pass names the reference-derived albedo palette, roughness variation, tactile normal/bump/displacement response, and local masks.",
+          "When a source image is available, run reference PBR extraction and require confidence >= 0.7 before treating maps as implementation-ready.",
+          "Lighting-pass names key/fill/rim or environment light, exposure, tone mapping, background, and contact shadow behavior.",
+          "Neutral, grazing-angle, and reference-matched renders prove that surface relief survives relighting and is not painted into albedo."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model has acceptable shape but reads as flat shaded or plastic",
+          "colors are a generic average instead of reference-observed local color zones",
+          "lighting is evenly ambient and cannot reproduce the source value range"
+        ]
+      }
+    ],
+    "visualDeltaChecks": [
+      "silhouette and negative-space delta",
+      "component hierarchy depth delta",
+      "repetition density and distribution delta",
+      "material albedo/roughness/normal response delta",
+      "local feature placement and scale delta"
+    ],
+    "antiShallowSpecRules": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md).",
+      "Adjacent components must overlap by at least 0.02 world units at shared seams (source: grimoire/build/geometry_patterns.md).",
+      "Raised or recessed relief and fasteners must be geometry, instanced micro-parts, or displacement; a map alone is an approximation (source: grimoire/build/geometry_patterns.md)."
+    ],
+    "mustNotDo": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md).",
+      "Adjacent components must overlap by at least 0.02 world units at shared seams (source: grimoire/build/geometry_patterns.md).",
+      "Raised or recessed relief and fasteners must be geometry, instanced micro-parts, or displacement; a map alone is an approximation (source: grimoire/build/geometry_patterns.md)."
+    ]
+  },
+  "qualityTargets": {
+    "targetFidelity": 0.7,
+    "mustMatch": [
+      "macro silhouette and proportions",
+      "primary material albedo/roughness response",
+      "reference-derived PBR material response at or above 0.7 confidence when source pixels are usable",
+      "most recognizable local features"
+    ],
+    "niceToHave": [
+      "micro scratches, stains, chips, and dirt masks",
+      "secondary lighting match"
+    ],
+    "fpsTarget": 60,
+    "reviewViewpoints": [
+      "front",
+      "three-quarter",
+      "side",
+      "thickness-axis",
+      "long-axis"
+    ]
+  },
+  "selfCorrectLoop": {
+    "enabled": true,
+    "visualAcceptance": {
+      "reviewer": "ai-vision",
+      "threshold": 0.7,
+      "comparisonArtifactRequired": true,
+      "layerScoresRequired": true,
+      "codePixelDiffIsAcceptanceAuthority": false,
+      "scoringRule": "AI vision must inspect a side-by-side reference/render sheet and score the current pass from 0 to 1. Pixel-diff code may assist diagnostics but cannot approve a pass.",
+      "requiredLayerScores": [
+        "silhouetteProportion",
+        "componentStructure",
+        "formDetail",
+        "materialSurface",
+        "lightingCamera"
+      ],
+      "featureReviewPolicy": {
+        "enabled": true,
+        "reviewUnit": "semantic-subsystem",
+        "maxCriticalFeaturesPerPass": 5,
+        "maxImportantFeaturesPerPass": 3,
+        "criticalDefaultThreshold": 0.8,
+        "importantAverageThreshold": 0.65,
+        "adaptiveEscalation": true,
+        "singleImagePairOnly": true,
+        "selectionRule": "Choose only the most visually salient, identity-defining, user-prioritized, or high-risk semantic systems. Group repeated parts instead of reviewing every mesh. AI vision scores every selected feature from the same full reference/render pair."
+      }
+    },
+    "reviewAfterPasses": [
+      "blockout",
+      "structural-pass",
+      "form-refinement",
+      "material-pass",
+      "surface-pass",
+      "lighting-pass",
+      "interaction-pass",
+      "optimization-pass"
+    ],
+    "allowedActions": [
+      "continue",
+      "refine-spec",
+      "refine-code",
+      "request-input",
+      "stop"
+    ],
+    "specRefineTriggers": [
+      "missing component",
+      "wrong primitive family",
+      "wrong proportions",
+      "material layer under-specified",
+      "local feature not traceable to viewEvidence",
+      "reference ambiguity discovered during implementation"
+    ],
+    "codeRefineTriggers": [
+      "spec is adequate but generated geometry/material does not match",
+      "browser render differs from reference",
+      "performance budget exceeded",
+      "lighting hides geometry or material response"
+    ],
+    "stopCriteria": [
+      "target fidelity reached or user accepts current approximation",
+      "remaining gaps require new reference images or manual art"
+    ],
+    "screenshotPolicy": {
+      "requiredForPasses": [
+        "blockout",
+        "structural-pass",
+        "form-refinement",
+        "material-pass",
+        "surface-pass",
+        "lighting-pass",
+        "interaction-pass"
+      ],
+      "preferredCapture": "in-app-browser-screenshot",
+      "fallbackCapture": "user-supplied-screenshot-path",
+      "minimumEvidence": "Each visual pass needs a reference image, rendered screenshot, side-by-side comparison sheet, AI vision score, layer scores, and critique before choosing continue.",
+      "reviewPairRule": "Compare the same camera/viewpoint whenever possible; do not judge a front reference against a random render angle.",
+      "acceptanceAuthority": "AI vision review of the comparison sheet. Code-generated pixel similarity is not sufficient evidence."
+    }
+  },
+  "featureReviewTargets": [
+    {
+      "id": "desaturated-ground",
+      "name": "Ground reads as weathered silver-grey, not fresh wood",
+      "tier": "critical",
+      "passIds": [
+        "material-pass"
+      ],
+      "minimumScore": 0.75,
+      "mustPass": true,
+      "componentRefs": [
+        "root"
+      ],
+      "evidenceRefs": [
+        "whole-frame median sat 0.022"
+      ]
+    },
+    {
+      "id": "seam-rhythm",
+      "name": "Dark seam slots at unequal plank widths",
+      "tier": "critical",
+      "passIds": [
+        "surface-pass"
+      ],
+      "minimumScore": 0.7,
+      "mustPass": true,
+      "componentRefs": [
+        "seam-slots",
+        "unequal-plank-widths"
+      ],
+      "evidenceRefs": [
+        "ratio 0.211"
+      ]
+    },
+    {
+      "id": "grain-relief",
+      "name": "Raised grain ridges along the plank length",
+      "tier": "important",
+      "passIds": [
+        "surface-pass"
+      ],
+      "minimumScore": 0.6,
+      "mustPass": false,
+      "componentRefs": [
+        "raised-grain"
+      ],
+      "evidenceRefs": [
+        "ratio 1.404"
+      ]
+    },
+    {
+      "id": "board-stays-subject",
+      "name": "The board still dominates the frame",
+      "tier": "critical",
+      "passIds": [
+        "material-pass"
+      ],
+      "minimumScore": 0.85,
+      "mustPass": true,
+      "componentRefs": [
+        "root"
+      ],
+      "evidenceRefs": [
+        "project constraint from DESIGN.md, not the reference"
+      ]
+    }
+  ],
+  "sculptPipeline": {
+    "passGateMode": "locked-sequential",
+    "passOrder": [
+      "blockout",
+      "structural-pass",
+      "form-refinement",
+      "material-pass",
+      "surface-pass",
+      "lighting-pass",
+      "interaction-pass",
+      "optimization-pass"
+    ],
+    "currentPass": "blockout",
+    "completedPasses": [],
+    "lastCompletedPass": "",
+    "blockedReason": "",
+    "nextRequiredEvidence": [
+      "Silhouette reads correctly without materials.",
+      "Quality contract has named all required macro feature groups before code generation.",
+      "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold.",
+      "browser render screenshot from your agent's browser/screenshot tool",
+      "single side-by-side full reference/render comparison sheet",
+      "all critical semantic feature scores at or above their thresholds",
+      "self-correction review appended with action=continue before the next pass"
+    ]
+  },
+  "lookDevTargets": {
+    "qualityPriority": "real-time-first",
+    "materialPass": {
+      "albedoPaletteRequired": true,
+      "roughnessVariationRequired": true,
+      "normalOrBumpRequired": true,
+      "localOverridesRequired": true,
+      "minimumTextureResolution": 512,
+      "preferredTextureResolution": 2048,
+      "independentMapChannels": [
+        "albedo",
+        "roughness",
+        "height",
+        "normal",
+        "ambient-occlusion"
+      ],
+      "requiredSurfaceFrequencyBands": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "geometryReliefRequiredWhenSilhouetteAffected": true,
+      "referencePbrExtraction": {
+        "requiredWhenSourceImagePresent": true,
+        "targetThreshold": 0.7,
+        "stopOnLowConfidence": true,
+        "script": "forge/stage1_intake/extract_pbr_evidence.py",
+        "acceptedLimitation": "single-image extraction is reference-derived inference, not exact photogrammetry"
+      },
+      "mustAvoid": [
+        "single flat albedo per material",
+        "uniform roughness",
+        "albedo texture reused as roughness/height/normal/AO",
+        "single-frequency random noise",
+        "plastic-looking smooth bark, stone, cloth, foliage, or aged material",
+        "local color/detail described only in prose without material masks",
+        "claiming exact PBR recovery when confidence is below the target threshold"
+      ],
+      "rationale": "The tile repeats 6.8 times across the plane; at the shipping camera one tile spans roughly 300 px, so 512 already oversamples."
+    },
+    "lightingPass": {
+      "requiredTerms": [
+        "key light",
+        "fill light",
+        "rim or environment light",
+        "exposure",
+        "tone mapping",
+        "background",
+        "contact shadow"
+      ],
+      "mustAvoid": [
+        "ambient-only lighting",
+        "flat value range",
+        "missing contact shadow",
+        "reference lighting copied without separating material readability"
+      ]
+    },
+    "screenshotReview": [
+      "Compare albedo palette and local color zones.",
+      "Compare roughness/normal/bump response under light.",
+      "Compare cavity dirt, edge wear, stains, moss, scratches, or other local masks.",
+      "Compare key/fill/rim structure, exposure, tone mapping, background, and contact shadows.",
+      "Capture a neutral-light render to verify material readability without reference lighting.",
+      "Capture a grazing-light close-up to expose flat normals, uniform roughness, tiling, and plastic highlights.",
+      "Capture a reference-matched render from the same camera framing as the source."
+    ]
+  },
+  "actionReadiness": {
+    "contract": "Every macro/meso component should be generated as a stable named Object3D pivot node with a mesh child, action metadata, optional sockets, collider proxy, and destruction metadata.",
+    "defaultRigType": "action-ready-static-rig",
+    "rootMotionNode": "root",
+    "requiredComponentFields": [
+      "id",
+      "parent",
+      "transform",
+      "attachment for child appendages, connectors, limbs, tubes, handles, legs, horns, wings, branches, or cables",
+      "actionProfile.animationRole",
+      "actionProfile.pivot",
+      "actionProfile.collider",
+      "actionProfile.destruction"
+    ],
+    "transformChannels": [
+      "translate",
+      "rotate",
+      "scale",
+      "bend",
+      "twist",
+      "detach",
+      "visibility",
+      "material-state"
+    ],
+    "authoringRules": [
+      "Do not collapse independently movable parts into one mesh.",
+      "Put transforms on component pivot groups, not only on raw meshes.",
+      "For attached child parts, put the pivot at the semantic root/socket and build visible geometry from localStart to localEnd.",
+      "Represent hinge, socket, detachable, and breakable intent even when no animation is implemented yet.",
+      "Use simplified collider proxies for runtime physics instead of visual mesh colliders by default."
+    ],
+    "destructionPolicy": {
+      "defaultBreakable": false,
+      "fractureGroupNaming": "Use stable semantic names such as body-shell, left-hinge, glass-panel, branch-segment.",
+      "debrisStrategy": "Prefer detachable component groups and a small number of procedural fragments over random mesh explosion."
+    }
+  },
+  "assumptions": [],
+  "coordinateFrame": {
+    "front": "camera-facing side in the reference image",
+    "up": "image up direction",
+    "scaleReference": "unit scale; adjust after first browser render"
+  },
+  "silhouette": {
+    "boundingShape": "",
+    "aspectRatios": [],
+    "symmetry": "",
+    "dominantCurves": [],
+    "negativeSpaces": [],
+    "landmarks": []
+  },
+  "viewEvidence": [
+    {
+      "id": "full-object",
+      "view": "primary",
+      "imageRegion": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 1.0,
+        "height": 1.0,
+        "units": "normalized"
+      },
+      "observations": [],
+      "confidence": 0.5
+    }
+  ],
+  "componentTree": [
+    {
+      "level": "macro",
+      "role": "body",
+      "importance": 0.9,
+      "confidence": 0.9,
+      "topologyClass": "material-only",
+      "topologyRationale": "A ground surface: one plane. Every feature the reference offers is a change of material across that plane, never a change of form.",
+      "geometryDescriptor": {
+        "topologyIntent": "single plane, no tessellation",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "tiled planar UV; one canvas repeats across the plane",
+        "normalStrategy": "flat"
+      },
+      "parent": null,
+      "attachment": null,
+      "transform": {
+        "position": [
+          0,
+          -0.62,
+          0
+        ],
+        "rotation": [
+          -1.5708,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(74, 73, 76, 1.0)",
+        "secondaryAlbedo": "rgba(43, 38, 40, 1.0)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.9,
+        "sourceToken": "var(--table)",
+        "note": "De-lit extraction, not the photo median. See approximationNotes.",
+        "evidenceRefs": [
+          "pbr/plank/report.json"
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 1.0
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "collider": {
+          "type": "none"
+        },
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "id": "root",
+      "name": "Weathered Plank Ground",
+      "primitive": "plane-card",
+      "dimensions": {
+        "width": 60,
+        "height": 0.0,
+        "depth": 60,
+        "units": "board squares",
+        "confidence": 0.8
+      },
+      "localFeatures": [
+        {
+          "id": "desaturated-silver",
+          "kind": "stain",
+          "observation": "saturation 0.022 — weathering removed the wood colour",
+          "implementation": "the --table token is a near-neutral grey; the canvas adds no hue",
+          "evidence": "whole-frame median",
+          "confidence": 0.95
+        },
+        {
+          "id": "delit-albedo-is-dark",
+          "kind": "stain",
+          "observation": "de-lit albedo #4A494C is far darker than the lit photo",
+          "implementation": "the token uses the de-lit value so the game's own key light supplies the brightness",
+          "evidence": "pbr/plank/report.json",
+          "confidence": 0.86
+        }
+      ]
+    },
+    {
+      "level": "macro",
+      "role": "surface",
+      "importance": 0.85,
+      "confidence": 0.9,
+      "topologyClass": "material-only",
+      "topologyRationale": "A ground surface: one plane. Every feature the reference offers is a change of material across that plane, never a change of form.",
+      "geometryDescriptor": {
+        "topologyIntent": "single plane, no tessellation",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "tiled planar UV; one canvas repeats across the plane",
+        "normalStrategy": "flat"
+      },
+      "parent": "root",
+      "attachment": null,
+      "transform": {
+        "position": [
+          0,
+          -0.62,
+          0
+        ],
+        "rotation": [
+          -1.5708,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(74, 73, 76, 1.0)",
+        "secondaryAlbedo": "rgba(43, 38, 40, 1.0)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.9,
+        "sourceToken": "var(--table)",
+        "note": "De-lit extraction, not the photo median. See approximationNotes.",
+        "evidenceRefs": [
+          "pbr/plank/report.json"
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 1.0
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "collider": {
+          "type": "none"
+        },
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "id": "seam-slots",
+      "name": "Seam slots",
+      "primitive": "plane-card",
+      "dimensions": {
+        "width": 2.2,
+        "height": 0.0,
+        "depth": 60,
+        "units": "board squares",
+        "confidence": 0.6
+      },
+      "localFeatures": [
+        {
+          "id": "seam-slots",
+          "kind": "groove",
+          "observation": "seam/plank luminance ratio 0.211 — dark slots, not lines",
+          "implementation": "drawn as dark bands 1.5 percent of plank width, with a soft inner edge so they read as depth",
+          "evidence": "2nd vs 50th percentile",
+          "confidence": 0.9
+        }
+      ],
+      "materialId": "seam-void"
+    },
+    {
+      "level": "meso",
+      "role": "surface",
+      "importance": 0.7,
+      "confidence": 0.85,
+      "topologyClass": "material-only",
+      "topologyRationale": "A ground surface: one plane. Every feature the reference offers is a change of material across that plane, never a change of form.",
+      "geometryDescriptor": {
+        "topologyIntent": "single plane, no tessellation",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "tiled planar UV; one canvas repeats across the plane",
+        "normalStrategy": "flat"
+      },
+      "parent": "root",
+      "attachment": null,
+      "transform": {
+        "position": [
+          0,
+          -0.62,
+          0
+        ],
+        "rotation": [
+          -1.5708,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(74, 73, 76, 1.0)",
+        "secondaryAlbedo": "rgba(43, 38, 40, 1.0)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.9,
+        "sourceToken": "var(--table)",
+        "note": "De-lit extraction, not the photo median. See approximationNotes.",
+        "evidenceRefs": [
+          "pbr/plank/report.json"
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 1.0
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "collider": {
+          "type": "none"
+        },
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "id": "unequal-plank-widths",
+      "name": "Unequal plank widths",
+      "primitive": "plane-card",
+      "dimensions": {
+        "width": 2.2,
+        "height": 0.0,
+        "depth": 60,
+        "units": "board squares",
+        "confidence": 0.6
+      },
+      "localFeatures": [
+        {
+          "id": "unequal-plank-widths",
+          "kind": "contour",
+          "observation": "planks are visibly not the same width",
+          "implementation": "plank boundaries walk by a deterministic +/-18 percent so the rhythm never repeats within a tile",
+          "evidence": "whole-frame inspection",
+          "confidence": 0.85
+        }
+      ]
+    },
+    {
+      "level": "meso",
+      "role": "surface",
+      "importance": 0.7,
+      "confidence": 0.9,
+      "topologyClass": "material-only",
+      "topologyRationale": "A ground surface: one plane. Every feature the reference offers is a change of material across that plane, never a change of form.",
+      "geometryDescriptor": {
+        "topologyIntent": "single plane, no tessellation",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "tiled planar UV; one canvas repeats across the plane",
+        "normalStrategy": "flat"
+      },
+      "parent": "root",
+      "attachment": null,
+      "transform": {
+        "position": [
+          0,
+          -0.62,
+          0
+        ],
+        "rotation": [
+          -1.5708,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(74, 73, 76, 1.0)",
+        "secondaryAlbedo": "rgba(43, 38, 40, 1.0)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.9,
+        "sourceToken": "var(--table)",
+        "note": "De-lit extraction, not the photo median. See approximationNotes.",
+        "evidenceRefs": [
+          "pbr/plank/report.json"
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 1.0
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "collider": {
+          "type": "none"
+        },
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "id": "raised-grain",
+      "name": "Raised grain ridges",
+      "primitive": "plane-card",
+      "dimensions": {
+        "width": 2.2,
+        "height": 0.0,
+        "depth": 60,
+        "units": "board squares",
+        "confidence": 0.6
+      },
+      "localFeatures": [
+        {
+          "id": "raised-grain",
+          "kind": "ridge",
+          "observation": "highlight/plank luminance ratio 1.404 along the plank length",
+          "implementation": "high-contrast streaks along the plank axis, drawn both lighter and darker than the base",
+          "evidence": "90th vs 50th percentile",
+          "confidence": 0.9
+        }
+      ]
+    },
+    {
+      "level": "meso",
+      "role": "surface",
+      "importance": 0.7,
+      "confidence": 0.85,
+      "topologyClass": "material-only",
+      "topologyRationale": "A ground surface: one plane. Every feature the reference offers is a change of material across that plane, never a change of form.",
+      "geometryDescriptor": {
+        "topologyIntent": "single plane, no tessellation",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "tiled planar UV; one canvas repeats across the plane",
+        "normalStrategy": "flat"
+      },
+      "parent": "root",
+      "attachment": null,
+      "transform": {
+        "position": [
+          0,
+          -0.62,
+          0
+        ],
+        "rotation": [
+          -1.5708,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(74, 73, 76, 1.0)",
+        "secondaryAlbedo": "rgba(43, 38, 40, 1.0)",
+        "materialClass": "wood",
+        "materialClassConfidence": 0.9,
+        "sourceToken": "var(--table)",
+        "note": "De-lit extraction, not the photo median. See approximationNotes.",
+        "evidenceRefs": [
+          "pbr/plank/report.json"
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 1.0
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "collider": {
+          "type": "none"
+        },
+        "destruction": {
+          "breakable": false
+        }
+      },
+      "id": "knots",
+      "name": "Knots",
+      "primitive": "plane-card",
+      "dimensions": {
+        "width": 2.2,
+        "height": 0.0,
+        "depth": 60,
+        "units": "board squares",
+        "confidence": 0.6
+      },
+      "localFeatures": [
+        {
+          "id": "knots",
+          "kind": "contour",
+          "observation": "dark oval knots with radial cracking; grain deflects around them",
+          "implementation": "a few elliptical dark blobs per tile with a lighter halo, placed from a deterministic seed",
+          "evidence": "zones/crop-plank.png",
+          "confidence": 0.85
+        }
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "id": "plank-ground",
+      "name": "Weathered plank",
+      "type": "standard",
+      "shaderModel": "MeshStandardMaterial",
+      "baseColor": "#4a494c",
+      "color": "#4a494c",
+      "albedo": {
+        "dominant": "#4a494c",
+        "secondary": [
+          "#2b2628",
+          "#363134"
+        ],
+        "samplingNotes": "De-lit extraction. The photo's #838386 median is sun, not albedo."
+      },
+      "colorVariation": {
+        "palette": [
+          "#4a494c",
+          "#2b2628",
+          "#363134"
+        ],
+        "pattern": "linear-planks",
+        "amplitude": 0.3,
+        "heightCorrelation": 0.6
+      },
+      "textureResolution": 512,
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          6.8,
+          6.8
+        ],
+        "anisotropy": 4,
+        "texelDensityIntent": "One 512px tile carries 4 planks; the plane repeats it. Plank width 2.2 board squares."
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 4.0,
+          "amplitude": 0.3,
+          "role": "plank boundaries and seam slots"
+        },
+        {
+          "id": "meso",
+          "frequency": 40.0,
+          "amplitude": 0.16,
+          "role": "raised grain ridges along the plank length"
+        },
+        {
+          "id": "micro",
+          "frequency": 140.0,
+          "amplitude": 0.04,
+          "role": "surface fibre"
+        }
+      ],
+      "roughness": {
+        "base": 0.85,
+        "variation": 0.06,
+        "map": "independent-procedural-field",
+        "localResponse": "the seam slots are darker and rougher; the proud grain ridges are the only places that catch any sheen"
+      },
+      "metalness": {
+        "base": 0.0,
+        "variation": 0.0
+      },
+      "specular": {
+        "f0": 0.04
+      },
+      "ambientOcclusion": {
+        "map": "independent-procedural-cavity-field",
+        "intensity": 0.5,
+        "note": "the seam slots are genuine cavities and carry the strongest occlusion"
+      },
+      "finishStyle": "weathered bare wood, matte",
+      "localOverrides": [
+        {
+          "id": "seam-slots",
+          "target": "seam-slots",
+          "observation": "ratio 0.211",
+          "implementation": "seam luminance is 0.21 of the plank base",
+          "evidence": "percentiles"
+        },
+        {
+          "id": "raised-grain",
+          "target": "raised-grain",
+          "observation": "ratio 1.404",
+          "implementation": "grain highlights reach 1.4 of the plank base",
+          "evidence": "percentiles"
+        },
+        {
+          "id": "unequal-plank-widths",
+          "target": "unequal-plank-widths",
+          "observation": "widths vary",
+          "implementation": "deterministic +/-18 percent walk",
+          "evidence": "inspection"
+        },
+        {
+          "id": "knots",
+          "target": "knots",
+          "observation": "dark ovals with radial cracking",
+          "implementation": "elliptical blobs with a lighter halo",
+          "evidence": "zones/crop-plank.png"
+        }
+      ],
+      "referencePbr": {
+        "usable": true,
+        "confidence": 0.86,
+        "estimatedFidelity": 0.86,
+        "sourceCrop": "zones/crop-plank.png",
+        "palette": [
+          "#2B2628",
+          "#4A494C",
+          "#363134",
+          "#1A1618",
+          "#D1D0D3"
+        ],
+        "maps": {
+          "albedo": {
+            "url": "pbr/plank/plank_albedo.png",
+            "path": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/table-recon/pbr/plank/plank_albedo.png",
+            "channel": "albedo",
+            "colorSpace": "srgb",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "url": "pbr/plank/plank_roughness.png",
+            "path": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/table-recon/pbr/plank/plank_roughness.png",
+            "channel": "roughness",
+            "colorSpace": "linear",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "url": "pbr/plank/plank_height.png",
+            "path": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/table-recon/pbr/plank/plank_height.png",
+            "channel": "height",
+            "colorSpace": "linear",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "url": "pbr/plank/plank_normal.png",
+            "path": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/table-recon/pbr/plank/plank_normal.png",
+            "channel": "normal",
+            "colorSpace": "linear",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "url": "pbr/plank/plank_ao.png",
+            "path": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/table-recon/pbr/plank/plank_ao.png",
+            "channel": "ao",
+            "colorSpace": "linear",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "limitation": "single-image estimate; used to set the de-lit base tone and the frequency bands, not shipped as textures"
+      }
+    },
+    {
+      "id": "seam-void",
+      "name": "Seam slot",
+      "type": "standard",
+      "shaderModel": "MeshStandardMaterial",
+      "baseColor": "#141215",
+      "color": "#141215",
+      "albedo": {
+        "dominant": "#141215",
+        "secondary": [],
+        "samplingNotes": "0.211 of the plank base, from the 2nd percentile"
+      },
+      "colorVariation": {
+        "palette": [
+          "#141215"
+        ],
+        "pattern": "flat",
+        "amplitude": 0.0,
+        "heightCorrelation": 0.0
+      },
+      "textureResolution": 512,
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          6.8,
+          6.8
+        ],
+        "anisotropy": 4,
+        "texelDensityIntent": "shares the plank tile; the seam is its darkest stop"
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 4.0,
+          "amplitude": 0.1,
+          "role": "slot width variation"
+        },
+        {
+          "id": "meso",
+          "frequency": 30.0,
+          "amplitude": 0.05,
+          "role": "edge fibre"
+        },
+        {
+          "id": "micro",
+          "frequency": 120.0,
+          "amplitude": 0.02,
+          "role": "grit"
+        }
+      ],
+      "roughness": {
+        "base": 0.95,
+        "variation": 0.02,
+        "map": "independent-constant-field",
+        "localResponse": "a shadowed slot never catches light"
+      },
+      "metalness": {
+        "base": 0.0,
+        "variation": 0.0
+      },
+      "specular": {
+        "f0": 0.04
+      },
+      "ambientOcclusion": {
+        "map": "independent-procedural-cavity-field",
+        "intensity": 0.9,
+        "note": "the deepest occlusion in the scene"
+      },
+      "finishStyle": "shadowed gap",
+      "qualityTier": "utility",
+      "referenceNote": "Utility tier: the seam is measured as a ratio (0.211) off the plank, not extracted as its own surface.",
+      "localOverrides": []
+    }
+  ],
+  "repetitionSystems": [
+    {
+      "id": "plank-run",
+      "name": "Plank run",
+      "kind": "linear-series",
+      "componentRef": "root",
+      "count": 4,
+      "layout": {
+        "axis": "x",
+        "pitch": 2.2,
+        "pitchVariation": 0.18,
+        "note": "4 planks per 512px tile; the plane repeats the tile 6.8 times"
+      },
+      "variation": {
+        "note": "plank widths and grain seeds walk deterministically"
+      },
+      "instancing": "drawn once into the shared tile canvas",
+      "evidence": "whole-frame inspection"
+    }
+  ],
+  "buildPasses": [
+    {
+      "id": "blockout",
+      "goal": "Match macro silhouette and proportions.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Silhouette reads correctly without materials.",
+        "Quality contract has named all required macro feature groups before code generation.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "structural-pass",
+      "goal": "Build the component hierarchy implied by the pre-spec complexity assessment.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Macro, meso, and repeated structures meet qualityContract.minimumSpecDepth.",
+        "Parent-child relations, joints, seams, sockets, and contact points are explicit.",
+        "Every attached child appendage/connector has parentSocket, localStart/localEnd, contactType, embedDepth or overlap, and gapTolerance.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "form-refinement",
+      "goal": "Refine shape, deformation, bevels, tapers, curves, asymmetry, and visible local geometry.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Important visible forms are represented in component geometryDescriptor, deformations, localFeatures, or repetitionSystems.",
+        "Endpoint-based child parts are rooted at their attachment sockets and do not visibly float away from parents.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "material-pass",
+      "goal": "Match material color, roughness, bump, and local variation.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Reference-derived albedo palette records dominant, secondary, and accent colors per visible material.",
+        "Each important material defines roughness variation and at least one normal/bump/displacement response.",
+        "Local material overrides, dirt/wear/stains/moss/chips/scratches or equivalent masks are tied to evidenceRefs.",
+        "Thin, transparent, reflective, wet, or fibrous materials document alpha/transmission/clearcoat/metalness/fiber response when relevant.",
+        "Generated preview uses procedural albedo/roughness/bump texture or vertex color variation instead of one flat color.",
+        "Generated preview uses independent PBR maps at 1024px or higher for the quality-first tier.",
+        "If source pixels are available, referencePbr extraction passed at confidence >= 0.7 or the pass is stopped/requesting better references.",
+        "Macro, meso, and micro surface frequency bands are visible at the intended review distance without obvious tiling.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "surface-pass",
+      "goal": "Add procedural surface locality such as normal/bump/displacement, AO, dirt, stains, chips, grain, moss, scratches, and wear.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Every required material feature group has local overrides or surfaceDetail tied to evidenceRefs.",
+        "A grazing-angle close-up proves that normal/height detail breaks highlights naturally and does not read as smooth plastic.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "lighting-pass",
+      "goal": "Make material and form readable under neutral turntable lighting plus optional reference lighting.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "lightingFromPhoto identifies key light direction/color/intensity, fill light, rim or environment light, and ambient color.",
+        "Exposure, tone mapping, background color/gradient, shadow softness, and contact shadow behavior are specified.",
+        "Lighting does not hide geometry/material gaps and screenshots can be compared fairly to the reference.",
+        "Neutral, grazing, and reference-matched lighting checks distinguish material errors from lighting errors.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "interaction-pass",
+      "goal": "Make the model ready for future animation, transformation, physics, or destruction.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Macro and movable meso components have stable pivot nodes.",
+        "Sockets, collider proxies, and destruction metadata are present for future runtime actions.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "optimization-pass",
+      "goal": "Protect runtime performance after visual fidelity is accepted.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Triangle count, draw calls, instancing, LOD strategy, and FPS target are documented or verified.",
+        "Repeated detail is instanced or simplified where possible without breaking silhouette/material believability."
+      ]
+    }
+  ],
+  "visualEvidence": [
+    {
+      "timestamp": "2026-08-19T00:48:59.426905+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.76,
+      "aiVisionScore": 0.76,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouette": 0.0,
+        "structure": 0.78,
+        "form": 0.7,
+        "material": 0.72,
+        "lighting": 0.82
+      },
+      "featureReviews": [
+        {
+          "id": "board-stays-subject",
+          "score": 0.9,
+          "tier": "critical",
+          "threshold": 0.85,
+          "pass": true,
+          "note": "The ground is darker and cooler than the board and carries no colour, so the eye still goes to the board. It also gave the board a cast shadow, which is what actually grounds it — castShadow had never been switched on because until now there was nothing to receive it."
+        },
+        {
+          "id": "seam-rhythm",
+          "score": 0.78,
+          "tier": "critical",
+          "threshold": 0.7,
+          "pass": true,
+          "note": "Dark seam slots at unequal plank widths, ratio 0.211 as measured. Planks run 2.2 board squares wide, coarser than the board's 1.0, which keeps the ground subordinate."
+        },
+        {
+          "id": "grain-relief",
+          "score": 0.66,
+          "tier": "important",
+          "threshold": 0.6,
+          "pass": true,
+          "note": "CORRECTED: the first build drew grain at 0.5-1.9 px and 0.05-0.18 alpha and it vanished entirely into the mipmap chain — at a grazing angle the ground read as a flat grey slab with lines on it. Rebuilt at 1.0-3.6 px and 0.10-0.32 alpha with anisotropy 8. Still less dense and less varied than the reference."
+        },
+        {
+          "id": "desaturated-ground",
+          "score": 0.72,
+          "tier": "critical",
+          "threshold": 0.75,
+          "pass": false,
+          "note": "Reads as weathered grey, not fresh wood, and carries no hue — that part lands. It is still darker than the reference's silver. The de-lit extraction (#4A494C) is the physically correct albedo but renders as charcoal under this scene's lights, which are far weaker than the reference's noon sun. Shipped at #5F5E61, between the de-lit value and the photo median. Reported as a miss rather than moved further, because pushing it brighter starts competing with the board."
+        }
+      ],
+      "referenceScreenshot": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/refs/table.jpg",
+      "renderScreenshot": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/table-recon/render-ground-pure.png",
+      "comparisonImage": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/table-recon/cmp-ground.png",
+      "cameraView": "",
+      "notes": "",
+      "aiVisionNotes": ""
+    }
+  ],
+  "reviewHistory": [
+    {
+      "timestamp": "2026-08-19T00:48:59.426905+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.76,
+      "aiVisionScore": 0.76,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouette": 0.0,
+        "structure": 0.78,
+        "form": 0.7,
+        "material": 0.72,
+        "lighting": 0.82
+      },
+      "featureReviews": [
+        {
+          "id": "board-stays-subject",
+          "score": 0.9,
+          "tier": "critical",
+          "threshold": 0.85,
+          "pass": true,
+          "note": "The ground is darker and cooler than the board and carries no colour, so the eye still goes to the board. It also gave the board a cast shadow, which is what actually grounds it — castShadow had never been switched on because until now there was nothing to receive it."
+        },
+        {
+          "id": "seam-rhythm",
+          "score": 0.78,
+          "tier": "critical",
+          "threshold": 0.7,
+          "pass": true,
+          "note": "Dark seam slots at unequal plank widths, ratio 0.211 as measured. Planks run 2.2 board squares wide, coarser than the board's 1.0, which keeps the ground subordinate."
+        },
+        {
+          "id": "grain-relief",
+          "score": 0.66,
+          "tier": "important",
+          "threshold": 0.6,
+          "pass": true,
+          "note": "CORRECTED: the first build drew grain at 0.5-1.9 px and 0.05-0.18 alpha and it vanished entirely into the mipmap chain — at a grazing angle the ground read as a flat grey slab with lines on it. Rebuilt at 1.0-3.6 px and 0.10-0.32 alpha with anisotropy 8. Still less dense and less varied than the reference."
+        },
+        {
+          "id": "desaturated-ground",
+          "score": 0.72,
+          "tier": "critical",
+          "threshold": 0.75,
+          "pass": false,
+          "note": "Reads as weathered grey, not fresh wood, and carries no hue — that part lands. It is still darker than the reference's silver. The de-lit extraction (#4A494C) is the physically correct albedo but renders as charcoal under this scene's lights, which are far weaker than the reference's noon sun. Shipped at #5F5E61, between the de-lit value and the photo median. Reported as a miss rather than moved further, because pushing it brighter starts competing with the board."
+        }
+      ],
+      "action": "refine-spec",
+      "summary": "Plank ground added under the board (material-only reconstruction; the admission gate independently reported foreground coverage 1.000 and could not isolate a silhouette, so silhouette gates are not run and not claimed). Two real defects found and fixed: the grain was drawn too thin and disappeared into the mipmap chain at the grazing angle, and a linear/sRGB colour-space bug meant every canvas painted from token() was drawn with LINEAR channel values — which also explains why the CHESS-028 dark base looked crushed (#211d1a, sRGB 0.129, was being painted at 0.015). Three of four feature targets pass; desaturated-ground misses at 0.72/0.75 and is reported as a miss. NOT CREDITED as a completed pass: no unlit map-stripped render was captured.",
+      "matched": [],
+      "mismatches": [],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [],
+      "visualEvidence": {
+        "referenceScreenshot": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/refs/table.jpg",
+        "renderScreenshot": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/table-recon/render-ground-pure.png",
+        "comparisonImage": "/private/tmp/claude-501/-Users-yeomyooncheol-IdeaProjects-gambit-chess/b6b02776-cc92-4ede-ac2f-efa552d0823c/scratchpad/table-recon/cmp-ground.png",
+        "cameraView": "",
+        "notes": "",
+        "aiVisionNotes": ""
+      }
+    }
+  ],
+  "lodPlan": [
+    {
+      "tier": "near",
+      "distance": 0,
+      "strategy": "full component tree and material layers"
+    },
+    {
+      "tier": "far",
+      "distance": 30,
+      "strategy": "merge static components and reduce local feature geometry"
+    }
+  ],
+  "performanceBudget": {
+    "qualityPriority": "real-time-first",
+    "targetTriangles": 2,
+    "maxDrawCalls": 1,
+    "textureSize": 512,
+    "fpsTarget": 60,
+    "optimizationPolicy": "This surface covers most of the frame every frame. It is two triangles and one 512px canvas; nothing about it may scale with anything."
+  },
+  "lightingFromPhoto": [
+    "Key: hard direct sun raking across the planks from the upper right, which is what makes the raised grain read as relief at all. The game's DirectionalLight at (-4, 8, 5) rakes the ground similarly; no light change is proposed.",
+    "Fill: open sky, weak. The existing HemisphereLight covers it.",
+    "Rim / environment: none. The surface is matte and shows no environment reflection, so envMapIntensity stays 0.",
+    "Exposure and tone mapping: the reference is a bright outdoor frame. Its measured tones are NOT albedo — the de-lit extraction is 40 percent darker — and the renderer keeps its current SRGBColorSpace output with no tone mapping, so the ground uses the de-lit value and lets the game's key light do the rest.",
+    "Contact shadow / ambient occlusion: the board casts a real shadow-mapped shadow onto this plane, which is the whole point of adding it. Ambient occlusion is carried in the seam slots."
+  ],
+  "proceduralStrategy": [
+    "Block out macro silhouette first.",
+    "Add component hierarchy and joints.",
+    "Create stable pivot groups, sockets, collider proxies, and destruction metadata before visual polish.",
+    "Refine forms with bevels, tapers, bends, and procedural noise.",
+    "Run reference PBR extraction for important source-image materials and stop when confidence is below the target threshold.",
+    "Add material variation before adding expensive micro-geometry."
+  ],
+  "animationAnchors": [
+    "root pivot node supports whole-object translation, rotation, scale, and visibility changes",
+    "component pivot groups support later local transforms without rebuilding geometry"
+  ],
+  "destructionAnchors": [
+    "actionProfile.destruction.fractureGroup marks detachable or breakable component sets",
+    "component seams and sockets define plausible break points instead of random explosions"
+  ],
+  "risks": [
+    {
+      "id": "no-silhouette",
+      "resolution": "Accepted: material-only reconstruction. The admission gate reported foreground coverage 1.000 and could not isolate a silhouette; silhouette gates are not run and not claimed."
+    },
+    {
+      "id": "plank-scale",
+      "resolution": "Undetermined from the reference. Chosen at 2.2 board squares so the ground rhythm stays coarser than the board's and the board keeps the eye."
+    },
+    {
+      "id": "scene-tone-change",
+      "resolution": "This is the first change that alters the whole frame rather than one prop. Kept to a single commit so it can be reverted whole if the owner does not want it."
+    }
+  ],
+  "localSpecSearch": {
+    "collection": "core_3d",
+    "query": "Weathered Plank Ground plank seam tiling procedural weathered wood desaturated grey raised grain relief normal map",
+    "index": {
+      "status": "hit",
+      "reason": "current",
+      "fingerprint": "6857e5ab528b42ac12f4f411f862610a0bffce8e47aee3610a7603c318072fe8"
+    },
+    "matches": [
+      {
+        "record_id": "core.pbr-color-space-srgb-vs-linearnocolorspace",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.material_pbr[11]",
+        "score": 7.503018193464,
+        "snippets": [
+          "... cues: Base color/albedo and emissive textures are the only ones that should look like natural photographic color; Normal, roughness, metalness, and AO textures look like flat/desaturated data patterns and must never be gamma-corrected ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[11]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.pbr-tangent-space-normal-encoding-directx-vs-opengl",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.material_pbr[13]",
+        "score": 7.109603397665,
+        "snippets": [
+          "Convention difference in the green (Y) channel of tangent-space normal maps between DirectX-style and OpenGL-style encoding. Sự khác biệt quy ước ở kênh xanh lá (Y) của normal map không gian tiếp tuyến giữa mã hóa kiểu DirectX và kiểu OpenGL. ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[13]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.pbr-normal-map",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.material_pbr[2]",
+        "score": 6.170918912118,
+        "snippets": [
+          "... mô phỏng chi tiết hình học nhỏ (khắc chữ, vết trầy, dệt vải) mà không tăng số đa giác. Recognition cues: Fine surface relief (engraving, stippling, fabric weave, edge chips) visible under raking light but absent from the silhouette; ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[2]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      }
+    ]
+  },
+  "approximationNotes": [
+    "MATERIAL-ONLY reconstruction. Geometry comes from the game (a ground plane sized to cover the camera frustum); the reference supplies colour, seam structure, plank rhythm and grain relief. Silhouette gates do not apply and are not run.",
+    "Plank width in world units is UNDETERMINED from the reference (no scale in frame). Chosen at 2.2 board squares so the plank rhythm reads coarser than the board's 1.0 squares and the board stays the subject.",
+    "Base colour is the DE-LIT extraction (#4A494C), not the photo median (#838386). Using the photo median would bake the reference's direct sun into the albedo and the ground would render too bright under the game's own key light.",
+    "Layer 3 first filed the seams as meso. They are macro: without the gaps this is a slab, not a deck. Promoted."
+  ]
+}

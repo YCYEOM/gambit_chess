@@ -100,6 +100,21 @@ let spin = 0
 const token = (name: string) =>
   new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue(name).trim())
 
+/**
+ * token() 이 돌려주는 THREE.Color 는 **선형** 공간이다. three 가 재질 색을 그렇게 받기
+ * 때문인데, 캔버스에 붓으로 칠할 값은 sRGB 라 되돌려 놓아야 한다. 그냥 .r 을 쓰면 어두운
+ * 색일수록 크게 어긋난다 — #211d1a (sRGB 0.129) 가 캔버스에서는 0.015 가 되어 거의
+ * 순검정으로 칠해진다.
+ */
+function srgbOf(c: THREE.Color) {
+  const h = c.getHexString()
+  return {
+    r: parseInt(h.slice(0, 2), 16) / 255,
+    g: parseInt(h.slice(2, 4), 16) / 255,
+    b: parseInt(h.slice(4, 6), 16) / 255,
+  }
+}
+
 export function init(canvas: HTMLCanvasElement, onPick: (sq: Square) => void) {
   canvasEl = canvas
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true })
@@ -126,6 +141,7 @@ export function init(canvas: HTMLCanvasElement, onPick: (sq: Square) => void) {
   scene.add(fill)
 
   buildBoard()
+  buildGround()
   scene.add(markers, healthBars, itemGroup, fxGroup)
 
   canvas.addEventListener('pointerdown', (e) => {
@@ -243,6 +259,101 @@ function mitredRing(inner: number, outer: number, y0: number, y1: number, uScale
   return geo
 }
 
+/**
+ * 반상을 받치는 바닥 — 풍화된 널판 사진을 img2threejs 로 재구성한 것.
+ * 스펙: docs/table-recon/object-sculpt-spec.json (strict-quality PASS)
+ *
+ * 반상이 검은 허공에 떠 있던 것이 장면에서 제일 큰 구멍이었다. 그림자가 떨어질 자리가
+ * 생기면 판이 놓인 물건이 된다.
+ *
+ * 레퍼런스에서 잰 것:
+ *  - 널 median #838386, **채도 0.022** — 풍화가 나무색을 완전히 걷어 갔다
+ *  - 이음매/널 밝기비 0.211 (선이 아니라 어두운 틈이다)
+ *  - 결 하이라이트/널 밝기비 1.404 (무른 부분이 깎여 단단한 결만 도드라졌다)
+ *
+ * 바탕색은 사진에서 잰 #838386 이 아니라 **탈조명 알베도 #4A494C** 다. 사진의 밝기는
+ * 직사광이지 색이 아니라, 그대로 쓰면 게임 조명 아래에서 바닥이 허옇게 뜬다.
+ */
+const PLANK = { width: 2.2, tile: 4, size: 60 }
+
+function plankTexture() {
+  const px = 512
+  const c = document.createElement('canvas')
+  c.width = c.height = px
+  const g = c.getContext('2d')!
+  const r = seeded(88231)
+  const table = srgbOf(token('--table'))
+  const hex = (m: number) => {
+    const v = (x: number) => Math.round(Math.min(1, Math.max(0, x)) * 255)
+    return `rgb(${v(table.r * m)},${v(table.g * m)},${v(table.b * m)})`
+  }
+  g.fillStyle = hex(1); g.fillRect(0, 0, px, px)
+
+  // 널 경계는 고르지 않다. ±18% 로 걸어가게 둔다.
+  const edges: number[] = [0]
+  for (let i = 1; i < PLANK.tile; i++) {
+    edges.push(Math.round((px / PLANK.tile) * (i + (r() - 0.5) * 0.36)))
+  }
+  edges.push(px)
+
+  for (let i = 0; i < PLANK.tile; i++) {
+    const y0 = edges[i]
+    const y1 = edges[i + 1]
+    const h = y1 - y0
+    // 널마다 바탕 톤이 조금씩 다르다.
+    g.fillStyle = hex(0.86 + r() * 0.28)
+    g.fillRect(0, y0, px, h)
+    // 도드라진 결 — 널 길이 방향으로 흐르고, 밝은 쪽과 어두운 쪽이 모두 있다.
+    // 결은 굵고 세게 긋는다. 가늘게 그으면 밉맵에서 통째로 뭉개져 결 없는 판때기가 된다 —
+    // 실제로 그렇게 만들었다가 고쳤다. 바닥은 스치는 각도로 보여서 더 심하다.
+    for (let k = 0; k < 130; k++) {
+      const y = y0 + r() * h
+      const light = r() < 0.5
+      g.strokeStyle = hex(light ? 1.45 : 0.55)
+      g.globalAlpha = 0.10 + r() * 0.22
+      g.lineWidth = 1.0 + r() * 2.6
+      g.beginPath()
+      g.moveTo(-4, y)
+      for (let x = 0; x <= px; x += px / 4) g.lineTo(x, y + (r() - 0.5) * 3)
+      g.stroke()
+    }
+    g.globalAlpha = 1
+    // 옹이 — 어두운 타원에 밝은 테. 널마다 있을 수도 없을 수도 있다.
+    if (r() < 0.7) {
+      const kx = r() * px
+      const ky = y0 + h * (0.25 + r() * 0.5)
+      const kr = 3 + r() * 5
+      g.save(); g.translate(kx, ky); g.scale(1, 0.55)
+      g.fillStyle = hex(1.18); g.beginPath(); g.arc(0, 0, kr * 1.7, 0, Math.PI * 2); g.fill()
+      g.fillStyle = hex(0.42); g.beginPath(); g.arc(0, 0, kr, 0, Math.PI * 2); g.fill()
+      g.restore()
+    }
+    // 이음매 — 널 사이의 어두운 틈. 0.211 배는 선이 아니라 그늘이다.
+    g.fillStyle = hex(0.211)
+    g.fillRect(0, y1 - 2, px, 3)
+  }
+  const tex = new THREE.CanvasTexture(c)
+  tex.colorSpace = THREE.SRGBColorSpace
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping
+  const rep = PLANK.size / (PLANK.width * PLANK.tile)
+  tex.repeat.set(rep, rep)
+  tex.anisotropy = 8
+  return tex
+}
+
+function buildGround() {
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(PLANK.size, PLANK.size),
+    new THREE.MeshStandardMaterial({ map: plankTexture(), roughness: 0.85, metalness: 0 }),
+  )
+  ground.name = 'plank-ground'
+  ground.rotation.x = -Math.PI / 2
+  // 반상 밑면과 같은 높이. 판이 바닥에 놓인 것으로 읽혀야 한다.
+  ground.position.y = -BOARD.thick
+  ground.receiveShadow = true
+  scene.add(ground)
+}
+
 function buildBoard() {
   const grain = new THREE.CanvasTexture(grainCanvas(1024, 20260818, '#ffffff', '#7a5a34', 900))
   grain.colorSpace = THREE.SRGBColorSpace
@@ -327,6 +438,8 @@ function buildBoard() {
   body.name = 'slab-body'
   body.position.y = bodyTop - (BOARD.thick - BOARD.chamferD) / 2
   body.receiveShadow = true
+  // 바닥이 생겼으니 판도 그림자를 던져야 한다. 예전에는 받을 자리가 없어 끄고 있었다.
+  body.castShadow = true
   scene.add(body)
 
   // 레퍼런스의 모서리 스플라인 홈(옆면 구석의 가는 줄 셋)은 넣지 않는다.
@@ -390,7 +503,8 @@ const BASE_H = 0.06
 /** 나무 쪽으로 섞을 목표색. 밝은 진영에서는 어두워지고 어두운 진영에서는 밝아진다. */
 const BASE_WOOD = { r: 0x6b, g: 0x4a, b: 0x2f }
 
-function sliceTexture(team: THREE.Color) {
+function sliceTexture(teamLinear: THREE.Color) {
+  const team = srgbOf(teamLinear)
   const size = 256
   const c = document.createElement('canvas')
   c.width = c.height = size
